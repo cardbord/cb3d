@@ -30,10 +30,6 @@ class menu_screen:
         self.menurect =  pygame.Rect(100,100,600,600)
 
     def display(self,dis):
-
-        font = pygame.font.SysFont(default_font,46)
-        
-        display_height = 100
         for command in self.commands:
             command.display(dis)
 
