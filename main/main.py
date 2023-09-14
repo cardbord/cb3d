@@ -12,7 +12,7 @@ inputable_save = False
 load_answer = ''
 save_answer = ''
 user_text = ''
-input_rect = pygame.Rect(350, 350, 140, 56)
+input_rect = pygame.Rect(450, 450, 140, 56)
 default_font = pygame.font.get_default_font()
 font = pygame.font.Font(default_font,60)
 def take_input():
@@ -86,13 +86,17 @@ right = False
 
 defualt_position = [WINDOW_SIZE/2,WINDOW_SIZE/2]
 
-dis = pygame.display.set_mode((WINDOW_SIZE,WINDOW_SIZE))
-pygame.display.set_caption('CBmodeller','CBmodel engine')
 menusym = pygame.image.load('menusym.png')
 menusym = pygame.transform.scale(menusym,(30,30))
 menu_rect = menusym.get_rect()
-icon = pygame.image.load('icon.PNG')
-pygame.display.set_icon(icon)
+
+plussym = pygame.image.load('plussym.png')
+plussym = pygame.transform.scale(plussym,(30,30))
+plus_rect = plussym.get_rect()
+
+
+dis = pygame.display.set_mode((WINDOW_SIZE,WINDOW_SIZE))
+pygame.display.set_caption('CBmodeller','CBmodel engine')
 clock = pygame.time.Clock()
 
 def clear():
@@ -348,8 +352,11 @@ while not done:
                     mousepos = pygame.mouse.get_pos()
                     mx = mousepos[0]
                     my = mousepos[1]
-                    if mx in range(30,80) and my in range(30,90):
+                    if mx in range(20,60) and my in range(20,60):
                         menu.active = not menu.active
+
+                    elif mx in range(60,100) and my in range(20,60):
+                        menu.commands[6].command()
                         
                         
                     else:
@@ -414,6 +421,7 @@ while not done:
     runtime_dis.point_map = points
     dis.fill((104, 157, 242))
     dis.blit(menusym,(30,30))
+    dis.blit(plussym,(70,30))
     #print(pointmap)
     for point in pointmap:
         if show_points is True:
