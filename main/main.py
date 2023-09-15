@@ -1,6 +1,6 @@
 import pygame
+from cb3d_disgrid import menu_screen, display_3Dgrid, Button
 
-from main_attrs import menu_screen, display_3Dgrid, Button
 global points
 global connected_points
 points = []
@@ -15,10 +15,10 @@ user_text = ''
 input_rect = pygame.Rect(450, 450, 140, 56)
 default_font = pygame.font.get_default_font()
 font = pygame.font.Font(default_font,60)
-def take_input():
+def take_input(): #legacy inputs; incompatible with main menu
     while True:
         try:
-            print('    ')
+            print('')
             
             inpx = float(input("ADD POINT X: "))
             inpy = float(input("ADD POINT Y: "))
@@ -58,13 +58,12 @@ grid_points.append([0,0,10000])
 scale = 1
 
 connected_points = []
-connect_circle = []
 
-runtime_dis = display_3Dgrid(points,0,0,0,scale)
+runtime_dis = display_3Dgrid(points,0,0,0,scale) # using disgrid module to setup a 3d environment
 
 runtime_grid = display_3Dgrid(grid_points,0,0,0,scale)
 
-circled = False
+
 pointed = True
 show_grid = True
 pos = (0,0)
@@ -74,7 +73,6 @@ rotatez = False
 rotatey=False
 rotatex=False
 rotate_xyz = False
-done = False
 
 
 up = False
@@ -154,7 +152,7 @@ menu = menu_screen(False,commands)
 
 
 
-while not done:
+while 1:
     clock.tick(60)
     pointmap = runtime_dis.project_points((WINDOW_SIZE/2,WINDOW_SIZE/2))
     
@@ -166,224 +164,212 @@ while not done:
                     button.text = f'SHOW GRID LINES: {show_grid}'
                 elif 'SHOW POINTS' in button.text:
                     button.text = f'SHOW POINTS: {show_points}'
+        
+        match event.type:
+            case pygame.QUIT:
+                pygame.quit()
+                quit()
 
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            quit()
 
-
-        if event.type == pygame.KEYDOWN:
-            
-            if event.key == pygame.K_RETURN:
-                if inputable is True:
-                    inputable = False
-                    
-                    answer = user_text
-                    try:
-                        answer = answer.split(',')
-                        a = [float(x) for x in answer]
-                        points.append(a)
-                    except:
-                        pass
-                    user_text = ''
-                elif inputable_save is True:
-                    name = user_text
-                    if name.lower() == 'exit':
-                        pass
-                    else:
-                        with open(f'{name}.CBmodel','w') as writable:
-                            
-                            writable.write(str(points) + '\n')
-                            writable.write(str(connected_points)+ '\n')
-                            writable.close()
-                        print(f'SAVED {name}.CBmodel')
-
-                elif inputable_load is True:
-                    name = user_text
-                    if name.lower() == 'exit':
-                        pass
-                    else:
-                        points = []
-                        connected_points = []
-                        runtime_dis.point_map = []
+            case pygame.KEYDOWN:
+                
+                if event.key == pygame.K_RETURN:
+                    if inputable is True:
+                        inputable = False
+                        
+                        answer = user_text
                         try:
-                            with open(f'{name}.CBmodel','r') as model:
-                                model_info = model.readlines()
-                                model_points = eval((model_info[0]).replace('\n',''))
-                                model_connections = eval((model_info[1]).replace('\n',''))
-
+                            answer = answer.split(',')
+                            a = [float(x) for x in answer]
+                            points.append(a)
+                        except:
+                            pass
+                        user_text = ''
+                    elif inputable_save is True:
+                        name = user_text
+                        if name.lower() == 'exit':
+                            pass
+                        else:
+                            with open(f'{name}.CBmodel','w') as writable:
                                 
-                                model.close()
-                            connected_points = model_connections
-                            points = model_points
+                                writable.write(str(points) + '\n')
+                                writable.write(str(connected_points)+ '\n')
+                                writable.close()
+                            print(f'SAVED {name}.CBmodel')
 
-                        except FileNotFoundError:
-                            print(f'Could not find file {name}.CBmodel; please check your local files.')
+                    elif inputable_load is True:
+                        name = user_text
+                        if name.lower() == 'exit':
+                            pass
+                        else:
+                            points = []
+                            connected_points = []
+                            runtime_dis.point_map = []
+                            try:
+                                with open(f'{name}.CBmodel','r') as model:
+                                    model_info = model.readlines()
+                                    model_points = eval((model_info[0]).replace('\n',''))
+                                    model_connections = eval((model_info[1]).replace('\n',''))
+
+                                    
+                                    model.close()
+                                connected_points = model_connections
+                                points = model_points
+
+                            except FileNotFoundError:
+                                print(f'Could not find file {name}.CBmodel; please check your local files.')
 
 
-            
-            if event.key == pygame.K_BACKSPACE and inputable is True:
-                user_text = user_text[:-1]
-
-
-            elif inputable is True or inputable_load is True or inputable_save is True:
-                user_text+=event.unicode
-            else:
-                if event.key == pygame.K_UP:
-                    up = True
-                if event.key == pygame.K_DOWN:
-                    down = True
-                if event.key == pygame.K_LEFT:
-                    left = True
-                if event.key == pygame.K_RIGHT:
-                    right = True
-                if event.key == pygame.K_z:
-                    rotatez = True
-                if event.key == pygame.K_y:
-                    rotatey=True
-                if event.key == pygame.K_x:
-                    rotatex=True
                 
-                if event.key == pygame.K_o:
-                    print('CIRCLE TOGGLED')
-                    pointed = not pointed
-                    circled = not circled
+                if event.key == pygame.K_BACKSPACE and inputable is True:
+                    user_text = user_text[:-1]
 
-                if event.key == pygame.K_g:
-                    show_grid = not show_grid
 
-                if event.key == pygame.K_p:
-                    take_input()
-                if event.key == pygame.K_c:
-                    points = []
-                    connected_points = []
-                    runtime_dis.point_map = []
-                if event.key == pygame.K_e:
-                    points = []
-                    connected_points = []
-                    runtime_dis.point_map = []
+                elif inputable is True or inputable_load is True or inputable_save is True:
+                    user_text+=event.unicode
+                else:
+                    match event.key:
+                        case pygame.K_UP:
+                            up = True
+                        case pygame.K_DOWN:
+                            down = True
+                        case pygame.K_LEFT:
+                            left = True
+                        case pygame.K_RIGHT:
+                            right = True
+                        case pygame.K_z:
+                            rotatez = True
+                        case pygame.K_y:
+                            rotatey=True
+                        case pygame.K_x:
+                            rotatex=True
+                        case pygame.K_g:
+                            show_grid = not show_grid
+                        case pygame.K_p:
+                            take_input()
+                        case pygame.K_c:
+                            points = []
+                            connected_points = []
+                            runtime_dis.point_map = []
+                        case pygame.K_e:
+                            points = []
+                            connected_points = []
+                            runtime_dis.point_map = []
 
-                    points.append([-1,-1,1])
-                    points.append([1,-1,1])
-                    points.append([1,1,1])
-                    points.append([-1,1,1])
-                    points.append([-1,-1,-1])
-                    points.append([1,-1,-1])
-                    points.append([1,1,-1])
-                    points.append([-1,1,-1])
-                if event.key == pygame.K_s:
-                    show_points = not show_points
-                if event.key == pygame.K_j:
-                    name = input("ENTER SAVE FILE NAME (EXIT TO EXIT)>>>")
-                    if name.lower() == 'exit':
-                        pass
-                    else:
-                        with open(f'{name}.CBmodel','w') as writable:
-                            
-                            writable.write(str(points) + '\n')
-                            writable.write(str(connected_points)+ '\n')
-                            writable.close()
-                        print(f'SAVED {name}.CBmodel')
-                
-                if event.key == pygame.K_k:
+                            points.append([-1,-1,1])
+                            points.append([1,-1,1])
+                            points.append([1,1,1])
+                            points.append([-1,1,1])
+                            points.append([-1,-1,-1])
+                            points.append([1,-1,-1])
+                            points.append([1,1,-1])
+                            points.append([-1,1,-1])
+                        case pygame.K_s:
+                            show_points = not show_points
+                        case pygame.K_j:
+                            name = input("ENTER SAVE FILE NAME (EXIT TO EXIT)>>>")
+                            if name.lower() == 'exit':
+                                pass
+                            else:
+                                with open(f'{name}.CBmodel','w') as writable:
+                                    
+                                    writable.write(str(points) + '\n')
+                                    writable.write(str(connected_points)+ '\n')
+                                    writable.close()
+                                print(f'SAVED {name}.CBmodel')
                     
-                    name = input("ENTER FILENAME (EXIT TO EXIT) >>>")
-                    if name.lower() == 'exit':
-                        pass
-                    else:
-                        points = []
-                        connected_points = []
-                        runtime_dis.point_map = []
-                        try:
-                            with open(f'{name}.CBmodel','r') as model:
-                                model_info = model.readlines()
-                                model_points = eval((model_info[0]).replace('\n',''))
-                                model_connections = eval((model_info[1]).replace('\n',''))
+                        case pygame.K_k:
+                            
+                            name = input("ENTER FILENAME (EXIT TO EXIT) >>>")
+                            if name.lower() == 'exit':
+                                pass
+                            else:
+                                points = []
+                                connected_points = []
+                                runtime_dis.point_map = []
+                                try:
+                                    with open(f'{name}.CBmodel','r') as model:
+                                        model_info = model.readlines()
+                                        model_points = eval((model_info[0]).replace('\n',''))
+                                        model_connections = eval((model_info[1]).replace('\n',''))
 
-                                
-                                model.close()
-                            connected_points = model_connections
-                            points = model_points
+                                        
+                                        model.close()
+                                    connected_points = model_connections
+                                    points = model_points
 
-                        except FileNotFoundError:
-                            print(f'Could not find file {name}.CBmodel; please check your local files.')
+                                except FileNotFoundError:
+                                    print(f'Could not find file {name}.CBmodel; please check your local files.')
 
-
-
-
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_z:
-                rotatez = False
-            if event.key == pygame.K_y:
-                rotatey=False
-            if event.key == pygame.K_x:
-                rotatex=False
-
-            if event.key == pygame.K_UP:
-                up = False
-            if event.key == pygame.K_DOWN:
-                down = False
-            if event.key == pygame.K_LEFT:
-                left = False
-            if event.key == pygame.K_RIGHT:
-                right = False
+                        case pygame.K_ESCAPE:
+                            exit()
 
 
+            case pygame.KEYUP:
+                match event.key:
+                    case pygame.K_z:
+                        rotatez = False
+                    case pygame.K_y:
+                        rotatey=False
+                    case pygame.K_x:
+                        rotatex=False
+                    case pygame.K_UP:
+                        up = False
+                    case pygame.K_DOWN:
+                        down = False
+                    case pygame.K_LEFT:
+                        left = False
+                    case pygame.K_RIGHT:
+                        right = False
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 3:
-                rotate_xyz = True
-            
-            
-            #MOUSECLICKS
-
-            if event.button == 1:
-
-                if menu.active is True:
-                    mousepos = pygame.mouse.get_pos()
-                    mx = mousepos[0]
-                    my = mousepos[1]
-                    if mx in range(30,80) and my in range(30,90):
-                        menu.active = not menu.active
-                        
 
 
-                elif pointed == True:
-                    mousepos = pygame.mouse.get_pos()
-                    mx = mousepos[0]
-                    my = mousepos[1]
-                    if mx in range(20,60) and my in range(20,60):
-                        menu.active = not menu.active
+            case pygame.MOUSEBUTTONDOWN:
+                
+                if event.button == 3:
+                    rotate_xyz = True
+                
+                
+                #MOUSECLICKS
 
-                    elif mx in range(60,100) and my in range(20,60):
-                        menu.commands[6].command()
-                        
-                        
-                    else:
-                        for point in pointmap:
-                            if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
-                                connected_points.append(pointmap.index(point))
-                elif circled == True:
-                    mousepos = pygame.mouse.get_pos()
-                    mx = mousepos[0]
-                    my = mousepos[1]
-                    for point in pointmap:
-                        if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
-                            point_index = pointmap.index(point)
-                            connect_circle.append(point_index)
+                if event.button == 1:
+
+                    if menu.active is True:
+                        mousepos = pygame.mouse.get_pos()
+                        mx = mousepos[0]
+                        my = mousepos[1]
+                        if mx in range(30,80) and my in range(30,90):
+                            menu.active = not menu.active
+                            
+
+
+                    elif pointed == True:
+                        mousepos = pygame.mouse.get_pos()
+                        mx = mousepos[0]
+                        my = mousepos[1]
+                        if mx in range(20,60) and my in range(20,60):
+                            menu.active = not menu.active
+
+                        elif mx in range(60,100) and my in range(20,60):
+                            menu.commands[6].command()
+                            
+                            
+                        else:
+                            for point in pointmap:
+                                if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
+                                    connected_points.append(pointmap.index(point))
+                    
 
                 
 
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 3:
-                
-                
-                rotate_xyz = False
+            case pygame.MOUSEBUTTONUP:
+                if event.button == 3:
+                    rotate_xyz = False
 
-        if event.type == pygame.MOUSEWHEEL:
-            scale -= event.y*5
-            runtime_dis.scale = scale
-            runtime_grid.scale = scale
+            case pygame.MOUSEWHEEL:
+                scale -= event.y*5
+                runtime_dis.scale = scale
+                runtime_grid.scale = scale
 
     
     if left is True:
@@ -434,27 +420,11 @@ while not done:
             for point in pointmap:
                 
                 if pointmap.index(point) == indextocheck:
-                    try:
+                    try: # this is to ensure that lines aren't rendered while loading files (which while extremely rare, can occasionally happen when running on slow memory)
                         pygame.draw.line(dis,(0,0,0),pointmap[indextocheck],pointmap[second_index])
                     except:
                         pass
-    if len(connect_circle) > 3:
-
-        for i in range(0,len(connect_circle)-1,4):
-            indextocheck = connect_circle[i]
-            second_index = connect_circle[i+1]
-            third_index = connect_circle[i+2]
-            fourth_index = connect_circle[i+3]
-
-
-
-            for point in pointmap:
-
-                if pointmap.index(point) == indextocheck:
-                    width = pointmap[second_index][0] - pointmap[indextocheck][0]
-                    
-                    height = pointmap[second_index][1] - pointmap[second_index][1]
-                    
+    
                     
     
     if show_grid is True:
@@ -491,4 +461,5 @@ while not done:
 
 
     pygame.display.update()
-    
+
+
