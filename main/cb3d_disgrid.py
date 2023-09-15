@@ -2,8 +2,6 @@ import numpy as np
 import math as m
 import pygame
 
-WINDOW_SIZE = 800
-
 pygame.init()
 default_font = pygame.font.get_default_font()
 
@@ -59,7 +57,7 @@ class display_3Dgrid:
 
             projection = np.dot(self.manipulation_matrix,rotate)
             x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
-            y = WINDOW_SIZE - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
+            y = 800 - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
             pointmap.append((x,y))
         return pointmap
 
