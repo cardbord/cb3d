@@ -1,6 +1,7 @@
 import numpy as np
 import math as m
 import pygame
+from typing import Tuple
 
 pygame.init()
 default_font = pygame.font.get_default_font()
@@ -43,7 +44,7 @@ class display_3Dgrid:
 
         self.manipulation_matrix = np.matrix([[1,0,0],[0,1,0]])
 
-    def project_points(self,position:tuple):
+    def project_points(self,position:tuple) -> list:
         pointmap = []
         
         for point in self.point_map:
@@ -61,7 +62,7 @@ class display_3Dgrid:
             pointmap.append((x,y))
         return pointmap
 
-    def rotation(self):
+    def rotation(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         rotationalz = np.array([
             [m.cos(self.angle_z), -m.sin(self.angle_z),0],
             [m.sin(self.angle_z), m.cos(self.angle_z),0],
