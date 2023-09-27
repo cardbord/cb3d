@@ -162,3 +162,4 @@ cython_debug/
 #3dmodel files
 *.CBmodel
 !examples/*.CBmodel
+test.py
