@@ -1,7 +1,19 @@
-import pygame
+import pygame, pathlib
 from cb3d_disgrid import menu_screen, display_3Dgrid, Button
+from model import Point, CBModel
 
-global points
+global cbmod
+
+cbmod = CBModel()
+
+path = pathlib.Path(__file__).parent #just in case python refuses to locate model files
+
+grid_points = []
+grid_points.append([0,0,0])
+grid_points.append([10000,0,0])
+grid_points.append([0,10000,0])
+grid_points.append([0,0,10000])
+
 global connected_points
 points = []
 WINDOW_SIZE = 800
@@ -23,12 +35,13 @@ def take_input(): #legacy inputs; incompatible with main menu
             inpx = float(input("ADD POINT X: "))
             inpy = float(input("ADD POINT Y: "))
             inpz = float(input("ADD POINT Z: "))
+            
             break
         except:
             print("Invalid input.")
             pass
         
-    point = [inpx,inpy,inpz]
+    point = Point([inpx,inpy,inpz])
     
     points.append(point)
         
@@ -49,11 +62,7 @@ def take_input_save():
 
 
 
-grid_points = []
-grid_points.append([0,0,0])
-grid_points.append([10000,0,0])
-grid_points.append([0,10000,0])
-grid_points.append([0,0,10000])
+
 
 scale = 1
 
@@ -131,9 +140,6 @@ def show_point():
     global show_points
     show_points = not show_points
 
-def passer():
-    pass
-
 
 commands = [
 
@@ -141,8 +147,8 @@ commands = [
     Button(120,168,400,47,f'SHOW GRID LINES: {show_grid}',show_grid_lines),
     Button(120,216,400,47,'PLACE EXAMPLE CUBE',place_example_cube),
     Button(120,264,320,47,f'SHOW POINTS: {show_points}',show_point),
-    Button(120,312,320,47,'SAVE FILE',passer),
-    Button(120,360,320,47,'LOAD FILE',passer),
+    Button(120,312,320,47,'SAVE FILE',take_input_load),
+    Button(120,360,320,47,'LOAD FILE',take_input_load),
     Button(120,408,320,47,'ADD POINT',take_input2)
 
 ]
@@ -153,8 +159,11 @@ menu = menu_screen(False,commands)
 
 
 while 1:
-    clock.tick(60)
-    pointmap = runtime_dis.project_points((WINDOW_SIZE/2,WINDOW_SIZE/2))
+    clock.tick(75) #runs at 75fps
+
+    
+
+    runtime_dis.project_points((WINDOW_SIZE/2,WINDOW_SIZE/2))
     
     for event in pygame.event.get():
         if menu.active is True:
@@ -186,11 +195,13 @@ while 1:
                             pass
                         user_text = ''
                     elif inputable_save is True:
+                        inputable_save = False
+
                         name = user_text
                         if name.lower() == 'exit':
                             pass
                         else:
-                            with open(f'{name}.CBmodel','w') as writable:
+                            with open(f'{path}/{name}.CBmodel','w') as writable:
                                 
                                 writable.write(str(points) + '\n')
                                 writable.write(str(connected_points)+ '\n')
@@ -198,6 +209,7 @@ while 1:
                             print(f'SAVED {name}.CBmodel')
 
                     elif inputable_load is True:
+                        inputable_load = False
                         name = user_text
                         if name.lower() == 'exit':
                             pass
@@ -206,7 +218,7 @@ while 1:
                             connected_points = []
                             runtime_dis.point_map = []
                             try:
-                                with open(f'{name}.CBmodel','r') as model:
+                                with open(f'{path}/{name}.CBmodel','r') as model:
                                     model_info = model.readlines()
                                     model_points = eval((model_info[0]).replace('\n',''))
                                     model_connections = eval((model_info[1]).replace('\n',''))
@@ -221,8 +233,10 @@ while 1:
 
 
                 
-                if event.key == pygame.K_BACKSPACE and inputable is True:
+                if event.key == pygame.K_BACKSPACE and (inputable is True or inputable_load is True or inputable_save is True):
                     user_text = user_text[:-1]
+
+                        
 
 
                 elif inputable is True or inputable_load is True or inputable_save is True:
@@ -271,7 +285,7 @@ while 1:
                             if name.lower() == 'exit':
                                 pass
                             else:
-                                with open(f'{name}.CBmodel','w') as writable:
+                                with open(f'{path}/{name}.CBmodel','w') as writable:
                                     
                                     writable.write(str(points) + '\n')
                                     writable.write(str(connected_points)+ '\n')
@@ -287,8 +301,11 @@ while 1:
                                 points = []
                                 connected_points = []
                                 runtime_dis.point_map = []
+                                cbmod = CBModel.load(name)
+                                
+
                                 try:
-                                    with open(f'{name}.CBmodel','r') as model:
+                                    with open(f'{path}/{name}.CBmodel','r') as model:
                                         model_info = model.readlines()
                                         model_points = eval((model_info[0]).replace('\n',''))
                                         model_connections = eval((model_info[1]).replace('\n',''))
@@ -351,13 +368,13 @@ while 1:
                             menu.active = not menu.active
 
                         elif mx in range(60,100) and my in range(20,60):
-                            menu.commands[6].command()
+                            menu._commands[6]._command()
                             
                             
                         else:
-                            for point in pointmap:
+                            for point in runtime_dis.rendered_pointmap:
                                 if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
-                                    connected_points.append(pointmap.index(point))
+                                    connected_points.append(runtime_dis.rendered_pointmap.index(point))
                     
 
                 
@@ -409,7 +426,7 @@ while 1:
     dis.blit(menusym,(30,30))
     dis.blit(plussym,(70,30))
     #print(pointmap)
-    for point in pointmap:
+    for point in runtime_dis.rendered_pointmap:
         if show_points is True:
             pygame.draw.circle(dis,(0,0,0),point,20-runtime_dis.scale*0.1)
     if len(connected_points) > 1:
@@ -417,22 +434,22 @@ while 1:
         for i in range(0,len(connected_points)-1,2):
             indextocheck = connected_points[i]
             second_index = connected_points[i+1]
-            for point in pointmap:
+            for point in runtime_dis.rendered_pointmap:
                 
-                if pointmap.index(point) == indextocheck:
+                if runtime_dis.rendered_pointmap.index(point) == indextocheck:
                     try: # this is to ensure that lines aren't rendered while loading files (which while extremely rare, can occasionally happen when running on slow memory)
-                        pygame.draw.line(dis,(0,0,0),pointmap[indextocheck],pointmap[second_index])
+                        pygame.draw.line(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index])
                     except:
                         pass
     
                     
     
     if show_grid is True:
-        grid_lines = runtime_grid.project_points((WINDOW_SIZE/2,WINDOW_SIZE/2))
+        runtime_grid.project_points((WINDOW_SIZE/2,WINDOW_SIZE/2))
 
-        pygame.draw.line(dis,(255,0,0),grid_lines[0],grid_lines[1])
-        pygame.draw.line(dis,(0,255,0),grid_lines[0],grid_lines[2])
-        pygame.draw.line(dis,(0,0,255),grid_lines[0],grid_lines[3])
+        pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
+        pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
+        pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
 
 
     if menu.active is True:
@@ -450,13 +467,13 @@ while 1:
         pygame.draw.rect(dis,pygame.Color('gray'),input_rect)
         text_surface = font.render(user_text,True,(255,255,255))
         dis.blit(text_surface,(input_rect.x+5,input_rect.y+5))
-        input_rect.w = max(100,text_surface)
+        input_rect.w = max(100,text_surface.get_width()+10)
 
     if inputable_save is True:
         pygame.draw.rect(dis,pygame.Color('gray'),input_rect)
         text_surface = font.render(user_text,True,(255,255,255))
         dis.blit(text_surface,(input_rect.x+5,input_rect.y+5))
-        input_rect.w = max(100,text_surface)
+        input_rect.w = max(100,text_surface.get_width()+10)
 
 
 
