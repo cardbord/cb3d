@@ -24,7 +24,7 @@ inputable_save = False
 load_answer = ''
 save_answer = ''
 user_text = ''
-input_rect = pygame.Rect(450, 450, 140, 56)
+input_rect = pygame.Rect(100, 450, 140, 56)
 default_font = pygame.font.get_default_font()
 font = pygame.font.Font(default_font,60)
 def take_input(): #legacy inputs; incompatible with main menu
@@ -147,7 +147,7 @@ commands = [
     Button(120,168,400,47,f'SHOW GRID LINES: {show_grid}',show_grid_lines),
     Button(120,216,400,47,'PLACE EXAMPLE CUBE',place_example_cube),
     Button(120,264,320,47,f'SHOW POINTS: {show_points}',show_point),
-    Button(120,312,320,47,'SAVE FILE',take_input_load),
+    Button(120,312,320,47,'SAVE FILE',take_input_save),
     Button(120,360,320,47,'LOAD FILE',take_input_load),
     Button(120,408,320,47,'ADD POINT',take_input2)
 
@@ -196,8 +196,9 @@ while 1:
                         user_text = ''
                     elif inputable_save is True:
                         inputable_save = False
-
+                        
                         name = user_text
+                        user_text = ''
                         if name.lower() == 'exit':
                             pass
                         else:
@@ -211,6 +212,7 @@ while 1:
                     elif inputable_load is True:
                         inputable_load = False
                         name = user_text
+                        user_text = ''
                         if name.lower() == 'exit':
                             pass
                         else:
