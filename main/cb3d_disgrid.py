@@ -2,6 +2,7 @@ import numpy as np
 import math as m
 import pygame
 from typing import Tuple
+from model import Point
 
 pygame.init()
 default_font = pygame.font.get_default_font()
@@ -50,9 +51,13 @@ class display_3Dgrid:
         pointmap = []
         
         for point in self.point_map:
-            point = np.matrix(point)
+            if isinstance(point,Point): #my versioning isn't great, so as we shift to encapsulated point objects i'll prevent error here
+                mat_point = point.xyz
+            else:
+                mat_point = point
+            mat_point = np.matrix(mat_point)
             rotationalz, rotationaly, rotationalx = self.rotation()
-            rotate = np.dot(rotationaly, point.reshape((3,1)))
+            rotate = np.dot(rotationaly, mat_point.reshape((3,1)))
             
             
             rotate = np.dot(rotationalz, rotate)
