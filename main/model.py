@@ -1,4 +1,6 @@
-import typing
+import typing, pathlib
+
+
 
 class Point:
     def __init__(self,xyz,colour=(0,0,0)):
@@ -40,7 +42,8 @@ class CBModel:
     @classmethod
     def load(cls,name):
         try:
-            with open(f'{name}.CBmodel','r') as model:
+            path = pathlib.Path(__file__).parent
+            with open(f'{path}/{name}.CBmodel','r') as model:
                 model_info = model.readlines()
                 model_points = eval((model_info[0]).replace('\n',''))
                 model_connections = eval((model_info[1]).replace('\n',''))
@@ -60,7 +63,8 @@ class CBModel:
 
     def save(self,name):
         try:
-            with open(f'{name}.CBmodel','w') as writable:
+            path = pathlib.Path(__file__).parent
+            with open(f'{path}/{name}.CBmodel','w') as writable:
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
                 writable.close()
