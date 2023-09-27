@@ -8,7 +8,7 @@ default_font = pygame.font.get_default_font()
 
 class Button:
     def __init__(self,x,y,width,height,text,command):
-        self.command = command
+        self._command = command
         self.rect = pygame.Rect(x,y,width,height)
         self.text = text
     def display(self,dis):
@@ -20,16 +20,16 @@ class Button:
 
     def when_clicked(self,event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
-            self.command()
+            self._command()
 
 class menu_screen:
     def __init__(self,active, commands):
         self.active = active
-        self.commands = commands
+        self._commands = commands
         self.menurect =  pygame.Rect(100,100,600,600)
 
     def display(self,dis):
-        for command in self.commands:
+        for command in self._commands:
             command.display(dis)
 
 class display_3Dgrid:
@@ -42,9 +42,11 @@ class display_3Dgrid:
         self.scale = scale
         self.movable_position = [0,0]
 
+        self.rendered_pointmap = [] #edited once rendered
+
         self.manipulation_matrix = np.matrix([[1,0,0],[0,1,0]])
 
-    def project_points(self,position:tuple) -> list:
+    def project_points(self,position:tuple) -> list: #setter for rendered pointmap
         pointmap = []
         
         for point in self.point_map:
@@ -60,7 +62,7 @@ class display_3Dgrid:
             x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
             y = 800 - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
             pointmap.append((x,y))
-        return pointmap
+        self.rendered_pointmap = pointmap
 
     def rotation(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         rotationalz = np.array([
