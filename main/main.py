@@ -83,7 +83,7 @@ rotatey=False
 rotatex=False
 rotate_xyz = False
 
-
+delete_on_click = False
 up = False
 down = False
 left = False
@@ -245,6 +245,8 @@ while 1:
                     user_text+=event.unicode
                 else:
                     match event.key:
+                        case pygame.K_LCTRL:
+                            delete_on_click = True
                         case pygame.K_UP:
                             up = True
                         case pygame.K_DOWN:
@@ -326,6 +328,8 @@ while 1:
 
             case pygame.KEYUP:
                 match event.key:
+                    case pygame.K_LCTRL:
+                        delete_on_click = False
                     case pygame.K_z:
                         rotatez = False
                     case pygame.K_y:
@@ -346,7 +350,15 @@ while 1:
             case pygame.MOUSEBUTTONDOWN:
                 
                 if event.button == 3:
-                    rotate_xyz = True
+                    if delete_on_click:
+                        mousepos = pygame.mouse.get_pos()
+                        mx = mousepos[0]
+                        my = mousepos[1]
+                        for point in runtime_dis.rendered_pointmap:
+                                if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
+                                    cbmod.delete(runtime_dis.rendered_pointmap.index(point))
+                    else:
+                        rotate_xyz = True
                 
                 
                 #MOUSECLICKS
@@ -360,7 +372,7 @@ while 1:
                         if mx in range(30,80) and my in range(30,90):
                             menu.active = not menu.active
                             
-
+                
 
                     elif pointed == True:
                         mousepos = pygame.mouse.get_pos()
