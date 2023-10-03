@@ -93,7 +93,8 @@ right = False
 
 defualt_position = [WINDOW_SIZE/2,WINDOW_SIZE/2]
 
-menusym = pygame.image.load('menusym.png')
+
+menusym = pygame.image.load(f'{path.parent}/menusym.png')
 menusym = pygame.transform.scale(menusym,(30,30))
 menu_rect = menusym.get_rect()
 
