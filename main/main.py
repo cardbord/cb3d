@@ -42,7 +42,7 @@ def take_input(): #legacy inputs; incompatible with main menu
             pass
         
     point = Point([inpx,inpy,inpz])
-    
+    cbmod.add(point)
     points.append(point)
         
 def take_input2():
@@ -107,11 +107,8 @@ pygame.display.set_caption('CBmodeller','CBmodel engine')
 clock = pygame.time.Clock()
 
 def clear():
-    global points
-    global connected_points
-    points = []
-    connected_points = []
-    runtime_dis.point_map = []
+    cbmod.delete_all()
+    
 
 
 def show_grid_lines():
@@ -119,22 +116,17 @@ def show_grid_lines():
     show_grid = not show_grid
 
 def place_example_cube():
-    global points
-    global connected_points
-    points = []
-    connected_points = []
-    runtime_dis.point_map = []
     
 
 
-    points.append([-1,-1,1])
-    points.append([1,-1,1])
-    points.append([1,1,1])
-    points.append([-1,1,1])
-    points.append([-1,-1,-1])
-    points.append([1,-1,-1])
-    points.append([1,1,-1])
-    points.append([-1,1,-1])
+    cbmod.add([-1,-1,1])
+    cbmod.add([1,-1,1])
+    cbmod.add([1,1,1])
+    cbmod.add([-1,1,1])
+    cbmod.add([-1,-1,-1])
+    cbmod.add([1,-1,-1])
+    cbmod.add([1,1,-1])
+    cbmod.add([-1,1,-1])
 
 def show_point():
     global show_points
@@ -191,6 +183,7 @@ while 1:
                             answer = answer.split(',')
                             a = [float(x) for x in answer]
                             points.append(a)
+                            cbmod.add(a)
                         except:
                             pass
                         user_text = ''
@@ -266,22 +259,20 @@ while 1:
                         case pygame.K_p:
                             take_input()
                         case pygame.K_c:
-                            points = []
-                            connected_points = []
-                            runtime_dis.point_map = []
+                            cbmod.delete_all()
+                            
                         case pygame.K_e:
-                            points = []
-                            connected_points = []
-                            runtime_dis.point_map = []
+                            
+                            cbmod.add([-1,-1,1])
+                            cbmod.add([1,-1,1])
+                            cbmod.add([1,1,1])
+                            cbmod.add([-1,1,1])
+                            cbmod.add([-1,-1,-1])
+                            cbmod.add([1,-1,-1])
+                            cbmod.add([1,1,-1])
+                            cbmod.add([-1,1,-1])
 
-                            points.append([-1,-1,1])
-                            points.append([1,-1,1])
-                            points.append([1,1,1])
-                            points.append([-1,1,1])
-                            points.append([-1,-1,-1])
-                            points.append([1,-1,-1])
-                            points.append([1,1,-1])
-                            points.append([-1,1,-1])
+
                         case pygame.K_s:
                             show_points = not show_points
                         case pygame.K_j:
@@ -291,8 +282,8 @@ while 1:
                             else:
                                 with open(f'{path}/{name}.CBmodel','w') as writable:
                                     
-                                    writable.write(str(points) + '\n')
-                                    writable.write(str(connected_points)+ '\n')
+                                    writable.write(str(cbmod.pointmap) + '\n')
+                                    writable.write(str(cbmod.connected_points)+ '\n')
                                     writable.close()
                                 print(f'SAVED {name}.CBmodel')
                     
@@ -302,9 +293,6 @@ while 1:
                             if name.lower() == 'exit':
                                 pass
                             else:
-                                points = []
-                                connected_points = []
-                                runtime_dis.point_map = []
                                 cbmod = CBModel.load(name)
                                 
 
@@ -435,7 +423,7 @@ while 1:
         runtime_grid.angle_z = pos[0] /100
         runtime_grid.angle_x = pos[1] / 100
     
-    runtime_dis.point_map = points
+    runtime_dis.point_map = cbmod.pointmap
     dis.fill((104, 157, 242))
     dis.blit(menusym,(30,30))
     dis.blit(plussym,(70,30))
