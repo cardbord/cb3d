@@ -3,6 +3,7 @@ import math as m
 import pygame
 from typing import Tuple
 from model import Point
+from model import CBModel
 
 pygame.init()
 default_font = pygame.font.get_default_font()
@@ -35,6 +36,9 @@ class menu_screen:
 
 class display_3Dgrid:
     def __init__(self,points,angle_x,angle_y,angle_z,scale):
+
+        self.cbmods = []
+
         self.point_map = points
                   
         self.angle_x = angle_x
