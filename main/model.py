@@ -16,12 +16,18 @@ class Point:
 
 
 class CBModel:
-    def __init__(self,pointmap:typing.List[Point]=None,connected_points:typing.List[int]=None):
+    def __init__(self,pointmap:typing.List[Point]=[],connected_points:typing.List[int]=[]):
         self.pointmap = pointmap
         self.connected_points = connected_points
 
-    def add(self,points:typing.List[Point]):
-        if len(points) == 1:
+    def add(self,points:typing.Union[typing.List[Point],tuple,Point]):
+        if isinstance(points,tuple):
+
+            self.pointmap.append(Point(list(points)))
+
+        elif isinstance(points[0],int):
+            self.pointmap.append(Point(points))
+        elif isinstance(points,Point):
             self.pointmap.append(points)
         else:
             for i in points:
@@ -71,6 +77,8 @@ class CBModel:
         except:
             raise WindowsError("Could not save file.")
         
-
+    def delete_all(self):
+        self.pointmap=[]
+        self.connected_points=[]
       
-        
+    
