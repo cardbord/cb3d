@@ -37,14 +37,27 @@ class CBModel:
     def delete(self,index:int):  #we need a specific function for this otherwise the indexes will remain in the connected_points arr, leading to errors when rendering connections
         try:
             self.pointmap.pop(index)
+            
+            print(self.connected_points)
             if len(self.connected_points) > 1:
+                pop_pairs = []
+
                 for _ in range(0,len(self.connected_points)-1,2):
-                    if self.connected_points[_] == index or self.connected_points[_+1] == index:
-                        self.connected_points.pop(_)
-                        self.connected_points.pop(_+1)
-                
-        except:
-            pass
+                    if self.connected_points[_]:
+                        if _ % 2 == 0:
+                            pop_pairs.append(_)
+                            pop_pairs.append(_)
+                            _-=2
+                        else:
+                            pop_pairs.append(_-1)
+                            self.connected_points.pop(_)
+                            _-=2
+                    else:
+                        self.connected_points[_]-=1
+                print(self.connected_points)
+        except Exception as e:
+            print(e)
+            print(self.connected_points)
 
     @classmethod
     def load(cls,name):
