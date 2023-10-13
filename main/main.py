@@ -66,7 +66,10 @@ def take_input_save():
     inputable_save = True
 
     
-
+def take_input_plane():
+    global answer
+    global inputable
+    inputable=True
 
 
 scale = 1
@@ -347,11 +350,13 @@ while 1:
                 
                 if event.button == 3:
                     if delete_on_click:
+                        print('attempting to delete')
                         mousepos = pygame.mouse.get_pos()
                         mx = mousepos[0]
                         my = mousepos[1]
                         for point in runtime_dis.rendered_pointmap:
                                 if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
+                                    print('deleting point', str(runtime_dis.rendered_pointmap.index(point)))
                                     cbmod.delete(runtime_dis.rendered_pointmap.index(point))
                     else:
                         rotate_xyz = True
