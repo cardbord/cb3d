@@ -47,6 +47,8 @@ class display_3Dgrid:
         self.scale = scale
         self.movable_position = [0,0]
 
+        self.window_size = pygame.display.get_desktop_sizes()[0]
+
         self.rendered_pointmap = [] #edited once rendered
 
         self.manipulation_matrix = np.matrix([[1,0,0],[0,1,0]])
@@ -69,7 +71,7 @@ class display_3Dgrid:
 
             projection = np.dot(self.manipulation_matrix,rotate)
             x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
-            y = 800 - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
+            y = self.window_size[1] - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
             pointmap.append((x,y))
         self.rendered_pointmap = pointmap
 
