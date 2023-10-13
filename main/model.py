@@ -1,4 +1,5 @@
-import typing, pathlib
+import typing
+from pathlib import Path
 
 
 
@@ -48,7 +49,7 @@ class CBModel:
     @classmethod
     def load(cls,name):
         try:
-            path = pathlib.Path(__file__).parent
+            path = Path(__file__).parent
             with open(f'{path}/{name}.CBmodel','r') as model:
                 model_info = model.readlines()
                 model_points = eval((model_info[0]).replace('\n',''))
@@ -69,7 +70,7 @@ class CBModel:
 
     def save(self,name):
         try:
-            path = pathlib.Path(__file__).parent
+            path = Path(__file__).parent
             with open(f'{path}/{name}.CBmodel','w') as writable:
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
@@ -81,4 +82,15 @@ class CBModel:
         self.pointmap=[]
         self.connected_points=[]
       
-    
+class Plane:
+    def __init__(self,vertices:typing.List[Point],colour):
+        self.vertices = vertices
+        self.colour = colour
+
+    @property
+    def width():
+        pass
+
+    def find_overlaps(self,other_plane):
+        for vertex in self.vertices:
+            pass
