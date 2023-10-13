@@ -1,4 +1,5 @@
-import pygame, pathlib
+import pygame
+from pathlib import Path
 from cb3d_disgrid import menu_screen, display_3Dgrid, Button
 from model import Point, CBModel
 
@@ -6,7 +7,7 @@ global cbmod
 
 cbmod = CBModel()
 
-path = pathlib.Path(__file__).parent #just in case python refuses to locate model files
+path = Path(__file__).parent #just in case python refuses to locate model files, this is a slight problem since older versions of pygame are pretty fussy
 
 grid_points = []
 grid_points.append([0,0,0])
@@ -16,7 +17,11 @@ grid_points.append([0,0,10000])
 
 global connected_points
 points = []
-WINDOW_SIZE = 800
+#WINDOW_SIZE = 800 <- made fullscreen
+
+
+winsize = pygame.display.get_desktop_sizes()[0]
+
 answer = ''
 inputable = False
 inputable_load = False
@@ -60,7 +65,7 @@ def take_input_save():
     global inputable_save
     inputable_save = True
 
-
+    
 
 
 
@@ -91,19 +96,19 @@ right = False
 
 
 
-defualt_position = [WINDOW_SIZE/2,WINDOW_SIZE/2]
+defualt_position = [winsize[0]/2,winsize[1]/2]
 
 
 menusym = pygame.image.load(f'{path.parent}/menusym.png')
 menusym = pygame.transform.scale(menusym,(30,30))
 menu_rect = menusym.get_rect()
 
-plussym = pygame.image.load('plussym.png')
+plussym = pygame.image.load(f'{path.parent}/plussym.png')
 plussym = pygame.transform.scale(plussym,(30,30))
 plus_rect = plussym.get_rect()
 
 
-dis = pygame.display.set_mode((WINDOW_SIZE,WINDOW_SIZE))
+dis = pygame.display.set_mode((winsize[0],winsize[1]))
 pygame.display.set_caption('CBmodeller','CBmodel engine')
 clock = pygame.time.Clock()
 
@@ -142,7 +147,8 @@ commands = [
     Button(120,264,320,47,f'SHOW POINTS: {show_points}',show_point),
     Button(120,312,320,47,'SAVE FILE',take_input_save),
     Button(120,360,320,47,'LOAD FILE',take_input_load),
-    Button(120,408,320,47,'ADD POINT',take_input2)
+    Button(120,408,320,47,'ADD POINT',take_input2),
+    Button(120,456,320,47,'ADD PLANe',take_input_plane),
 
 ]
 
@@ -156,7 +162,7 @@ while 1:
 
     
 
-    runtime_dis.project_points((WINDOW_SIZE/2,WINDOW_SIZE/2))
+    runtime_dis.project_points((winsize[0]/2,winsize[1]/2))
     
     for event in pygame.event.get():
         if menu.active is True:
@@ -183,10 +189,11 @@ while 1:
                         try:
                             answer = answer.split(',')
                             a = [float(x) for x in answer]
-                            points.append(a)
-                            cbmod.add(a)
-                        except:
-                            pass
+                            
+                            a = Point(a)
+                            cbmod.add([a])
+                        except Exception as e:
+                            print(e)
                         user_text = ''
                     elif inputable_save is True:
                         inputable_save = False
@@ -199,7 +206,7 @@ while 1:
                             with open(f'{path}/{name}.CBmodel','w') as writable:
                                 
                                 writable.write(str(points) + '\n')
-                                writable.write(str(connected_points)+ '\n')
+                                writable.write(str(cbmod.connected_points)+ '\n')
                                 writable.close()
                             print(f'SAVED {name}.CBmodel')
 
@@ -221,8 +228,8 @@ while 1:
 
                                     
                                     model.close()
-                                connected_points = model_connections
-                                points = model_points
+                                cbmod.connected_points = model_connections
+                                cbmod.add(model_points)
 
                             except FileNotFoundError:
                                 print(f'Could not find file {name}.CBmodel; please check your local files.')
@@ -305,7 +312,7 @@ while 1:
 
                                         
                                         model.close()
-                                    connected_points = model_connections
+                                    cbmod.connected_points = model_connections
                                     points = model_points
 
                                 except FileNotFoundError:
@@ -377,7 +384,7 @@ while 1:
                         else:
                             for point in runtime_dis.rendered_pointmap:
                                 if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
-                                    connected_points.append(runtime_dis.rendered_pointmap.index(point))
+                                    cbmod.connected_points.append(runtime_dis.rendered_pointmap.index(point))
                     
 
                 
@@ -432,11 +439,11 @@ while 1:
     for point in runtime_dis.rendered_pointmap:
         if show_points is True:
             pygame.draw.circle(dis,(0,0,0),point,20-runtime_dis.scale*0.1)
-    if len(connected_points) > 1:
+    if len(cbmod.connected_points) > 1:
         
-        for i in range(0,len(connected_points)-1,2):
-            indextocheck = connected_points[i]
-            second_index = connected_points[i+1]
+        for i in range(0,len(cbmod.connected_points)-1,2):
+            indextocheck = cbmod.connected_points[i]
+            second_index = cbmod.connected_points[i+1]
             for point in runtime_dis.rendered_pointmap:
                 
                 if runtime_dis.rendered_pointmap.index(point) == indextocheck:
@@ -448,7 +455,7 @@ while 1:
                     
     
     if show_grid is True:
-        runtime_grid.project_points((WINDOW_SIZE/2,WINDOW_SIZE/2))
+        runtime_grid.project_points((winsize[0]/2,winsize[1]/2))
 
         pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
         pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
