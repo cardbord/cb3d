@@ -4,11 +4,11 @@ from typing import List
 class CBmodel(BaseModel):
     pointmap:List
     connected_points:List[int]
-
-class NameID(BaseModel):
+    
+class registrationItem(BaseModel):
     username:str
-    userID:int
+    password:str
 
-class CBpkg(BaseModel):
-    user:NameID
-    cbmodel:CBmodel
+class Token(BaseModel):
+    access_token:str
+    token_type:str
