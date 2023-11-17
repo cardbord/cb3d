@@ -1,9 +1,8 @@
-from _models import NameID
-from fastapi import HTTPException, Depends
+
+from fastapi import HTTPException
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from passlib.hash import bcrypt
 from datetime import datetime, timedelta
 from typing import Annotated
 from sqlalchemy import Table
@@ -47,6 +46,3 @@ class UploadHandler:
                     raise HTTPException(status_code=401,detail="Bad credentials",headers={"WWW-Authenticate":"Bearer"})
         except JWTError as e:
             raise HTTPException(status_code=401,detail=str(e),headers={"WWW-Authenticate":"Bearer"})
-
-    async def hash_password(password):
-        return bcrypt.hash(password)
