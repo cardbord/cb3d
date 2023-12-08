@@ -12,6 +12,7 @@ def main():
         __version__ = lines[0]
         module_globals.close()
     if __version__ != current_ver:
+        print("updating...")
         auto_updater.pull_update()
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ def pull_version():
     return pull_gh("/cardbord/cb3d/main/_globals.cblog")
 
 def pull_update():
-
+    fulfilled_update = False
     module_path = Path(__file__).parent
     md_walk = walk(module_path)
     for (dirpath, dirname, filename) in md_walk:
@@ -30,6 +30,9 @@ def pull_update():
                         with open(openable_path,'w') as overwritable:
                             overwritable.write(pulled_file) 
                             overwritable.close()
+                            fulfilled_update=True #an update has been completed successfully, so we use this bool to guarantee that _globals gets the latest version
                     else:
                         pass # file was not pulled properly due to non-existence/request error, so we pass it,    
-            
+    if fulfilled_update:
+        with open("_globals.cblog", 'w') as module_globals:
+            module_globals.write(pull_version())
