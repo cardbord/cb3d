@@ -6,7 +6,7 @@ import auto_updater
 import guizero
 
 def main():
-    version = eval(auto_updater.pull_version())
+    exec(auto_updater.pull_version())
     
 
 
