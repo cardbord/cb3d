@@ -6,9 +6,13 @@ import auto_updater
 import guizero
 
 def main():
-    exec(auto_updater.pull_version())
-    
-
+    current_ver = exec(auto_updater.pull_version())
+    with open("_globals.cblog") as module_globals:
+        lines = module_globals.readlines()
+        __version__ = lines[0]
+        module_globals.close()
+    if __version__ != current_ver:
+        auto_updater.pull_update()
 
 if __name__ == "__main__":
     main()
