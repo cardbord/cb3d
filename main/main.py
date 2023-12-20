@@ -4,10 +4,13 @@
 #give option to start/join classroom service
 import auto_updater
 import guizero
+from pathlib import Path
 
+globalpath = str(Path(__file__).parent.parent).replace('\\','/')
+print(globalpath)
 def main():
-    current_ver = exec(auto_updater.pull_version())
-    with open("_globals.cblog") as module_globals:
+    current_ver = auto_updater.pull_version()
+    with open(f"{globalpath}/_globals.cblog") as module_globals:
         lines = module_globals.readlines()
         __version__ = lines[0]
         module_globals.close()
