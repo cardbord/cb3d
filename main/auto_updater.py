@@ -50,6 +50,7 @@ def pull_update() -> bool: #return bool for result of success/failure
                         else:
                             pass # file was not pulled properly due to non-existence/request error, so we pass it
     except: #failsafe
+        fulfilled_update=False
         error("cb3d auto-update error","Please install a more stable version, or disable the auto-update script in main.py")
 
 
