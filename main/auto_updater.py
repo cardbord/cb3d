@@ -1,6 +1,7 @@
 import requests
 from pathlib import Path
 from os import walk
+from guizero import error
 
 def pull_gh(path:str):
     r = requests.get(f"https://raw.githubusercontent.com{path}",stream=True)
@@ -10,29 +11,54 @@ def pull_gh(path:str):
 def pull_version():
     return pull_gh("/cardbord/cb3d/main/_globals.cblog")
 
-def pull_update():
+def pull_update() -> bool: #return bool for result of success/failure
     fulfilled_update = False
     module_path = Path(__file__).parent
     md_walk = walk(module_path)
-    for (dirpath, dirname, filename) in md_walk:
-        if not "__pycache__" in dirpath and not ".CBmodel" in filename:
-            path_formatted = dirpath[dirpath.find("main"):].replace("\\","/")
-            
-            for file in filename:
-                if not ".CBmodel" in file and not "auto_updater" in file:
-                    
-                    path = "/cardbord/cb3d/main/"+path_formatted+f"/{file}"
-                    pulled_file = pull_gh(path)
-
-                    if pulled_file:
-                        openable_path = dirpath.replace("\\","/") + "/"+file
+    try:
+        for (dirpath, _, filename) in md_walk: #dirname isn't required
+            if not "__pycache__" in dirpath and not ".CBmodel" in filename:
+                path_formatted = dirpath[dirpath.find("main"):].replace("\\","/")
+                
+                for file in filename:
+                    if not ".CBmodel" in file and not "auto_updater" in file:
                         
-                        with open(openable_path,'w') as overwritable:
-                            overwritable.write(pulled_file) 
-                            overwritable.close()
-                            fulfilled_update=True #an update has been completed successfully, so we use this bool to guarantee that _globals gets the latest version
-                    else:
-                        pass # file was not pulled properly due to non-existence/request error, so we pass it,    
+                        path = "/cardbord/cb3d/main/"+path_formatted+f"/{file}"
+                        pulled_file = pull_gh(path)
+
+                        #we have to check how pulled_file compares to our current file.
+                        #if no changes, no update.
+                        #this ensures that fulfilled_update functions as intended.
+
+                        if pulled_file:
+                            openable_path = dirpath.replace("\\","/") + "/"+file
+                            must_overwrite=False
+
+                            with open(openable_path,'r') as readable_for_changes:
+                                content = readable_for_changes.read()
+                                if content!=pulled_file:
+                                    must_overwrite=True
+                                else:
+                                    pass
+                                readable_for_changes.close()
+
+                            if must_overwrite:
+                                with open(openable_path,'w') as overwritable:
+                                    overwritable.write(pulled_file) 
+                                    overwritable.close()
+                                    fulfilled_update=True #an update has been completed successfully, so we use this bool to guarantee that _globals gets the latest version
+                        else:
+                            pass # file was not pulled properly due to non-existence/request error, so we pass it
+    
+    except (IOError): #failsafes
+        fulfilled_update = False
+    except:
+        error("cb3d auto-updater error.","Please install a more stable version, or disable the auto-update script in main.py")
+
+
     if fulfilled_update:
         with open("_globals.cblog", 'w') as module_globals:
             module_globals.write(pull_version())
+        return True
+    else:
+        return False
