@@ -49,11 +49,8 @@ def pull_update() -> bool: #return bool for result of success/failure
                                     fulfilled_update=True #an update has been completed successfully, so we use this bool to guarantee that _globals gets the latest version
                         else:
                             pass # file was not pulled properly due to non-existence/request error, so we pass it
-    
-    except (IOError): #failsafes
-        fulfilled_update = False
-    except:
-        error("cb3d auto-updater error.","Please install a more stable version, or disable the auto-update script in main.py")
+    except: #failsafe
+        error("cb3d auto-update error","Please install a more stable version, or disable the auto-update script in main.py")
 
 
     if fulfilled_update:
