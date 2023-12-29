@@ -35,29 +35,34 @@ class CBModel:
                 self.pointmap.append(i)
     
     def delete(self,index:int):  #we need a specific function for this otherwise the indexes will remain in the connected_points arr, leading to errors when rendering connections
-        try:
-            self.pointmap.pop(index)
-            
-            print(self.connected_points)
-            if len(self.connected_points) > 1:
-                pop_pairs = []
+        #1. go thru pointmap, delete index
+        #2. go thru connected_points, delete pairs
+        #3. go thru connected_points, -1 from every point above index
 
-                for _ in range(0,len(self.connected_points)-1,2):
-                    if self.connected_points[_]:
-                        if _ % 2 == 0:
-                            pop_pairs.append(_)
-                            pop_pairs.append(_)
-                            _-=2
-                        else:
-                            pop_pairs.append(_-1)
-                            self.connected_points.pop(_)
-                            _-=2
+        print(self.pointmap)
+        print(self.connected_points)
+        counter = 0
+        self.pointmap.pop(index)
+        
+        for i in range(len(self.connected_points)):
+            i-=counter
+            try:
+                if self.connected_points[i] == index:
+                    counter+=2
+                    if i%2 == 0:
+                        del self.connected_points[i:i+2]
                     else:
-                        self.connected_points[_]-=1
-                print(self.connected_points)
-        except Exception as e:
-            print(e)
-            print(self.connected_points)
+                        del self.connected_points[i-1:i+1]
+            except:
+                pass
+                    
+
+        for i in range(len(self.connected_points)):
+            if self.connected_points[i] >= index:
+                self.connected_points[i] -= 1
+        
+        print(self.pointmap)
+        print(self.connected_points)
 
     @classmethod
     def load(cls,name):
@@ -99,11 +104,3 @@ class Plane:
     def __init__(self,vertices:typing.List[Point],colour):
         self.vertices = vertices
         self.colour = colour
-
-    @property
-    def width():
-        pass
-
-    def find_overlaps(self,other_plane):
-        for vertex in self.vertices:
-            pass
