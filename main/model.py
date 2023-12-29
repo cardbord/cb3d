@@ -12,7 +12,7 @@ class Point:
         self.z = xyz[2]
     
     def __repr__(self):
-        return self.xyz
+        return str(self.xyz) # I forgot my zen of python for a minute there!
 
 
 
@@ -62,8 +62,8 @@ class CBModel:
     @classmethod
     def load(cls,name):
         try:
-            path = Path(__file__).parent
-            with open(f'{path}/{name}.CBmodel','r') as model:
+            
+            with open(name,'r') as model: #guizero.select_file will provide full path, so no pathlib needed here
                 model_info = model.readlines()
                 model_points = eval((model_info[0]).replace('\n',''))
                 model_connections = eval((model_info[1]).replace('\n',''))
