@@ -1,4 +1,4 @@
-import pygame
+import pygame, guizero
 from pathlib import Path
 from cb3d_disgrid import menu_screen, display_3Dgrid, Button
 from model import Point, CBModel
@@ -143,7 +143,7 @@ def show_point():
 
 
 commands = [
-
+    #what is wrong with me why is this all manually placed
     Button(120,120,160,47,'CLEAR',clear),
     Button(120,168,400,47,f'SHOW GRID LINES: {show_grid}',show_grid_lines),
     Button(120,216,400,47,'PLACE EXAMPLE CUBE',place_example_cube),
@@ -208,7 +208,7 @@ while 1:
                         else:
                             with open(f'{path}/{name}.CBmodel','w') as writable:
                                 
-                                writable.write(str(points) + '\n')
+                                writable.write(str(cbmod.pointmap) + '\n')
                                 writable.write(str(cbmod.connected_points)+ '\n')
                                 writable.close()
                             print(f'SAVED {name}.CBmodel')
@@ -287,40 +287,27 @@ while 1:
                         case pygame.K_s:
                             show_points = not show_points
                         case pygame.K_j:
-                            name = input("ENTER SAVE FILE NAME (EXIT TO EXIT)>>>")
-                            if name.lower() == 'exit':
+                            savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodel","*.CBmodel"]])
+                            print(savename)
+                            if savename == "":
                                 pass
                             else:
-                                with open(f'{path}/{name}.CBmodel','w') as writable:
-                                    
+                                
+                                with open(f'{savename}.CBmodel','w') as writable:
                                     writable.write(str(cbmod.pointmap) + '\n')
                                     writable.write(str(cbmod.connected_points)+ '\n')
                                     writable.close()
-                                print(f'SAVED {name}.CBmodel')
                     
                         case pygame.K_k:
+                            name = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
                             
-                            name = input("ENTER FILENAME (EXIT TO EXIT) >>>")
-                            if name.lower() == 'exit':
-                                pass
+                            if name == "":
+                                pass #user has closed the file opener, so pass
+
                             else:
+
                                 cbmod = CBModel.load(name)
-                                
-
-                                try:
-                                    with open(f'{path}/{name}.CBmodel','r') as model:
-                                        model_info = model.readlines()
-                                        model_points = eval((model_info[0]).replace('\n',''))
-                                        model_connections = eval((model_info[1]).replace('\n',''))
-
-                                        
-                                        model.close()
-                                    cbmod.connected_points = model_connections
-                                    points = model_points
-
-                                except FileNotFoundError:
-                                    print(f'Could not find file {name}.CBmodel; please check your local files.')
-
+                                    
                         case pygame.K_ESCAPE:
                             exit()
 
