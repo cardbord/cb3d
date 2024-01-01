@@ -15,14 +15,12 @@ grid_points.append([10000,0,0])
 grid_points.append([0,10000,0])
 grid_points.append([0,0,10000])
 
-global connected_points
-points = []
 #WINDOW_SIZE = 800 <- made fullscreen
 
 
 winsize = pygame.display.get_desktop_sizes()[0]
 
-answer = ''
+answer = '' #these globals have no place here, I shall smite them when I move to guizero fully.
 inputable = False
 inputable_load = False
 inputable_save = False
@@ -32,7 +30,7 @@ user_text = ''
 input_rect = pygame.Rect(100, 450, 140, 56)
 default_font = pygame.font.get_default_font()
 font = pygame.font.Font(default_font,60)
-def take_input(): #legacy inputs; incompatible with main menu
+def take_input(): #legacy inputs; incompatible with main menu. honestly, these are like relics at this point, it would be shameful to remove them.
     while True:
         try:
             print('')
@@ -48,8 +46,9 @@ def take_input(): #legacy inputs; incompatible with main menu
         
     point = Point([inpx,inpy,inpz])
     cbmod.add(point)
-    points.append(point)
-        
+    
+
+#these are garbage, i'll make some guizero-based ones that aren't as horrible        
 def take_input2():
     global answer
     global inputable
@@ -72,19 +71,14 @@ def take_input_plane():
     inputable=True
 
 
-scale = 1
 
-connected_points = []
+runtime_dis = display_3Dgrid([],0,0,0,1) # using disgrid module to setup a 3d environment
 
-runtime_dis = display_3Dgrid(points,0,0,0,scale) # using disgrid module to setup a 3d environment
-
-runtime_grid = display_3Dgrid(grid_points,0,0,0,scale)
+runtime_grid = display_3Dgrid(grid_points,0,0,0,1) # create another disgrid underlayed for the xyz axis
 
 
 pointed = True
 show_grid = True
-pos = (0,0)
-mouse_values = [0,0]
 show_points = True
 rotatez = False
 rotatey=False
@@ -99,9 +93,6 @@ right = False
 
 
 
-defualt_position = [winsize[0]/2,winsize[1]/2]
-
-
 menusym = pygame.image.load(f'{path.parent}/menusym.png')
 menusym = pygame.transform.scale(menusym,(30,30))
 menu_rect = menusym.get_rect()
@@ -112,7 +103,7 @@ plus_rect = plussym.get_rect()
 
 
 dis = pygame.display.set_mode((winsize[0],winsize[1]))
-pygame.display.set_caption('CBmodeller','CBmodel engine')
+pygame.display.set_caption('cb3d','CBmodel engine')
 clock = pygame.time.Clock()
 
 def clear():
@@ -125,9 +116,6 @@ def show_grid_lines():
     show_grid = not show_grid
 
 def place_example_cube():
-    
-
-
     cbmod.add([-1,-1,1])
     cbmod.add([1,-1,1])
     cbmod.add([1,1,1])
@@ -151,19 +139,18 @@ commands = [
     Button(120,312,320,47,'SAVE FILE',take_input_save),
     Button(120,360,320,47,'LOAD FILE',take_input_load),
     Button(120,408,320,47,'ADD POINT',take_input2),
-    Button(120,456,320,47,'ADD PLANe',take_input_plane),
+    Button(120,456,320,47,'ADD PLANE',take_input_plane),
 
 ]
-
-
 menu = menu_screen(False,commands)
-
-
 
 while 1:
     clock.tick(75) #runs at 75fps
 
-    
+    #with the number of references to mousepos, i'm just going to initialize one here, to use throughout the whole main loop
+    mousepos = pygame.mouse.get_pos()
+    mx = mousepos[0]
+    my = mousepos[1]
 
     runtime_dis.project_points((winsize[0]/2,winsize[1]/2))
     
@@ -178,6 +165,7 @@ while 1:
         
         match event.type:
             case pygame.QUIT:
+                #run a docs script here first, to add recents to globals, or whatever
                 pygame.quit()
                 quit()
 
@@ -220,8 +208,7 @@ while 1:
                         if name.lower() == 'exit':
                             pass
                         else:
-                            points = []
-                            connected_points = []
+                            
                             runtime_dis.point_map = []
                             try:
                                 with open(f'{path}/{name}.CBmodel','r') as model:
@@ -338,9 +325,6 @@ while 1:
                 if event.button == 3:
                     if delete_on_click:
                         print('attempting to delete')
-                        mousepos = pygame.mouse.get_pos()
-                        mx = mousepos[0]
-                        my = mousepos[1]
                         for point in runtime_dis.rendered_pointmap:
                                 if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
                                     print('deleting point', str(runtime_dis.rendered_pointmap.index(point)))
@@ -354,18 +338,16 @@ while 1:
                 if event.button == 1:
 
                     if menu.active is True:
-                        mousepos = pygame.mouse.get_pos()
-                        mx = mousepos[0]
-                        my = mousepos[1]
+                        
+                        
                         if mx in range(30,80) and my in range(30,90):
                             menu.active = not menu.active
                             
                 
 
                     elif pointed == True:
-                        mousepos = pygame.mouse.get_pos()
-                        mx = mousepos[0]
-                        my = mousepos[1]
+                        
+                        
                         if mx in range(20,60) and my in range(20,60):
                             menu.active = not menu.active
 
@@ -386,9 +368,8 @@ while 1:
                     rotate_xyz = False
 
             case pygame.MOUSEWHEEL:
-                scale -= event.y*5
-                runtime_dis.scale = scale
-                runtime_grid.scale = scale
+                runtime_dis.scale -= event.y*5
+                runtime_grid.scale -= event.y*5
 
     
     if left is True:
@@ -415,13 +396,13 @@ while 1:
         runtime_dis.angle_x +=0.01
         runtime_grid.angle_x+=0.01
     if rotate_xyz is True:
-        pos = pygame.mouse.get_pos()
+        
         
 
-        runtime_dis.angle_z = pos[0] /100
-        runtime_dis.angle_x = pos[1] /100
-        runtime_grid.angle_z = pos[0] /100
-        runtime_grid.angle_x = pos[1] / 100
+        runtime_dis.angle_z = mx /100
+        runtime_dis.angle_x = my /100
+        runtime_grid.angle_z = mx /100
+        runtime_grid.angle_x = my / 100
     
     runtime_dis.point_map = cbmod.pointmap
     dis.fill((104, 157, 242))
@@ -432,10 +413,15 @@ while 1:
         if show_points is True:
             pygame.draw.circle(dis,(0,0,0),point,20-runtime_dis.scale*0.1)
     if len(cbmod.connected_points) > 1:
-        
+        counter = 0
         for i in range(0,len(cbmod.connected_points)-1,2):
+            i-=counter
             indextocheck = cbmod.connected_points[i]
             second_index = cbmod.connected_points[i+1]
+            if indextocheck == second_index:
+                counter+=2
+                del cbmod.connected_points[i:i+2] #just checking that no two points match, it's inefficient to render lines with no length
+                
             for point in runtime_dis.rendered_pointmap:
                 
                 if runtime_dis.rendered_pointmap.index(point) == indextocheck:
