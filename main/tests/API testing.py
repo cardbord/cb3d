@@ -22,5 +22,4 @@ def upload_castle_demo(): #uploading CASTLE.CBmodel to the API, for storage in t
     print(r)
     print(r.json())
 
-
-get()
+#just reference these somewhere, to test if they work fine

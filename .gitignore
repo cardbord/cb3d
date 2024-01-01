@@ -5,3 +5,6 @@ __pycache__/
 *.CBmodel
 !examples/*.CBmodel
 test.py
+*.cblog
+!_globals.cblog
+#there are going to be other user-specific log files with file type cblog, but they are not global.
