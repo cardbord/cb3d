@@ -39,8 +39,6 @@ class CBModel:
         #2. go thru connected_points, delete pairs
         #3. go thru connected_points, -1 from every point above index
 
-        print(self.pointmap)
-        print(self.connected_points)
         counter = 0
         self.pointmap.pop(index)
         
@@ -61,8 +59,7 @@ class CBModel:
             if self.connected_points[i] >= index:
                 self.connected_points[i] -= 1
         
-        print(self.pointmap)
-        print(self.connected_points)
+        
 
     @classmethod
     def load(cls,name):
