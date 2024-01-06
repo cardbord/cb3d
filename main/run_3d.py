@@ -5,7 +5,7 @@ from model import Point, CBModel
 
 global cbmod
 
-cbmod = CBModel()
+cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
 
 path = Path(__file__).parent #just in case python refuses to locate model files, this is a slight problem since older versions of pygame are pretty fussy
 
@@ -165,7 +165,7 @@ while 1:
         
         match event.type:
             case pygame.QUIT:
-                #run a docs script here first, to add recents to globals, or whatever
+                cbmod.save_on_exit() #run a docs script here first, to add recents to globals, or whatever
                 pygame.quit()
                 quit()
 
@@ -279,23 +279,23 @@ while 1:
                             if savename == "":
                                 pass
                             else:
-                                
-                                with open(f'{savename}.CBmodel','w') as writable:
-                                    writable.write(str(cbmod.pointmap) + '\n')
-                                    writable.write(str(cbmod.connected_points)+ '\n')
-                                    writable.close()
+                                cbmod.save(savename)
+                                cbmod.filename_modified = savename
                     
                         case pygame.K_k:
-                            name = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
+                            savename = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
                             
-                            if name == "":
+                            if savename == "":
                                 pass #user has closed the file opener, so pass
 
                             else:
 
-                                cbmod = CBModel.load(name)
+                                cbmod = CBModel.load(savename)
+                                cbmod.filename_modified = savename
                                     
                         case pygame.K_ESCAPE:
+                            cbmod.save_on_exit()
+                            pygame.quit()
                             exit()
 
 
