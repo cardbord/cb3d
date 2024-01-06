@@ -17,11 +17,15 @@ class Point:
 
 
 class CBModel:
-    def __init__(self,pointmap:typing.List[Point]=[],connected_points:typing.List[int]=[]):
+    def __init__(self,pointmap:typing.List[Point]=[],connected_points:typing.List[int]=[],__fname:str=None):
         self.pointmap = pointmap
         self.connected_points = connected_points
+        self.__path = str(Path(__file__).parent).replace("\\","/")
+        self.filename_modified = __fname #set when model opened, or saved. __fname should only be used by classmethods to maintain save data
+    
 
     def add(self,points:typing.Union[typing.List[Point],tuple,Point]):
+        self.filename_modified = None
         if isinstance(points,tuple):
 
             self.pointmap.append(Point(list(points)))
@@ -33,12 +37,42 @@ class CBModel:
         else:
             for i in points:
                 self.pointmap.append(i)
+
+    def save_on_exit(self): #our nice little recovery funct
+        
+        with open(f'{self.__path}/_savedata.cblog', 'w') as writable:
+            if self.filename_modified:
+                writable.write(self.filename_modified)
+            else: #write model, just clone CBModel.save()
+                writable.write(str(self.pointmap) + '\n')
+                writable.write(str(self.connected_points)+ '\n')
+            writable.close()
+    
+    @classmethod
+    def from_cblog(cls):
+        path = str(Path(__file__).parent).replace("\\","/") + "/_savedata.cblog"
+        if Path(path).is_file():
+            with open(path,'r') as readable:
+                model_info = readable.readlines()
+                if len(model_info) > 1: #this is a cbmodel file
+                    model_points = eval((model_info[0]).replace('\n',''))
+                    model_connections = eval((model_info[1]).replace('\n',''))
+                    readable.close()
+                    
+                    
+                    return cls(model_points,model_connections)
+                else: #single line, so this is a path to a cbmodel
+                    return CBModel.load(model_info[0].replace('\n',''))
+        else:
+            return cls()
+
+
     
     def delete(self,index:int):  #we need a specific function for this otherwise the indexes will remain in the connected_points arr, leading to errors when rendering connections
         #1. go thru pointmap, delete index
         #2. go thru connected_points, delete pairs
         #3. go thru connected_points, -1 from every point above index
-
+        self.filename_modified = None
         counter = 0
         self.pointmap.pop(index)
         
@@ -63,7 +97,7 @@ class CBModel:
 
     @classmethod
     def load(cls,name):
-        try:
+        if Path(name).is_file():
             
             with open(name,'r') as model: #guizero.select_file will provide full path, so no pathlib needed here
                 model_info = model.readlines()
@@ -72,21 +106,17 @@ class CBModel:
 
                 
                 model.close()
-            connected_points = model_connections
-            points = model_points
+            return cls(model_points,model_connections,name)
 
-            return CBModel(points,connected_points)
-
-        except Exception as e:
-            print(e)
-            print(f'Could not find file {name}.CBmodel; please check your local files.')
-
+        else: #this is most likely to happen if an __fname is moved or deleted, and the old path is still saved in _savedata.cblog
+            return cls()
+            
         
 
     def save(self,name):
         try:
-            path = Path(__file__).parent
-            with open(f'{path}/{name}.CBmodel','w') as writable:
+            
+            with open(f'{name}.CBmodel','w') as writable:
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
                 writable.close()
@@ -96,6 +126,7 @@ class CBModel:
     def delete_all(self):
         self.pointmap=[]
         self.connected_points=[]
+        self.filename_modified = None
       
 class Plane:
     def __init__(self,vertices:typing.List[Point],colour):
