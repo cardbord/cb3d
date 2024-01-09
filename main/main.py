@@ -37,7 +37,8 @@ def chcekver_update(): #method to update the module, using our version pulls and
         if __version__ != current_ver:
             print("updating...")
             return auto_updater.pull_update()
-
+        else:
+            return True
 
 def main():
     if update_on_launch:
