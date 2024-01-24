@@ -66,9 +66,25 @@ def take_input_save():
 
     
 def take_input_plane():
-    global answer
-    global inputable
-    inputable=True
+    numoftimes = int(input("Enter how many points>>>"))
+    a = []
+    for i in range(numoftimes):
+    
+        while True:
+            try:
+                print('')
+                
+                inpx = float(input("ADD POINT X: "))
+                inpy = float(input("ADD POINT Y: "))
+                
+                break
+            except:
+                print("Invalid input.")
+                pass
+            
+        point = Point([inpx,inpy,0])
+        a.append(point)
+        cbmod.add_plane(a,[])
 
 
 
@@ -236,6 +252,8 @@ while 1:
                     user_text+=event.unicode
                 else:
                     match event.key:
+                        case pygame.K_0:
+                            take_input_plane()
                         case pygame.K_LCTRL:
                             delete_on_click = True
                         case pygame.K_UP:
