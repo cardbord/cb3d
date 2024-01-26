@@ -67,18 +67,40 @@ class TextInput(GUIbaseClass):
         self.raw_text = text
         self.text = self.font.render(text,True,(0,0,0))
         self.text_box_width = max(42*self._SIZE_SF,self.text.get_width()*self.text_box_width)
-        
-            
-    
+
+
+
 class TextInputBox(GUIobj):
     def __init__(self,pos,window_size,text_inputs:typing.List[TextInput]):
         self.text_inputs = text_inputs
         super.__init__(pos,window_size)
+        self.height = len(self.text_inputs) * self.text_inputs[0].text_box_height
+        self.width = max(i.text_box_width for i in text_inputs) * len(self.text_inputs)
+        
+    
+    @property
+    def dis_rect(self):
+        return pygame.Rect(self.pos[0],self.pos[1],self.width,self.height)
     
 
-        
+
+
+    #this might be right?
+    def display(self,surface:pygame.Surface):
+        dis:pygame.Surface
+        with surface as dis:
+            dis.blit(self.dis_rect,self.pos)    
+            for _ in range(self.text_inputs):
+                input_table = self.text_inputs[_]
+                input_table.pos[1] += _*self._SIZE_SF #how do we handle this??!?!?!?!?!?!1?
+                input_table.display(dis) #we need to init position again, as the original is it's own, but we're in an array here.
+            
+
+
+    
     #determine text input boxes properly through a class, initialized through a property
+    #yeah yeah i know
     
 class Drawing(GUIobj): #this one will be harder, I'll have to really think about how to implement this.
-    def __init__(self):
+    def __init__(self,):
         pass
