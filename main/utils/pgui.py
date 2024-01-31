@@ -1,6 +1,7 @@
 import pygame #do we make enum class for types at some point?
 from pygame.font import get_default_font, Font
 import typing
+from pygame import gfxdraw
 
 pygame.font.init()
 
@@ -8,11 +9,11 @@ class GUIbaseClass: #provide attrs for other junk, because these things are incl
     def __init__(self):
         self.window_size = pygame.display.get_desktop_sizes()[0]        
         self._SIZE_SF = round((self.window_size[0]*self.window_size[1])/2073600,1) #factor for monitor size, 1920x1080p default
-        self.font = Font(get_default_font(),int(round(12*self._SIZE_SF)))
+        self.font = Font(get_default_font(),int(round(50*self._SIZE_SF)))
 
 class GUIobj(GUIbaseClass):
     def __init__(self,pos,window_size):
-        super.__init__()
+        super().__init__()
         # change size sf for monitor size
         self.pos = pos #stored as raw coords
         self.window_size = window_size #stored as width/height
@@ -27,31 +28,30 @@ class GUIobj(GUIbaseClass):
 
 
 class Button(GUIbaseClass):
-    def __init__(self,pos,text_overlay,size_sf):
-        super.__init__()
+    def __init__(self,pos,text_overlay):
+        super().__init__()
         self.pos = pos
         self.text_overlay = text_overlay
-        self._SIZE_SF = size_sf
-        self.text = self.font.render(self.text_overlay)
-        self.text_box_width = max(42*self._SIZE_SF,self.text.get_width()*self._SIZE_SF)
+        self.text = self.font.render(self.text_overlay,True,(0,0,0))
+        self.text_box_width = max(42*self._SIZE_SF,self.text.get_width()*self._SIZE_SF*7)
         self.text_box_height = (self.font.get_height()+4)*self._SIZE_SF
 
     @property
     def button_rect(self):
         return pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_width)
     
-    def display(self,surface):
-        with surface as dis:
-            dis.blit(self.text,(self.text_box_width,self.text_box_height))
-            dis.blit(self.button_rect,self.pos)
-            
+    def display(self,dis:pygame.Surface):
+        dis.blit(self.text,(self.text_box_width,self.text_box_height))
+        dis.blit(self.button_rect,self.pos)
+        
 class TextInput(GUIbaseClass):
     def __init__(self,pos,text):
+        super().__init__()
         self.pos = pos
         self.raw_text = text
         self.text = self.font.render(text,True,(0,0,0))
         self.to_input = False
-        self.text_box_width = max(42*self._SIZE_SF,self.text.get_width()*self._SIZE_SF)
+        self.text_box_width = max(300*self._SIZE_SF,self.text.get_width()*self._SIZE_SF*len(text))
         self.text_box_height = (self.font.get_height()+4)*self._SIZE_SF
         
     
@@ -59,42 +59,39 @@ class TextInput(GUIbaseClass):
     def text_input_rect(self):
         return pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_width)
         
-    def display(self,surface):
-        with surface as dis:
-            dis.blit(self.text,(self.pos))
+    def display(self,dis:pygame.Surface):
+        dis.blit(self.text,(self.pos))
     
     def update(self,text):
         self.raw_text = text
         self.text = self.font.render(text,True,(0,0,0))
-        self.text_box_width = max(42*self._SIZE_SF,self.text.get_width()*self.text_box_width)
+        self.text_box_width = max(100*self._SIZE_SF,self.text.get_width()*self.text_box_width)
 
 
 
 class TextInputBox(GUIobj):
     def __init__(self,pos,window_size,text_inputs:typing.List[TextInput]):
         self.text_inputs = text_inputs
-        super.__init__(pos,window_size)
+        super().__init__(pos,window_size)
         self.height = len(self.text_inputs) * self.text_inputs[0].text_box_height
         self.width = max(i.text_box_width for i in text_inputs) * len(self.text_inputs)
+        self.confirm_button = Button(pos=[self.pos[0]+(window_size[0]-24)*self._SIZE_SF, self.pos[1]+(window_size[1]-self.text_inputs[0].font.get_height())*self._SIZE_SF],text_overlay="Confirm")
+
         
-    
     @property
     def dis_rect(self):
         return pygame.Rect(self.pos[0],self.pos[1],self.width,self.height)
-    
 
 
 
     #this might be right?
-    def display(self,surface:pygame.Surface):
-        dis:pygame.Surface
-        with surface as dis:
-            dis.blit(self.dis_rect,self.pos)    
-            for _ in range(self.text_inputs):
-                input_table = self.text_inputs[_]
-                input_table.pos[1] += _*self._SIZE_SF #how do we handle this??!?!?!?!?!?!1?
-                input_table.display(dis) #we need to init position again, as the original is it's own, but we're in an array here.
-            
+    def display(self,dis:pygame.Surface):
+        pygame.draw.rect(dis,(0,0,0),self.dis_rect)    
+        for _ in range(len(self.text_inputs)):
+            input_table = self.text_inputs[_]
+            input_table.pos[1] += _*self._SIZE_SF #how do we handle this??!?!?!?!?!?!1?
+            input_table.display(dis) #we need to init position again, as the original is it's own, but we're in an array here.
+        
 
 
     
