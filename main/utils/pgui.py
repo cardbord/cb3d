@@ -1,14 +1,13 @@
 import pygame #do we make enum class for types at some point? #no, are you stupid? - future me
 from pygame.font import get_default_font, Font
 import typing
-from pygame import gfxdraw
 
 pygame.font.init()
 
 class GUIbaseClass: #provide attrs for other junk, because these things are included in everything
     def __init__(self):
         self.window_size = pygame.display.get_desktop_sizes()[0]        
-        self._SIZE_SF = round((self.window_size[0]*self.window_size[1])/2073600,1) #factor for monitor size, 1920x1080p default
+        self._SIZE_SF = round((self.window_size[0]*self.window_size[1])/2073600,2) #factor for monitor size, 1920x1080p default
         self.font = Font(get_default_font(),int(round(50*self._SIZE_SF)))
 
 class GUIobj(GUIbaseClass):
@@ -35,8 +34,12 @@ class GUIobj(GUIbaseClass):
     
 
     def display_window(self,dis:pygame.Surface):
+        pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
+        pygame.draw.rect(dis,(255,255,255),self.clickableborder_area)
         pygame.draw.rect(dis,(0,0,0),self.parent_window_rect,width=1)
         pygame.draw.rect(dis,(0,0,0),self.clickableborder_area,width=1)
+        
+        
         self.clickable_cross.display(dis)
 
     def check_windowcollide(self,xval,yval):
@@ -56,9 +59,10 @@ class Button(GUIbaseClass):
         self.highlighted_colour = colourvalue if colourvalue else (0,0,0)
         self.button_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width ,self.text_box_height)
         self.highlighted = False #we change this at some point in the main program to highlight with our selected colour, just by doing ```Button.highlighted = True; Button.display(dis)```
+    
     def display(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
-        dis.blit(self.text,(self.pos[0]+10*self._SIZE_SF,self.pos[1]-3*self._SIZE_SF))
+        dis.blit(self.text,(self.pos[0]+11*self._SIZE_SF,self.pos[1]-3*self._SIZE_SF))
 
 
 class TextInput(GUIbaseClass):
@@ -103,7 +107,8 @@ class TextInputBox(GUIobj):
 
     #this might be right?
     def display(self,dis:pygame.Surface):
-        pygame.draw.rect(dis,(0,0,0),self.dis_rect,width=1)
+        self.display_window()
+        
         
         for _ in range(len(self.text_inputs)):
             input_table = self.text_inputs[_]
