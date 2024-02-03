@@ -1,13 +1,14 @@
 import pygame #do we make enum class for types at some point? #no, are you stupid? - future me
 from pygame.font import get_default_font, Font
 import typing
+from math import sqrt
 
 pygame.font.init()
 
 class GUIbaseClass: #provide attrs for other junk, because these things are included in everything
     def __init__(self):
         self.window_size = pygame.display.get_desktop_sizes()[0]        
-        self._SIZE_SF = round((self.window_size[0]*self.window_size[1])/2073600,2) #factor for monitor size, 1920x1080p default
+        self._SIZE_SF = round(sqrt((self.window_size[0]*self.window_size[1]))/1440,1) #factor for monitor size, 1920x1080p default
         self.font = Font(get_default_font(),int(round(50*self._SIZE_SF)))
 
 class GUIobj(GUIbaseClass):
