@@ -91,6 +91,8 @@ class TextInput(GUIbaseClass):
 
 
 
+
+
 class TextInputBox(GUIobj):
     def __init__(self,pos,window_size,text_inputs:typing.List[TextInput]):
         self.text_inputs = text_inputs
@@ -113,15 +115,36 @@ class TextInputBox(GUIobj):
         
         for _ in range(len(self.text_inputs)):
             input_table = self.text_inputs[_]
-            input_table.pos[1] += _*self._SIZE_SF #how do we handle this??!?!?!?!?!?!1?
+            input_table.pos[1] += _*self._SIZE_SF #how do we handle displaying every table if there are too many to fit? I'll have to think about that later
             input_table.display(dis) #we need to init position again, as the original is it's own, but we're in an array here.
-        
+                                    #haha this comment above is almost completely nonsensical
 
 
     
     #determine text input boxes properly through a class, initialized through a property
     #yeah yeah i know
-    
+
+class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a class that collates multiple buttons together
+    def __init__(self,pos,buttons):
+        super().__init__()
+        self.pos = pos
+        self.button_array = buttons #calcuate the buttons positions from this array
+
+
 class Drawing(GUIobj): #this one will be harder, I'll have to really think about how to implement this.
     def __init__(self,):
         pass
+
+class menu(GUIobj):
+    def __init__(self):
+        temp = pygame.display.get_desktop_sizes()[0]
+        super().__init__([0,0],[temp[0],temp[1]]) #  i hate tuples, so i'm using arrs instead (forgive me maybe i'll change later)
+        #we don't need a custom closebutton, this comes included
+        self.File = Button([0,50*self._SIZE_SF],"File",[200*self._SIZE_SF,50*self._SIZE_SF],(10,10,10)) #file and help will be dropdown menus, maybe i'll make a dropdown class too
+        self.Help = Button([200*self._SIZE_SF,50*self._SIZE_SF],"Help",[200*self._SIZE_SF,50*self._SIZE_SF],(10,10,10))    
+
+    def move_window(self, mousepos):
+        #return super().move_window(mousepos) <- this is overrided as the menu window should ideally not be moved around! 
+        pass
+    
+    
