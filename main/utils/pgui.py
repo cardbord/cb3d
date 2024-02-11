@@ -142,7 +142,7 @@ class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a 
     
     def _calc_button_rel_pos(self):
         for b_index in range(len(self.buttons)):
-            self.buttons[b_index].pos[1] += (self.__dropdown_displace_height + (self.buttons[b_index -1].button_rect.height if b_index > 0 else 0))
+            self.buttons[b_index].pos[1] += (self.__dropdown_displace_height if b_index == 0 else 0 + (self.buttons[b_index -1].button_rect.bottom if b_index > 0 else 0)) 
             self.buttons[b_index].pos[0] = self.pos[0] #overwrite x completely
             self.buttons[b_index].button_rect.y = self.buttons[b_index].pos[1]
             self.buttons[b_index].button_rect.x = self.buttons[b_index].pos[0]
