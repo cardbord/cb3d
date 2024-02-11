@@ -1,14 +1,20 @@
 import pygame #do we make enum class for types at some point? #no, are you stupid? - future me
 from pygame.font import get_default_font, Font
 import typing
-from math import sqrt
+from math import sqrt, ceil
 
 pygame.font.init()
 
 class GUIbaseClass: #provide attrs for other junk, because these things are included in everything
     def __init__(self):
-        self.window_size = pygame.display.get_desktop_sizes()[0]        
-        self._SIZE_SF = round(sqrt((self.window_size[0]*self.window_size[1]))/1440,1) #factor for monitor size, 1920x1080p default
+        
+        if pygame.get_init(): #small method to avoid no video system errors if GUIbaseClass is init before pygame
+            self.window_size = pygame.display.get_desktop_sizes()[0]
+        else:
+            pygame.init() #we don't ideally want to init pygame here (that should be left to the main program), but just in case
+            self.window_size = pygame.display.get_desktop_sizes()[0]
+
+        self._SIZE_SF = round(sqrt((self.window_size[0]*self.window_size[1]))/1440,3) #factor for monitor size, 1920x1080p default
         self.font = Font(get_default_font(),int(round(50*self._SIZE_SF)))
 
 class GUIobj(GUIbaseClass):
@@ -16,7 +22,7 @@ class GUIobj(GUIbaseClass):
         super().__init__()
         # change size sf for monitor size
         self.pos = pos #stored as raw coords
-        self.window_size = [window_size[0]*self._SIZE_SF, window_size[1] * self._SIZE_SF] #stored as width/height
+        self.window_size = [ceil(window_size[0]*self._SIZE_SF), ceil(window_size[1] * self._SIZE_SF)] #stored as width/height, use ceil to ensure no small clipping
         self.border_colour = (0,0,0)
         self.clickableborder_pos = [self.window_size[0],50*self._SIZE_SF] #stored as width/height, syntax to check would be ``` if x in range(self.pos[0],self.clickableborder_pos[1]) ```
         self.parent_window_rect = pygame.Rect(self.pos[0],self.pos[1],self.window_size[0],self.window_size[1])
@@ -125,26 +131,62 @@ class TextInputBox(GUIobj):
     #yeah yeah i know
 
 class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a class that collates multiple buttons together
-    def __init__(self,pos,buttons):
+    def __init__(self,pos,placeholder:Button,buttons:typing.List[Button]):
         super().__init__()
         self.pos = pos
-        self.button_array = buttons #calcuate the buttons positions from this array
+        self.placeholder = placeholder
+        self.buttons = buttons #calcuate the buttons positions from this array
+        self.__dropdown_displace_height = self.placeholder.button_rect.height
+        self.is_dropped = False
+        self._calc_button_rel_pos()
+    
+    def _calc_button_rel_pos(self):
+        for b_index in range(len(self.buttons)):
+            self.buttons[b_index].pos[1] += (self.__dropdown_displace_height + (self.buttons[b_index -1].button_rect.height if b_index > 0 else 0))
+            self.buttons[b_index].pos[0] = self.pos[0] #overwrite x completely
+            self.buttons[b_index].button_rect.y = self.buttons[b_index].pos[1]
+            self.buttons[b_index].button_rect.x = self.buttons[b_index].pos[0]
 
+    def display(self,dis:pygame.Surface):
+        self.placeholder.display(dis)
+        if self.is_dropped:
+            for button in self.buttons:
+                button.display(dis)
+
+    def checkcollide(self,xval,yval):
+        #return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.clickableborder_pos[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.clickableborder_pos[1])))) else False
+        return True if (xval in range(int(round(self.pos[0])), int(round(self.pos[0]+self.placeholder.button_rect.width))) and yval in range(int(round(self.pos[1])), int(round(self.pos[1] + self.placeholder.button_rect.height)))) else False
 
 class Drawing(GUIobj): #this one will be harder, I'll have to really think about how to implement this.
     def __init__(self,):
         pass
 
-class menu(GUIobj):
+class menu(GUIobj): # i wonder... will setting window size to 1080p remove any need to descale?
     def __init__(self):
-        temp = pygame.display.get_desktop_sizes()[0]
-        super().__init__([0,0],[temp[0],temp[1]]) #  i hate tuples, so i'm using arrs instead (forgive me maybe i'll change later)
+        
+        super().__init__([0,0],(1920,1080))
+        
         #we don't need a custom closebutton, this comes included
-        self.File = Button([0,50*self._SIZE_SF],"File",[200*self._SIZE_SF,50*self._SIZE_SF],(10,10,10)) #file and help will be dropdown menus, maybe i'll make a dropdown class too
-        self.Help = Button([200*self._SIZE_SF,50*self._SIZE_SF],"Help",[200*self._SIZE_SF,50*self._SIZE_SF],(10,10,10))    
+        self.File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), [ Button([0,0],"demo1",[200,50]),Button([0,0],"demo2",[200,50]),Button([0,0],"demo3",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]), ] )#place button list in sq brackets
+        self.Help = Dropdown([200*self._SIZE_SF,0], Button([200*self._SIZE_SF,0],"Help",[200,50],(10,10,10)), [ Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]), ] ) 
+        #maybe i'll set File and Help button dropdowns in run_3d?
 
+        #absolutely horrid descaling of width as our window is already set, un-hashtag if my sneaky method doesn't work
+        #self.parent_window_rect.right /= self._SIZE_SF
+        #self.clickableborder_area.right /= self._SIZE_SF
+        #self.clickableborder_pos[0] #this is width/height stored
+        #self.clickable_cross.pos[0] /= self._SIZE_SF #we don't want this scaled, otherwise it'll end up hundreds of pixels off to the side!
+        
+    
     def move_window(self, mousepos):
         #return super().move_window(mousepos) <- this is overrided as the menu window should ideally not be moved around! 
         pass
     
+    def display_window(self,dis): #override GUIobj display window for extra functionality
+        super().display_window(dis)
+        self.File.display(dis)
+        self.Help.display(dis)
+        
+        
+        
     
