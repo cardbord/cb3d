@@ -5,6 +5,12 @@ from math import sqrt, ceil
 
 pygame.font.init()
 
+def CLOSE():
+    if pygame.get_init():
+        pygame.quit()
+    exit()
+
+
 class GUIbaseClass: #provide attrs for other junk, because these things are included in everything
     def __init__(self):
         
@@ -56,7 +62,7 @@ class GUIobj(GUIbaseClass):
         return True if (xval in range(int(round(self.clickable_cross.button_rect.left)), int(round(self.clickable_cross.button_rect.right))) and yval in range(int(round(self.clickable_cross.pos[1])), int(round(self.clickable_cross.button_rect.bottom)))) else False
 
 class Button(GUIbaseClass):
-    def __init__(self,pos,text_overlay,window_size:list = None,colourvalue:tuple=None): #if no window_size, we approximate with text_overlay (mainly used for guiobj x button)
+    def __init__(self,pos,text_overlay,window_size:list = None,colourvalue:tuple=None,callback=None): #if no window_size, we approximate with text_overlay (mainly used for guiobj x button)
         super().__init__()
         self.pos = pos
         self.text_overlay = text_overlay
@@ -66,11 +72,18 @@ class Button(GUIbaseClass):
         self.highlighted_colour = colourvalue if colourvalue else (0,0,0)
         self.button_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width ,self.text_box_height)
         self.highlighted = False #we change this at some point in the main program to highlight with our selected colour, just by doing ```Button.highlighted = True; Button.display(dis)```
-    
+        self.callback = callback #function to execute once button is clicked
+
+
     def display(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
         dis.blit(self.text,(self.pos[0]+11*self._SIZE_SF,self.pos[1]-3*self._SIZE_SF))
 
+    def on_click(self,xval,yval):
+        if (xval in range(int(round(self.button_rect.left)), int(round(self.button_rect.right))) and yval in range(int(round(self.pos[1])), int(round(self.button_rect.bottom)))):
+            return self.callback() if self.callback else True #if no callback is provided, use this as a collider so the main program can handle it
+        else:
+            return False
 
 class TextInput(GUIbaseClass):
     def __init__(self,pos,text):
@@ -154,8 +167,7 @@ class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a 
                 button.display(dis)
 
     def checkcollide(self,xval,yval):
-        #return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.clickableborder_pos[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.clickableborder_pos[1])))) else False
-        return True if (xval in range(int(round(self.pos[0])), int(round(self.pos[0]+self.placeholder.button_rect.width))) and yval in range(int(round(self.pos[1])), int(round(self.pos[1] + self.placeholder.button_rect.height)))) else False
+        return self.placeholder.on_click(xval,yval) #just use our on_click method now
 
 class Drawing(GUIobj): #this one will be harder, I'll have to really think about how to implement this.
     def __init__(self,):
@@ -165,17 +177,11 @@ class menu(GUIobj): # i wonder... will setting window size to 1080p remove any n
     def __init__(self):
         
         super().__init__([0,0],(1920,1080))
-        
+        self.clickable_cross.callback = CLOSE
         #we don't need a custom closebutton, this comes included
-        self.File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), [ Button([0,0],"demo1",[200,50]),Button([0,0],"demo2",[200,50]),Button([0,0],"demo3",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]), ] )#place button list in sq brackets
+        self.File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), [ Button([0,0],"demo1",[200,50]),Button([0,0],"demo2",[200,50]),Button([0,0],"demo3",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50],None,lambda: print("works")), ] )#place button list in sq brackets
         self.Help = Dropdown([200*self._SIZE_SF,0], Button([200*self._SIZE_SF,0],"Help",[200,50],(10,10,10)), [ Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]), ] ) 
         #maybe i'll set File and Help button dropdowns in run_3d?
-
-        #absolutely horrid descaling of width as our window is already set, un-hashtag if my sneaky method doesn't work
-        #self.parent_window_rect.right /= self._SIZE_SF
-        #self.clickableborder_area.right /= self._SIZE_SF
-        #self.clickableborder_pos[0] #this is width/height stored
-        #self.clickable_cross.pos[0] /= self._SIZE_SF #we don't want this scaled, otherwise it'll end up hundreds of pixels off to the side!
         
     
     def move_window(self, mousepos):

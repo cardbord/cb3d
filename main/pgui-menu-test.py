@@ -34,10 +34,15 @@ while 1: #main loop
                     if menu.Help.checkcollide(x,y):
                          menu.Help.is_dropped = not menu.Help.is_dropped
                          
-                    if menu.check_closebuttoncollide(x,y):
-                         pygame.quit() #completely exit because this is closing the menu
-                         exit()
-           
+                    menu.clickable_cross.on_click(x,y)
+
+               if menu.File.is_dropped:
+                    for button in menu.File.buttons:
+                         button.on_click(x,y)
+               elif menu.Help.is_dropped:
+                    for button in menu.Help.buttons:
+                         button.on_click(x,y)
+               
                     
           elif event.type == pygame.MOUSEBUTTONUP:
                pass
