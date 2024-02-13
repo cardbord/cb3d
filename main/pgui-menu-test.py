@@ -1,6 +1,6 @@
 
 import pygame
-from utils import pgui
+from utils.pgui import menu as m, Dropdown, Button, scale_to_window
 
 
 pygame.init()
@@ -9,7 +9,10 @@ dis = pygame.display.set_mode(pygame.display.get_desktop_sizes()[0])
 
 print(pygame.display.get_desktop_sizes()[0])
 
-menu =  pgui.menu()
+File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), [ Button([0,0],"demo1",[200,50]),Button([0,0],"demo2",[200,50]),Button([0,0],"demo3",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50],None,lambda: print("works")), ] )#place button list in sq brackets
+Help = Dropdown([scale_to_window(200),0], Button([scale_to_window(200),0],"Help",[200,50],(10,10,10)), [ Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]),Button([0,0],"demo",[200,50]), ] ) 
+
+menu = m([File,Help])
 
 
 while 1: #main loop
@@ -29,19 +32,19 @@ while 1: #main loop
                     
           elif event.type == pygame.MOUSEBUTTONDOWN:
                if menu.check_windowcollide(x,y):
-                    if menu.File.checkcollide(x,y):
-                         menu.File.is_dropped = not menu.File.is_dropped
-                    if menu.Help.checkcollide(x,y):
-                         menu.Help.is_dropped = not menu.Help.is_dropped
+                    
+                    for dropdown in menu.dropdowns:
+                         dropdown.on_click(x,y)
+                    
                          
                     menu.clickable_cross.on_click(x,y)
+               
+               
+               for dropdown in menu.dropdowns:
+                    if dropdown.is_dropped:
+                         for button in dropdown.buttons:
+                              button.on_click(x,y)
 
-               if menu.File.is_dropped:
-                    for button in menu.File.buttons:
-                         button.on_click(x,y)
-               elif menu.Help.is_dropped:
-                    for button in menu.Help.buttons:
-                         button.on_click(x,y)
                
                     
           elif event.type == pygame.MOUSEBUTTONUP:
