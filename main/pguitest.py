@@ -29,7 +29,7 @@ previously_moved = 0
 while 1: #main loop
     dis.fill((255,255,255))
     for i in range(len(darr),0,-1):
-        darr[i-1].display_window(dis)
+        darr[i-1].display(dis)
     #tib1.display(dis)
     
     
