@@ -14,7 +14,8 @@ class Point:
     def __repr__(self):
         return str(self.xyz) # I forgot my zen of python for a minute there!
 
-
+    def rounded(self):
+        return [round(self.x),round(self.y),round(self.z)]
 
 class CBModel:
     def __init__(self,pointmap:typing.List[Point]=[],connected_points:typing.List[int]=[],__fname:str=None):
