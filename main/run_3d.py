@@ -161,13 +161,12 @@ commands = [
 ]
 menu = menu_screen(False,commands)
 
+mousepos = pygame.mouse.get_pos()
+mx = mousepos[0]
+my = mousepos[1]
+
 while 1:
     clock.tick(75) #runs at 75fps
-
-    #with the number of references to mousepos, i'm just going to initialize one here, to use throughout the whole main loop
-    mousepos = pygame.mouse.get_pos()
-    mx = mousepos[0]
-    my = mousepos[1]
 
     runtime_dis.project_points((winsize[0]/2,winsize[1]/2))
     
@@ -416,12 +415,14 @@ while 1:
         runtime_grid.angle_x+=0.01
     if rotate_xyz is True:
         
-        
+        newpos = pygame.mouse.get_pos()
+        npmx = newpos[0]
+        npmy = newpos[1]
 
-        runtime_dis.angle_z = mx /100
-        runtime_dis.angle_x = my /100
-        runtime_grid.angle_z = mx /100
-        runtime_grid.angle_x = my / 100
+        runtime_dis.angle_z += (npmx-mx) /100
+        runtime_dis.angle_x += (npmy-my) /100
+        runtime_grid.angle_z += (npmx-mx) /100
+        runtime_grid.angle_x += (npmy-my) / 100
     
     runtime_dis.point_map = cbmod.pointmap
     dis.fill((104, 157, 242))
@@ -485,8 +486,13 @@ while 1:
         dis.blit(text_surface,(input_rect.x+5,input_rect.y+5))
         input_rect.w = max(100,text_surface.get_width()+10)
 
+    mousepos = pygame.mouse.get_pos()
+    mx = mousepos[0]
+    my = mousepos[1]
 
+    print(runtime_grid.angle_x,runtime_grid.angle_z)
 
     pygame.display.update()
-
-
+    
+    
+    
