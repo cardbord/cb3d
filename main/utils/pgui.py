@@ -12,7 +12,7 @@ def calc_rel_size() -> typing.Union[float,None]: #requies a running pyame displa
         winsize = pygame.display.get_desktop_sizes()[0]
         return round(sqrt((winsize[0]*winsize[1]))/1440,3)  #returns size scale factor
     
-def scale_to_window(value:typing.Union[int,float]):
+def scale_to_window(value:typing.Union[int,float]) -> float:
     return calc_rel_size() * value
 
 
@@ -145,45 +145,49 @@ class TextInput(GUIbaseClass):
     
     @property
     def text_input_rect(self):
-        return pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_width)
+        return pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_height)
         
     def display(self,dis:pygame.Surface):
         dis.blit(self.text,(self.pos))
-    
-    def update(self,text):
+
+    def update_text(self,text):
         self.raw_text = text
         self.text = self.font.render(text,True,(0,0,0))
         self.text_box_width = max(100*self._SIZE_SF,self.text.get_width()*self.text_box_width)
+        self.text_input_rect.width = self.text_box_width
 
 
 
 
-
-class TextInputBox(GUIobj):
+class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it collates TextInputs together to be handled 
     def __init__(self,pos,window_size,text_inputs:typing.List[TextInput]):
         self.text_inputs = text_inputs
         super().__init__(pos,window_size)
         self.height = len(self.text_inputs) * self.text_inputs[0].text_box_height + 60*self._SIZE_SF
-        self.width = max(i.text_box_width for i in text_inputs) * len(self.text_inputs)
-        self.confirm_button = Button(pos=[self.pos[0]+(window_size[0]-24)*self._SIZE_SF, self.pos[1]+(window_size[1]-self.text_inputs[0].font.get_height())*self._SIZE_SF],text_overlay="Confirm")
-
+        self.width = max(i.text_box_width for i in text_inputs) 
+        self.confirm_button = Button([self.pos[0]+(window_size[0]-24)*self._SIZE_SF, self.pos[1]+(window_size[1]-24)*self._SIZE_SF],"Confirm",[self.font.size("Confirm")])
+        self.__GUIobjWinTop_Displacement = 50*self._SIZE_SF
         
     @property
     def dis_rect(self):
         return pygame.Rect(self.pos[0],self.pos[1],self.width,self.height)
 
+    def _calc_TextInput_rel_pos(self):
+        for t_input in range(len(self.text_inputs)):
+            self.text_inputs[t_input].pos[1] +=  (self.__GUIobjWinTop_Displacement if t_input == 0 else 0 + (self.text_inputs[t_input -1].text_input_rect.bottom if t_input > 0 else 0)) 
+            #self.text_inputs[t_input].pos[0] = 
 
 
     #this might be right?
     def display(self,dis:pygame.Surface):
-        self.display_window()
+        self.display_window(dis)
         
+        self.confirm_button.display(dis)
         
         for _ in range(len(self.text_inputs)):
             input_table = self.text_inputs[_]
-            input_table.pos[1] += _*self._SIZE_SF #how do we handle displaying every table if there are too many to fit? I'll have to think about that later
-            input_table.display(dis) #we need to init position again, as the original is it's own, but we're in an array here.
-                                    #haha this comment above is almost completely nonsensical
+            input_table.pos[1] += _*self._SIZE_SF #??? what the hell is this line? this is not how we scale stuff?
+            input_table.display(dis) 
 
 
     
@@ -248,3 +252,7 @@ class menu(GUIobj): # i wonder... will setting window size to 1080p remove any n
         for dropdown in self.dropdowns:
             dropdown.display(dis)
         
+#make more generalised `window` class for easier use of GUIobj, abstracting more from the end-user (working with GUIobj isn't ideal)
+
+class window(GUIobj):
+    ... #here!
