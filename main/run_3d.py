@@ -2,6 +2,7 @@ import pygame, guizero
 from pathlib import Path
 from cb3d_disgrid import menu_screen, display_3Dgrid, Button
 from model import Point, CBModel
+from pygame import gfxdraw
 
 global cbmod
 
@@ -428,8 +429,10 @@ while 1:
     dis.blit(plussym,(70,30))
     #print(pointmap)
     for point in runtime_dis.rendered_pointmap:
+        point:Point
         if show_points is True:
-            pygame.draw.circle(dis,(0,0,0),point,20-runtime_dis.scale*0.1)
+            gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
+            
     if len(cbmod.connected_points) > 1:
         counter = 0
         for i in range(0,len(cbmod.connected_points)-1,2):
@@ -444,7 +447,8 @@ while 1:
                 
                 if runtime_dis.rendered_pointmap.index(point) == indextocheck:
                     try: # this is to ensure that lines aren't rendered while loading files (which while extremely rare, can occasionally happen when running on slow memory)
-                        pygame.draw.line(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index])
+                        pygame.draw.aaline(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index])
+                        
                     except:
                         pass
     
