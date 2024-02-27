@@ -44,23 +44,32 @@ class Observer:
     
     #len y = 100cos(pi/2 - thetay)
     #hidden z = 100sin(pi/2 - thetay)
-        xlen = 100*m.cos(m.pi/2 - angle_x)
-        zlen = 100*m.sin(m.pi/2 - angle_x)
+        xlen = 100*m.cos(m.pi*2 - angle_x)
+        zlen = 100*m.sin(m.pi*2 - angle_x)
         
-        ylen = 100*m.cos(m.pi/2 - angle_y)
-        hidden_z = 100*m.sin(m.pi/2 - angle_y)
+        ylen = 100*m.cos(m.pi*2 - angle_y)
+        hidden_z = 100*m.sin(m.pi*2 - angle_y)
         
         sf = 100/hidden_z
-        self.position = [xlen/sf, ylen, zlen/sf]
+        self.position = [xlen/sf, zlen/sf, ylen]
 
+    def calc_dist_topoint(self,point):
+        return m.sqrt(abs((self.position[0] - point[0][0])**2 + (self.position[1] - point[1][0])**2 + (self.position[2] - point[2][0])**2))
+        
+        
 
 class display_3Dgrid:
     def __init__(self,points,angle_x,angle_y,angle_z,scale):
-
+        self.observer = Observer()
+        
         self.cbmods = []
 
         self.point_map = points
-                  
+        
+        
+        self.furthest_point = [] #remove in a sec
+        
+        
         self.angle_x = angle_x
         self.angle_z = angle_z
         self.angle_y = angle_y
@@ -75,7 +84,10 @@ class display_3Dgrid:
 
     def project_points(self,position:tuple) -> list: #setter for rendered pointmap
         pointmap = []
-        
+        furthest = 0
+        rotate_arr = []
+        dist_arr = []
+        self.observer.calcpos(self.angle_y,self.angle_x)
         for point in self.point_map:
             if isinstance(point,Point): #my versioning isn't great, so as we shift to encapsulated point objects i'll prevent error here
                 mat_point = point.xyz
@@ -88,12 +100,29 @@ class display_3Dgrid:
             
             rotate = np.dot(rotationalz, rotate)
             rotate = np.dot(rotationalx,rotate)
-
+            rotate_arr.append(rotate)
+            
+            distance = self.observer.calc_dist_topoint(rotate)
+            
+            #furthest = self.point_map.index(point)
+            dist_arr.append(distance)
+                   
+                    
+            
+            print(f"distance to point {point}: {distance} observer position {self.observer.position} point position {rotate}")
+            
             projection = np.dot(self.manipulation_matrix,rotate)
             x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
             y = self.window_size[1] - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
             pointmap.append((x,y))
         self.rendered_pointmap = pointmap
+        
+        
+        self.furthest_point = dist_arr.index(max(dist_arr)) if len(dist_arr) > 0 else [0,0]
+        print(f"furthest: {self.point_map[furthest] if len(self.point_map) > 0 else None}")
+        
+        
+        
 
     def rotation(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         rotationalz = np.array([
