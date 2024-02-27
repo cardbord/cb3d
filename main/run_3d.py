@@ -18,7 +18,7 @@ grid_points.append([0,0,10000])
 
 #WINDOW_SIZE = 800 <- made fullscreen
 
-debug = True #SET FALSE LATER
+debug = False #SET FALSE WHEN NOT TESTING
 
 winsize = pygame.display.get_desktop_sizes()[0]
 
@@ -167,7 +167,7 @@ my = mousepos[1]
 while 1:
     clock.tick(75) #runs at 75fps
 
-    runtime_dis.project_points((winsize[0]/2,winsize[1]/2),False)
+    runtime_dis.project_points((winsize[0]/2,winsize[1]/2),debug)
     
     
     
@@ -277,7 +277,11 @@ while 1:
                             take_input()
                         case pygame.K_c:
                             cbmod.delete_all()
-                            
+                        case pygame.K_h:
+                            runtime_dis.update_angles(0,0)
+                            runtime_grid.update_angles(0,0)
+
+
                         case pygame.K_e:
                             
                             cbmod.add([-1,-1,1])
@@ -387,7 +391,7 @@ while 1:
                     rotate_xyz = False
 
             case pygame.MOUSEWHEEL:
-                runtime_dis.scale -= event.y*5
+                runtime_dis.update_scale(runtime_dis.scale-event.y*5)
                 runtime_grid.scale -= event.y*5
 
     
@@ -420,10 +424,11 @@ while 1:
         npmx = newpos[0]
         npmy = newpos[1]
 
-        runtime_dis.angle_y += (npmx-mx) /100
-        runtime_dis.angle_x += (npmy-my) /100
+        
         runtime_grid.angle_y += (npmx-mx) /100
         runtime_grid.angle_x += (npmy-my) / 100
+        
+        runtime_dis.update_angles(runtime_dis.angle_x + ((npmy-my)/100),runtime_dis.angle_y + ((npmx-mx)/100))
     
     runtime_dis.point_map = cbmod.pointmap
     dis.fill((104, 157, 242))
@@ -462,7 +467,7 @@ while 1:
                     
     
     if show_grid is True:
-        runtime_grid.project_points((winsize[0]/2,winsize[1]/2),True)
+        runtime_grid.project_points((winsize[0]/2,winsize[1]/2),debug)
 
         pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
         pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
