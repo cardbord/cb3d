@@ -82,7 +82,7 @@ class display_3Dgrid:
 
         self.manipulation_matrix = np.matrix([[1,0,0],[0,1,0]])
 
-    def project_points(self,position:tuple) -> list: #setter for rendered pointmap
+    def project_points(self,position:tuple, debug:bool=False) -> list: #setter for rendered pointmap
         pointmap = []
         furthest = 0
         rotate_arr = []
@@ -115,6 +115,14 @@ class display_3Dgrid:
             x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
             y = self.window_size[1] - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
             pointmap.append((x,y))
+        
+        #DELETE LATER
+        if debug:
+            projection = np.dot(self.manipulation_matrix,np.matrix(self.observer.position).reshape((3,1)))
+            x = int(projection[0][0]) + position[0] + self.movable_position[0]
+            y = self.window_size[1] - (int(projection[1][0]) + position[1]) + self.movable_position[1]
+            pointmap.append((x,y))
+            #
         self.rendered_pointmap = pointmap
         
         

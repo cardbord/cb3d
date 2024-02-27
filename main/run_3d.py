@@ -18,6 +18,7 @@ grid_points.append([0,0,10000])
 
 #WINDOW_SIZE = 800 <- made fullscreen
 
+debug = True #SET FALSE LATER
 
 winsize = pygame.display.get_desktop_sizes()[0]
 
@@ -166,7 +167,9 @@ my = mousepos[1]
 while 1:
     clock.tick(75) #runs at 75fps
 
-    runtime_dis.project_points((winsize[0]/2,winsize[1]/2))
+    runtime_dis.project_points((winsize[0]/2,winsize[1]/2),False)
+    
+    
     
     for event in pygame.event.get():
         if menu.active is True:
@@ -459,12 +462,18 @@ while 1:
                     
     
     if show_grid is True:
-        runtime_grid.project_points((winsize[0]/2,winsize[1]/2))
+        runtime_grid.project_points((winsize[0]/2,winsize[1]/2),True)
 
         pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
         pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
         pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
 
+        if debug:
+            for point in runtime_grid.rendered_pointmap:
+                if runtime_grid.rendered_pointmap.index(point) == 0:
+                    pass
+                else: pygame.draw.circle(dis,(0,255,0),(int(round(point[0])), int(round(point[1]))), 50)
+                
 
     if menu.active is True:
         pygame.draw.rect(dis,(180,180,180),menu.menurect)
