@@ -34,6 +34,26 @@ class menu_screen:
         for command in self._commands:
             command.display(dis)
 
+class Observer:
+    def __init__(self):
+        self.position = [0,0] #init through calcpos
+        
+    def calcpos(self,angle_x,angle_y):
+        #len x = 100cos(pi/2 - thetax)
+    #len z = 100sin(pi/2 - thetax)
+    
+    #len y = 100cos(pi/2 - thetay)
+    #hidden z = 100sin(pi/2 - thetay)
+        xlen = 100*m.cos(m.pi/2 - angle_x)
+        zlen = 100*m.sin(m.pi/2 - angle_x)
+        
+        ylen = 100*m.cos(m.pi/2 - angle_y)
+        hidden_z = 100*m.sin(m.pi/2 - angle_y)
+        
+        sf = 100/hidden_z
+        self.position = [xlen/sf, ylen, zlen/sf]
+
+
 class display_3Dgrid:
     def __init__(self,points,angle_x,angle_y,angle_z,scale):
 
