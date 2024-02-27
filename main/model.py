@@ -24,6 +24,8 @@ class CBModel:
         self.__path = str(Path(__file__).parent).replace("\\","/")
         self.filename_modified = __fname #set when model opened, or saved. __fname should only be used by classmethods to maintain save data
         self.planes = [] # implement through add_plane method
+        self.plane_points = []
+        self.plane_connections_raw = []
 
     def add(self,points:typing.Union[typing.List[Point],tuple,Point]):
         self.filename_modified = None
@@ -40,16 +42,19 @@ class CBModel:
                 self.pointmap.append(i)
 
     def add_plane(self,points:typing.List[Point], connection_list:typing.List[int]):
-        data = [len(self.pointmap),len(points)]
-        self.planes.append(data)
+        
         #we also add point data and connection data to our connections and points array
         current_counter = len(self.pointmap)
+        
         for point in points:
             self.pointmap.append(point)
         for connection in connection_list:
             self.connected_points.append(connection+current_counter)
-        
-    
+            connection+=current_counter
+        data = [i+current_counter for i in connection_list]
+        self.planes.append(data)
+        self.plane_points.append(points)
+        self.plane_connections_raw.append(connection_list)
 
     def save_on_exit(self): #our nice little recovery funct
         
@@ -140,6 +145,7 @@ class CBModel:
         self.pointmap=[]
         self.connected_points=[]
         self.filename_modified = None
+        self.planes = []
       
 class Plane:
     def __init__(self,vertices:typing.List[Point],colour):
