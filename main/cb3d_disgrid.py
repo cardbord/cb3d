@@ -64,6 +64,7 @@ class display_3Dgrid:
 
         self.point_map = points
         
+        self.raw_rotations = []
         
         self.furthest_point = [] #remove in a sec
         
@@ -94,9 +95,7 @@ class display_3Dgrid:
     def project_points(self,position:tuple, debug:bool=False) -> list: #setter for rendered pointmap
         pointmap = []
         
-        rotate_arr = []
-        dist_arr = []
-        self.observer.calcpos(self.angle_y,self.angle_x,self.scale)
+        
         for point in self.point_map:
             if isinstance(point,Point): #my versioning isn't great, so as we shift to encapsulated point objects i'll prevent error here
                 mat_point = point.xyz
@@ -109,12 +108,12 @@ class display_3Dgrid:
             
             rotate = np.dot(rotationalz, rotate)
             rotate = np.dot(rotationalx,rotate)
-            rotate_arr.append(rotate)
+            self.raw_rotations.append(rotate)
             
-            distance = self.observer.calc_dist_topoint(rotate)
+            
             
             #furthest = self.point_map.index(point)
-            dist_arr.append(distance)
+            
             
             
             projection = np.dot(self.manipulation_matrix,rotate)
@@ -135,9 +134,34 @@ class display_3Dgrid:
         self.rendered_pointmap = pointmap
         
         
-        self.furthest_point = dist_arr.index(max(dist_arr)) if len(dist_arr) > 0 else [0,0]
+    def plane_project(self,points,position:tuple) -> list: #returns arr of points, used for rendering planes seperately
+        pointmap = []
         
         
+        for point in self.point_map:
+            if isinstance(point,Point): #my versioning isn't great, so as we shift to encapsulated point objects i'll prevent error here
+                mat_point = point.xyz
+            else:
+                mat_point = point
+            mat_point = np.matrix(mat_point)
+            rotationalz, rotationaly, rotationalx = self.rotation()
+            rotate = np.dot(rotationaly, mat_point.reshape((3,1)))
+            
+            
+            rotate = np.dot(rotationalz, rotate)
+            rotate = np.dot(rotationalx,rotate)
+            self.raw_rotations.append(rotate)
+            
+            
+            
+            #furthest = self.point_map.index(point)
+            
+            
+            
+            projection = np.dot(self.manipulation_matrix,rotate)
+            x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
+            y = self.window_size[1] - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
+            pointmap.append((x,y))
         
 
     def rotation(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
