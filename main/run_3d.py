@@ -1,6 +1,6 @@
 import pygame, guizero
 from pathlib import Path
-from cb3d_disgrid import menu_screen, display_3Dgrid, Button
+from cb3d_disgrid import menu_screen, display_3Dgrid, Button, Observer
 from model import Point, CBModel
 from pygame import gfxdraw
 
@@ -108,7 +108,7 @@ down = False
 left = False
 right = False
 
-
+cbObserv = Observer()
 
 menusym = pygame.image.load(f'{path.parent}/menusym.png')
 menusym = pygame.transform.scale(menusym,(30,30))
@@ -419,9 +419,9 @@ while 1:
         npmx = newpos[0]
         npmy = newpos[1]
 
-        runtime_dis.angle_z += (npmx-mx) /100
+        runtime_dis.angle_y += (npmx-mx) /100
         runtime_dis.angle_x += (npmy-my) /100
-        runtime_grid.angle_z += (npmx-mx) /100
+        runtime_grid.angle_y += (npmx-mx) /100
         runtime_grid.angle_x += (npmy-my) / 100
     
     runtime_dis.point_map = cbmod.pointmap
@@ -496,3 +496,5 @@ while 1:
     
     
     
+    cbObserv.calcpos(runtime_grid.angle_y,runtime_grid.angle_x)
+    print(cbObserv.position)
