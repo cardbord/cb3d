@@ -1,6 +1,6 @@
 import pygame, guizero
 from pathlib import Path
-from cb3d_disgrid import menu_screen, display_3Dgrid, Button, Observer
+from cb3d_disgrid import menu_screen, display_3Dgrid, Button
 from model import Point, CBModel
 from pygame import gfxdraw
 
@@ -107,8 +107,6 @@ up = False
 down = False
 left = False
 right = False
-
-cbObserv = Observer()
 
 menusym = pygame.image.load(f'{path.parent}/menusym.png')
 menusym = pygame.transform.scale(menusym,(30,30))
@@ -433,7 +431,12 @@ while 1:
         point:Point
         if show_points is True:
             gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
-            
+    
+    #del later
+    if len(runtime_dis.rendered_pointmap) > 0:
+        print(runtime_dis.furthest_point, len(runtime_dis.rendered_pointmap))
+        pygame.draw.circle(dis,(255,0,0),runtime_dis.rendered_pointmap[runtime_dis.furthest_point],int(round(20-runtime_dis.scale*0.1)))
+    
     if len(cbmod.connected_points) > 1:
         counter = 0
         for i in range(0,len(cbmod.connected_points)-1,2):
@@ -490,11 +493,9 @@ while 1:
     mx = mousepos[0]
     my = mousepos[1]
 
-    print(runtime_grid.angle_x,runtime_grid.angle_z)
+    #print(runtime_grid.angle_x,runtime_grid.angle_z)
 
     pygame.display.update()
     
     
     
-    cbObserv.calcpos(runtime_grid.angle_y,runtime_grid.angle_x)
-    print(cbObserv.position)
