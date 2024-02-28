@@ -41,21 +41,15 @@ class CBModel:
             for i in points:
                 self.pointmap.append(i)
 
-    def add_plane(self,points:typing.List[Point], connection_list:typing.List[int]):
+    def add_plane(self,points:typing.List[Point], connection_list:typing.List[int],colour:tuple=None):
         
         #we also add point data and connection data to our connections and points array
-        current_counter = len(self.pointmap)
         
-        for point in points:
-            self.pointmap.append(point)
-        for connection in connection_list:
-            self.connected_points.append(connection+current_counter)
-            connection+=current_counter
-        data = [i+current_counter for i in connection_list]
-        self.planes.append(data)
-        self.plane_points.append(points)
-        self.plane_connections_raw.append(connection_list)
-
+        
+        newplane = Plane(points,connection_list,colour if colour else (255,255,255))
+        self.planes.append(newplane)
+        
+        
     def save_on_exit(self): #our nice little recovery funct
         
         with open(f'{self.__path}/_savedata.cblog', 'w') as writable:
@@ -148,6 +142,10 @@ class CBModel:
         self.planes = []
       
 class Plane:
-    def __init__(self,vertices:typing.List[Point],colour):
-        self.vertices = vertices
+    def __init__(self,points:typing.List[Point],connections:typing.List[int],colour):
+        self.points = points
         self.colour = colour
+        self.connections = connections
+        self.rpoints = [] #init later
+        self.render_points = []
+        self.avg_distance = 100
