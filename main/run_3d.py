@@ -1,8 +1,10 @@
 import pygame, guizero
 from pathlib import Path
 from cb3d_disgrid import menu_screen, display_3Dgrid, Button
-from model import Point, CBModel
+from model import Point, CBModel, Plane
 from pygame import gfxdraw
+from utils.plane_sorter import calc_rel_distance,quicksort
+
 
 global cbmod
 
@@ -78,13 +80,14 @@ def take_input_plane():
                 
                 inpx = float(input("ADD POINT X: "))
                 inpy = float(input("ADD POINT Y: "))
+                inpz = float(input("ADD POINT Z: "))
                 
                 break
             except:
                 print("Invalid input.")
                 pass
             
-        point = Point([inpx,inpy,0])
+        point = Point([inpx,inpy,inpz])
         a.append(point)
         cbmod.add_plane(a,[])
 
@@ -470,34 +473,66 @@ while 1:
                     except:
                         pass
     
-    if len(cbmod.planes) > 1:
+    if len(cbmod.planes)>0:
         #sorter
         
+        for plane in cbmod.planes:
+            raw_renders,rendered_points = runtime_dis.plane_project(plane.points,(winsize[0]/2,winsize[1]/2))
+            
+            plane.rpoints = list(raw_renders)
+            plane.render_points = list(rendered_points)
         #cbmod.planes = quicksort(runtime_dis,cbmod.planes)
         #condition for sorting: sum([runtime_dis.observer.calc_dist_topoint(runtime_dis.rendered_pointmap[i]) for i in plane[1]])/len(plane[1])
         #eww, it's horrible!
         
+        plane_dlists = []
+        for a in cbmod.planes:
+            d_list = [runtime_dis.observer.calc_dist_topoint(distance) for distance in list(a.rpoints)]
+            avg_distance = sum(d_list)/len(d_list)
+            plane_dlists.append(avg_distance)
+            a.avg_distance = avg_distance
         
-        for i in range(0,len(cbmod.plane_connections_raw)-1,2):
-            indextocheck = cbmod.plane_connections_raw[i]
-            second_index = cbmod.plane_connections_raw[i+1]
-            for point in runtime_dis.rendered_pointmap:
-                
-                if runtime_dis.rendered_pointmap.index(point) == indextocheck:
-                    try: 
-                        pygame.draw.line(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index],width=3)
-                        
-                    except:
+        
+        plane_dlists = quicksort(plane_dlists)
+        
+        
+        
+        for distance in plane_dlists:
+            if isinstance(distance,Plane):
+                    pass
+            else:
+                for plane in cbmod.planes:
+                    
+                    if isinstance(distance,Plane):
                         pass
-
-        for plane in cbmod.planes:
-            
+                    elif round(plane.avg_distance,4) == round(distance,4):
+                        plane_dlists[plane_dlists.index(distance)] = plane
+        
+        for plane in plane_dlists:
             try:
-
-                points = [runtime_dis.rendered_pointmap[i] for i in list(set(plane))]
-                pygame.draw.polygon(dis,(255,255,255),points)
+                pygame.draw.polygon(dis,(255,255,255),plane.render_points)
             except:
                 pass
+            
+            for point in plane.render_points:
+                if show_points is True:
+                    gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
+            
+            
+            for i in range(0,len(plane.connections)-1,2):
+                indextocheck = plane.connections[i]
+                second_index = plane.connections[i+1]
+                for point in plane.render_points:
+                    
+                    if plane.render_points.index(point) == indextocheck:
+                        try: 
+                            pygame.draw.line(dis,(0,0,0),plane.render_points[indextocheck],plane.render_points[second_index],width=3)      
+                        except:
+                            pass
+
+        
+        
+        
 
     
     if show_grid is True:
