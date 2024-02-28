@@ -170,8 +170,7 @@ my = mousepos[1]
 while 1:
     clock.tick(75) #runs at 75fps
 
-    runtime_dis.project_points((winsize[0]/2,winsize[1]/2),debug)
-    
+    runtime_dis.project_points((winsize[0]/2,winsize[1]/2),False)
     
     
     for event in pygame.event.get():
@@ -298,9 +297,23 @@ while 1:
                             cbmod.add([-1,1,-1])
 
                         case pygame.K_m:
-                            cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3])
-                            cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3])
-                        
+                            cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+
+                            cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            cbmod.add_plane([Point((1,1,1)), Point((1,1,-1)), Point((1,-1,-1)), Point((1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            
+
+                            #[[1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]]
+                            cbmod.add_plane([Point((1,-1,1)), Point((-1,-1,1)), Point((-1,-1,-1)), Point((1,-1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            cbmod.add_plane([Point((1,1,1)), Point((-1,1,1)), Point((-1,1,-1)), Point((1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+
+                            cbmod.add_plane([Point((0.2,1,1)), Point((-0.2,1,1)), Point((-0.2,1,-1)), Point((0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                            cbmod.add_plane([Point((-0.2,0.2,-1)), Point((0.2,0.2,-1)), Point((0.2,1,-1)), Point((-0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                            cbmod.add_plane([Point((-0.2,0.2,1)),Point((0.2,0.2,1)),Point((0.2,1,1)),Point((-0.2,1,1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                            
+
+
                         case pygame.K_s:
                             show_points = not show_points
                         case pygame.K_j:
@@ -401,7 +414,7 @@ while 1:
                 runtime_dis.update_scale(runtime_dis.scale-event.y*5)
                 runtime_grid.scale -= event.y*5
 
-    
+
     if left is True:
         runtime_dis.movable_position[0] -= 1
         runtime_grid.movable_position[0] -=1
@@ -446,12 +459,6 @@ while 1:
         point:Point
         if show_points is True:
             gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
-    
-    if debug:
-        #del later
-        if len(runtime_dis.rendered_pointmap) > 0:
-            pygame.draw.circle(dis,(255,0,0),runtime_dis.rendered_pointmap[runtime_dis.furthest_point],int(round(20-runtime_dis.scale*0.1)))
-    
 
 
     if len(cbmod.connected_points) > 1:
@@ -488,7 +495,7 @@ while 1:
         plane_dlists = []
         for a in cbmod.planes:
             d_list = [runtime_dis.observer.calc_dist_topoint(distance) for distance in list(a.rpoints)]
-            avg_distance = sum(d_list)/len(d_list)
+            avg_distance = round( sum(d_list)/len(d_list), 4) #remove floating point imprecision
             plane_dlists.append(avg_distance)
             a.avg_distance = avg_distance
         
@@ -505,12 +512,15 @@ while 1:
                     
                     if isinstance(distance,Plane):
                         pass
-                    elif round(plane.avg_distance,4) == round(distance,4):
+                    elif plane.avg_distance == distance:
                         plane_dlists[plane_dlists.index(distance)] = plane
+        
+
+        
         
         for plane in plane_dlists:
             try:
-                pygame.draw.polygon(dis,(255,255,255),plane.render_points)
+                gfxdraw.filled_polygon(dis,plane.render_points,plane.colour)
             except:
                 pass
             
@@ -532,21 +542,16 @@ while 1:
 
         
         
-        
-
+        if debug:
+            gfxdraw.filled_polygon(dis,plane_dlists[len(plane_dlists)-1].render_points,(255,0,0))
+            print(plane_dlists[len(plane_dlists)-1].render_points)
     
     if show_grid is True:
-        runtime_grid.project_points((winsize[0]/2,winsize[1]/2),debug)
+        runtime_grid.project_points((winsize[0]/2,winsize[1]/2),False)
 
         pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
         pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
         pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
-
-        if debug:
-            for point in runtime_grid.rendered_pointmap:
-                if runtime_grid.rendered_pointmap.index(point) == 0:
-                    pass
-                else: pygame.draw.circle(dis,(0,255,0),(int(round(point[0])), int(round(point[1]))), 50)
                 
 
     if menu.active is True:
@@ -578,6 +583,15 @@ while 1:
 
     #print(runtime_grid.angle_x,runtime_grid.angle_z)
 
+    #DEBUG SPACE
+    
+    if debug:
+        gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255))
+    
+    
+    
+    
+    
     pygame.display.update()
     
     
