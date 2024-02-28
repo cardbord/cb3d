@@ -136,9 +136,9 @@ class display_3Dgrid:
         
     def plane_project(self,points,position:tuple) -> list: #returns arr of points, used for rendering planes seperately
         pointmap = []
+        raw_rotates = []
         
-        
-        for point in self.point_map:
+        for point in points:
             if isinstance(point,Point): #my versioning isn't great, so as we shift to encapsulated point objects i'll prevent error here
                 mat_point = point.xyz
             else:
@@ -150,9 +150,9 @@ class display_3Dgrid:
             
             rotate = np.dot(rotationalz, rotate)
             rotate = np.dot(rotationalx,rotate)
-            self.raw_rotations.append(rotate)
             
             
+            raw_rotates.append(rotate)
             
             #furthest = self.point_map.index(point)
             
@@ -162,7 +162,7 @@ class display_3Dgrid:
             x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
             y = self.window_size[1] - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
             pointmap.append((x,y))
-        
+        return raw_rotates, pointmap
 
     def rotation(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         rotationalz = np.array([
