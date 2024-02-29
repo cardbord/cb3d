@@ -18,12 +18,17 @@ class Point:
         return [round(self.x),round(self.y),round(self.z)]
 
 class CBModel:
-    def __init__(self,pointmap:typing.List[Point]=[],connected_points:typing.List[int]=[],__fname:str=None):
+    def __init__(self,pointmap:typing.List[Point]=[],connected_points:typing.List[int]=[],__fname:str=None, __planes:typing.List[list]=None):
         self.pointmap = pointmap
         self.connected_points = connected_points
         self.__path = str(Path(__file__).parent).replace("\\","/")
         self.filename_modified = __fname #set when model opened, or saved. __fname should only be used by classmethods to maintain save data
         self.planes = [] # implement through add_plane method
+        if __planes:
+            for plane in __planes:
+                
+                self.planes.append(Plane(eval(plane[0]),eval(plane[1]),eval(plane[2])))
+        
         self.plane_points = []
         self.plane_connections_raw = []
 
@@ -58,6 +63,7 @@ class CBModel:
             else: #write model, just clone CBModel.save()
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
+                writable.write(f"{[[str(i.points), str(i.connections), str(i.colour)] for i in self.planes]}" + "\n")
             writable.close()
     
     @classmethod
@@ -66,13 +72,15 @@ class CBModel:
         if Path(path).is_file():
             with open(path,'r') as readable:
                 model_info = readable.readlines()
-                if len(model_info) > 1: #this is a cbmodel file
+                if len(model_info) > 2: #this is a cbmodel file
                     model_points = eval((model_info[0]).replace('\n',''))
                     model_connections = eval((model_info[1]).replace('\n',''))
+                    model_planes = eval(model_info[2].replace('\n',''))
+                    
                     readable.close()
                     
                     
-                    return cls(model_points,model_connections)
+                    return cls(model_points,model_connections,None,model_planes)
                 else: #single line, so this is a path to a cbmodel
                     return CBModel.load(model_info[0].replace('\n',''))
         else:
@@ -115,10 +123,11 @@ class CBModel:
                 model_info = model.readlines()
                 model_points = eval((model_info[0]).replace('\n',''))
                 model_connections = eval((model_info[1]).replace('\n',''))
-
+                model_planes = eval(model_info[2].replace('\n',''))
+                
                 
                 model.close()
-            return cls(model_points,model_connections,name)
+            return cls(model_points,model_connections,name,model_planes)
 
         else: #this is most likely to happen if an __fname is moved or deleted, and the old path is still saved in _savedata.cblog
             return cls()
@@ -131,6 +140,7 @@ class CBModel:
             with open(f'{name}.CBmodel','w') as writable:
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
+                writable.write(f"{[[str(i.points), str(i.connections), str(i.colour)] for i in self.planes]}" + "\n")
                 writable.close()
         except:
             raise WindowsError("Could not save file.")
@@ -149,3 +159,4 @@ class Plane:
         self.rpoints = [] #init later
         self.render_points = []
         self.avg_distance = 100
+        
