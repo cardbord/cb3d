@@ -52,8 +52,10 @@ class Observer:
         self.position = [xlen/sf, zlen/sf, ylen]
 
     def calc_dist_topoint(self,point):
-        return m.sqrt(abs((self.position[0] - point[0][0])**2 + (self.position[1] - point[1][0])**2 + (self.position[2] - point[2][0])**2))
-        
+        try:
+            return m.sqrt(abs((self.position[0] - point[0][0])**2 + (self.position[1] - point[1][0])**2 + (self.position[2] - point[2][0])**2))
+        except:
+            return 10000
         
 
 class display_3Dgrid:
@@ -101,7 +103,9 @@ class display_3Dgrid:
                 mat_point = point.xyz
             else:
                 mat_point = point
+            
             mat_point = np.matrix(mat_point)
+            
             rotationalz, rotationaly, rotationalx = self.rotation()
             rotate = np.dot(rotationaly, mat_point.reshape((3,1)))
             
@@ -143,6 +147,7 @@ class display_3Dgrid:
                 mat_point = point.xyz
             else:
                 mat_point = point
+            
             mat_point = np.matrix(mat_point)
             rotationalz, rotationaly, rotationalx = self.rotation()
             rotate = np.dot(rotationaly, mat_point.reshape((3,1)))
