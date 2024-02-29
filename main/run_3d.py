@@ -9,7 +9,6 @@ from utils.plane_sorter import calc_rel_distance,quicksort
 global cbmod
 
 cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
-
 path = Path(__file__).parent #just in case python refuses to locate model files, this is a slight problem since older versions of pygame are pretty fussy
 
 grid_points = []
@@ -93,9 +92,9 @@ def take_input_plane():
 
 
 
-runtime_dis = display_3Dgrid([],0,0,0,1) # using disgrid module to setup a 3d environment
+runtime_dis = display_3Dgrid([],0,0,0,2) # using disgrid module to setup a 3d environment
 
-runtime_grid = display_3Dgrid(grid_points,0,0,0,1) # create another disgrid underlayed for the xyz axis
+runtime_grid = display_3Dgrid(grid_points,0,0,0,2) # create another disgrid underlayed for the xyz axis
 
 
 pointed = True
@@ -282,7 +281,8 @@ while 1:
                         case pygame.K_h:
                             runtime_dis.update_angles(0,0)
                             runtime_grid.update_angles(0,0)
-
+                            runtime_dis.movable_position = [0,0]
+                            runtime_grid.movable_position = [0,0]
 
                         case pygame.K_e:
                             
@@ -367,11 +367,19 @@ while 1:
                 
                 if event.button == 3:
                     if delete_on_click:
-                        print('attempting to delete')
+                        
                         for point in runtime_dis.rendered_pointmap:
                                 if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
                                     print('deleting point', str(runtime_dis.rendered_pointmap.index(point)))
                                     cbmod.delete(runtime_dis.rendered_pointmap.index(point))
+                        if len(cbmod.planes) > 0:
+                            for plane in cbmod.planes:
+                                
+                                for point in plane.render_points:
+                                    if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
+                                        del cbmod.planes[cbmod.planes.index(plane)]
+                                        break
+                    
                     else:
                         rotate_xyz = True
                 
@@ -484,6 +492,7 @@ while 1:
         #sorter
         
         for plane in cbmod.planes:
+            
             raw_renders,rendered_points = runtime_dis.plane_project(plane.points,(winsize[0]/2,winsize[1]/2))
             
             plane.rpoints = list(raw_renders)
@@ -587,7 +596,7 @@ while 1:
     
     if debug:
         gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255))
-    
+        print(runtime_dis.scale)
     
     
     
