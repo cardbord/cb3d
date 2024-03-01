@@ -72,11 +72,12 @@ class CBModel:
         if Path(path).is_file():
             with open(path,'r') as readable:
                 model_info = readable.readlines()
-                if len(model_info) > 2: #this is a cbmodel file
+                model_planes = None
+                if len(model_info) > 1: #this is a cbmodel file
                     model_points = eval((model_info[0]).replace('\n',''))
                     model_connections = eval((model_info[1]).replace('\n',''))
-                    model_planes = eval(model_info[2].replace('\n',''))
-                    
+                    if len(model_info) > 2:
+                        model_planes = eval(model_info[2].replace('\n',''))
                     readable.close()
                     
                     
@@ -120,10 +121,12 @@ class CBModel:
         if Path(name).is_file():
             
             with open(name,'r') as model: #guizero.select_file will provide full path, so no pathlib needed here
+                model_planes = None
                 model_info = model.readlines()
                 model_points = eval((model_info[0]).replace('\n',''))
                 model_connections = eval((model_info[1]).replace('\n',''))
-                model_planes = eval(model_info[2].replace('\n',''))
+                if len(model_info) > 2:
+                    model_planes = eval(model_info[2].replace('\n',''))
                 
                 
                 model.close()
