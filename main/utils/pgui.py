@@ -31,9 +31,10 @@ class GUIbaseClass: #provide attrs for other junk, because these things are incl
         else:
             pygame.init() #we don't ideally want to init pygame here (that should be left to the main program), but just in case
             self.window_size = pygame.display.get_desktop_sizes()[0]
-
+        self._fontSIZE = 50
         self._SIZE_SF = round(sqrt((self.window_size[0]*self.window_size[1]))/1440,3) #factor for monitor size, 1920x1080p default
-        self.font = Font(get_default_font(),int(round(50*self._SIZE_SF)))
+        self._ASIZE_SF = round((self.window_size[0]*self.window_size[1])/2073600,2) #whelp, our area-based size scaling returns
+        self.font = Font(get_default_font(),int(round(self._fontSIZE*self._SIZE_SF)))
 
 
 class DisplayColumn(GUIbaseClass):
@@ -169,7 +170,9 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
         self.width = max(i.text_box_width for i in text_inputs) 
         
         self.__s = self.font.size("Confirm")
-        self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]*self._SIZE_SF), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],"Confirm",[(self.__s[0]),self.__s[1]/self._SIZE_SF])
+        self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],
+                                     "Confirm",
+                                     [(self.__s[0]/self._SIZE_SF),self.__s[1]/self._SIZE_SF])
         self.__GUIobjWinTop_Displacement = 50*self._SIZE_SF
         
     def _calc_TextInput_rel_pos(self):
@@ -179,7 +182,11 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
  
     def move_window(self,mousepos):
         super().move_window(mousepos)
-        self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]*self._SIZE_SF), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],"Confirm",[(self.__s[0]),self.__s[1]/self._SIZE_SF])
+        self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],
+                                     "Confirm",
+                                     [(self.__s[0]/self._SIZE_SF),self.__s[1]/self._SIZE_SF])
+        
+        
         self._calc_TextInput_rel_pos()
 
     #this might be right?
