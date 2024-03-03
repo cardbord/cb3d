@@ -64,7 +64,7 @@ class GUIobj(GUIbaseClass):
     Will be initialized automatically through other GUI objects. It is encouraged to use those instead, as they all inherit from this.
     '''
 
-    def __init__(self,pos,window_size):
+    def __init__(self,pos,window_size,title:str=None):
         super().__init__()
         # change size sf for monitor size
         self.pos = pos #stored as raw coords
@@ -74,7 +74,7 @@ class GUIobj(GUIbaseClass):
         self.parent_window_rect = pygame.Rect(self.pos[0],self.pos[1],self.window_size[0],self.window_size[1])
         self.clickableborder_area = pygame.Rect(self.pos[0],self.pos[1],self.clickableborder_pos[0],self.clickableborder_pos[1])
         self.clickable_cross = Button([self.pos[0]+self.clickableborder_pos[0]-50*self._SIZE_SF,self.pos[1]],"×",[50,50],(255,0,0)) # window size is corrected to _SIZE_SF automatically in Button.__init__()!
-        
+        self.title = title #init later
         self.content = [] #display content
         #define other attrs in subclasses
         
@@ -95,7 +95,9 @@ class GUIobj(GUIbaseClass):
         pygame.draw.rect(dis,(255,255,255),self.clickableborder_area)
         pygame.draw.rect(dis,(0,0,0),self.parent_window_rect,width=1)
         pygame.draw.rect(dis,(0,0,0),self.clickableborder_area,width=1)
-
+        if self.title != None:
+            trect = self.font.render(self.title,True,(0,0,0))
+            dis.blit(trect,[(self.pos[0]+30), (self.pos[1]+10)])
         for display_obj in self.content:
             for content_obj in display_obj.content:
                 content_obj.display() 
@@ -160,13 +162,15 @@ class TextInput(GUIbaseClass):
 
 
 class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it collates TextInputs together to be handled 
-    def __init__(self,pos,window_size,text_inputs:typing.List[TextInput]):
+    def __init__(self,pos,window_size,text_inputs:typing.List[TextInput],title:str=None):
         self.text_inputs = text_inputs
-        super().__init__(pos,window_size)
+        super().__init__(pos,window_size,title)
         self.height = len(self.text_inputs) * self.text_inputs[0].text_box_height + 60*self._SIZE_SF
         self.width = max(i.text_box_width for i in text_inputs) 
-        self.confirm_button = Button([self.pos[0]+(window_size[0]-24)*self._SIZE_SF, self.pos[1]+(window_size[1]-24)*self._SIZE_SF],"Confirm",[self.font.size("Confirm")])
+        __s = self.font.size("Confirm")
+        self.confirm_button = Button([self.pos[0]+(window_size[0]-24)*self._SIZE_SF, self.pos[1]+(window_size[1]-24)*self._SIZE_SF],"Confirm",[(__s[0]*2*self._SIZE_SF),(__s[1]+10)*self._SIZE_SF])
         self.__GUIobjWinTop_Displacement = 50*self._SIZE_SF
+        
         
     @property
     def dis_rect(self):

@@ -11,7 +11,7 @@ from utils import pgui
 
 def create_random_textbox_for_the_funsies():
     tb1 = pgui.TextInput([0,0],"hi")
-    tib1 = pgui.TextInputBox([50,100],[600,500],[tb1])
+    tib1 = pgui.TextInputBox([50,100],[600,500],[tb1],"this is a demo")
     return tib1
 
 darr = []
@@ -23,7 +23,7 @@ print(pygame.display.get_desktop_sizes()[0])
 
 wecheck = False
 tb1 = pgui.TextInput([0,0],"hi")
-tib1 = pgui.TextInputBox([50,100],[600,500],[tb1])
+tib1 = pgui.TextInputBox([50,100],[600,500],[tb1],"this is a demo")
 darr.append(tib1)
 previously_moved = 0
 while 1: #main loop
