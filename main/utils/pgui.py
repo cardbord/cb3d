@@ -167,20 +167,20 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
         super().__init__(pos,window_size,title)
         self.height = len(self.text_inputs) * self.text_inputs[0].text_box_height + 60*self._SIZE_SF
         self.width = max(i.text_box_width for i in text_inputs) 
-        __s = self.font.size("Confirm")
-        self.confirm_button = Button([self.pos[0]+(window_size[0]-24)*self._SIZE_SF, self.pos[1]+(window_size[1]-24)*self._SIZE_SF],"Confirm",[(__s[0]*2*self._SIZE_SF),(__s[1]+10)*self._SIZE_SF])
+        
+        self.__s = self.font.size("Confirm")
+        self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]*self._SIZE_SF), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],"Confirm",[(self.__s[0]),self.__s[1]/self._SIZE_SF])
         self.__GUIobjWinTop_Displacement = 50*self._SIZE_SF
         
-        
-    @property
-    def dis_rect(self):
-        return pygame.Rect(self.pos[0],self.pos[1],self.width,self.height)
-
     def _calc_TextInput_rel_pos(self):
         for t_input in range(len(self.text_inputs)):
-            self.text_inputs[t_input].pos[1] +=  (self.__GUIobjWinTop_Displacement if t_input == 0 else 0 + (self.text_inputs[t_input -1].text_input_rect.bottom if t_input > 0 else 0)) 
-            #self.text_inputs[t_input].pos[0] = 
-
+            self.text_inputs[t_input].pos[1] =  (self.__GUIobjWinTop_Displacement if t_input == 0 else 0 + (self.text_inputs[t_input -1].text_input_rect.bottom if t_input > 0 else 0)) 
+            self.text_inputs[t_input].pos[0] = (self.pos[0] + 10*self._SIZE_SF)
+ 
+    def move_window(self,mousepos):
+        super().move_window(mousepos)
+        self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]*self._SIZE_SF), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],"Confirm",[(self.__s[0]),self.__s[1]/self._SIZE_SF])
+        self._calc_TextInput_rel_pos()
 
     #this might be right?
     def display(self,dis:pygame.Surface):
