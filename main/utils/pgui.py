@@ -129,6 +129,10 @@ class Button(GUIbaseClass):
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
         dis.blit(self.text,(self.pos[0]+11*self._SIZE_SF,self.pos[1]-3*self._SIZE_SF))
 
+    def _NSdis(self,dis:pygame.Surface): #method for Button which displays uncentered, use this for confirm buttons
+        pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
+        dis.blit(self.text,(self.pos[0],self.pos[1]))
+    
     def on_click(self,xval,yval):
         if (xval in range(int(round(self.button_rect.left)), int(round(self.button_rect.right))) and yval in range(int(round(self.pos[1])), int(round(self.button_rect.bottom)))):
             return self.callback() if self.callback else True #if no callback is provided, use this as a collider so the main program can handle it
@@ -195,7 +199,7 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
     def display(self,dis:pygame.Surface):
         self.display_window(dis)
         
-        self.confirm_button.display(dis)
+        self.confirm_button._NSdis(dis)
         
         for _ in range(len(self.text_inputs)):
             input_table = self.text_inputs[_]
