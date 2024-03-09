@@ -3,26 +3,75 @@ from pathlib import Path
 from cb3d_disgrid import menu_screen, display_3Dgrid, Button
 from model import Point, CBModel, Plane
 from pygame import gfxdraw
-from utils.plane_sorter import calc_rel_distance,quicksort
+from utils.plane_sorter import quicksort
+from utils import pgui
 
+###GLOBALS
 
+debug = False #SET FALSE WHEN NOT TESTING
+
+winsize = pygame.display.get_desktop_sizes()[0]
 global cbmod
 
-cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
 path = Path(__file__).parent #just in case python refuses to locate model files, this is a slight problem since older versions of pygame are pretty fussy
+cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
 
+
+###BUTTON CALLBACKS
+def load_file():
+    global cbmod
+    savename = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
+                            
+    if savename == "":
+        pass #user has closed the file opener, so pass
+
+    else:
+
+        cbmod = CBModel.load(savename)
+        cbmod.filename_modified = savename
+    
+def save_file():
+    global cbmod
+    savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodel","*.CBmodel"]])
+    print(savename)
+    if savename == "":
+        pass
+    else:
+        cbmod.save(savename)
+        cbmod.filename_modified = savename
+
+
+###GUI MENUS
+def createMenu():
+    file_list = [
+        pgui.Button([0,0],"Load file",[200,50],None,load_file),
+        pgui.Button([0,0],"Save file",[200,50],None,save_file),
+    ]    
+    
+    _File = pgui.Dropdown([0,0], pgui.Button([0,0],"File",[200,50],(10,10,10)), [])#place button list in sq brackets
+    _Help = pgui.Dropdown([pgui.scale_to_window(200),0], Button([pgui.scale_to_window(200),0],"Help",[200,50],(10,10,10)), []) 
+
+    
+
+    start_menu = pgui.menu(
+        [
+            pgui.Dropdown(_File),
+            pgui.Dropdown(_Help)
+        ]
+    )
+
+
+
+
+
+###GRID POINT INITS
 grid_points = []
 grid_points.append([0,0,0])
 grid_points.append([10000,0,0])
 grid_points.append([0,10000,0])
 grid_points.append([0,0,10000])
 
-#WINDOW_SIZE = 800 <- made fullscreen
-
-debug = False #SET FALSE WHEN NOT TESTING
-
-winsize = pygame.display.get_desktop_sizes()[0]
-
+###TO BE REMOVED
 answer = '' #these globals have no place here, I shall smite them when I move to guizero fully.
 inputable = False
 inputable_load = False
@@ -33,6 +82,8 @@ user_text = ''
 input_rect = pygame.Rect(100, 450, 140, 56)
 default_font = pygame.font.get_default_font()
 font = pygame.font.Font(default_font,60)
+
+###LEGACY INPUTS
 def take_input(): #legacy inputs; incompatible with main menu. honestly, these are like relics at this point, it would be shameful to remove them.
     while True:
         try:
@@ -50,7 +101,6 @@ def take_input(): #legacy inputs; incompatible with main menu. honestly, these a
     point = Point([inpx,inpy,inpz])
     cbmod.add(point)
     
-
 #these are garbage, i'll make some guizero-based ones that aren't as horrible        
 def take_input2():
     global answer
@@ -67,7 +117,6 @@ def take_input_save():
     global inputable_save
     inputable_save = True
 
-    
 def take_input_plane():
     numoftimes = int(input("Enter how many points>>>"))
     a = []
@@ -91,12 +140,13 @@ def take_input_plane():
         cbmod.add_plane(a,[])
 
 
-
+###GRID SETUP
 runtime_dis = display_3Dgrid([],0,0,0,2) # using disgrid module to setup a 3d environment
-
 runtime_grid = display_3Dgrid(grid_points,0,0,0,2) # create another disgrid underlayed for the xyz axis
 
 
+
+###INTERACTION BOOLS 
 pointed = True
 show_grid = True
 show_points = True
@@ -111,6 +161,8 @@ down = False
 left = False
 right = False
 
+
+#IMAGE-BASED PYG OBJECTS
 menusym = pygame.image.load(f'{path.parent}/menusym.png')
 menusym = pygame.transform.scale(menusym,(30,30))
 menu_rect = menusym.get_rect()
@@ -120,14 +172,17 @@ plussym = pygame.transform.scale(plussym,(30,30))
 plus_rect = plussym.get_rect()
 
 
+
+###DISPLAY SETUP
 dis = pygame.display.set_mode((winsize[0],winsize[1]))
 pygame.display.set_caption('cb3d','CBmodel engine')
 clock = pygame.time.Clock()
 
+
+###FULL DELETION/CUBE ADDITION
+#to be removed
 def clear():
     cbmod.delete_all()
-    
-
 
 def show_grid_lines():
     global show_grid
@@ -148,7 +203,8 @@ def show_point():
     show_points = not show_points
 
 
-commands = [
+###TO BE REMOVED
+commands = [ #to be removed
     #what is wrong with me why is this all manually placed
     Button(120,120,160,47,'CLEAR',clear),
     Button(120,168,400,47,f'SHOW GRID LINES: {show_grid}',show_grid_lines),
@@ -160,13 +216,17 @@ commands = [
     Button(120,456,320,47,'ADD PLANE',take_input_plane),
 
 ]
-menu = menu_screen(False,commands)
 
-mousepos = pygame.mouse.get_pos()
+menu = menu_screen(False,commands) #to be removed
+
+###MOUSE INITS
+mousepos = pygame.mouse.get_pos() #must init because we have newpos tracking
 mx = mousepos[0]
 my = mousepos[1]
 
-while 1:
+
+###MAIN LOOP
+while 1: 
     clock.tick(75) #runs at 75fps
 
     runtime_dis.project_points((winsize[0]/2,winsize[1]/2),False)
@@ -592,8 +652,7 @@ while 1:
 
     #print(runtime_grid.angle_x,runtime_grid.angle_z)
 
-    #DEBUG SPACE
-    
+    ###DEBUG SPACE
     if debug:
         gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255))
         print(runtime_dis.scale)
