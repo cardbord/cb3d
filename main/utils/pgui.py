@@ -177,7 +177,8 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
         
     def _calc_TextInput_rel_pos(self):
         for t_input in range(len(self.text_inputs)):
-            self.text_inputs[t_input].pos[1] =  (self.__GUIobjWinTop_Displacement if t_input == 0 else 0 + (self.text_inputs[t_input -1].text_input_rect.bottom if t_input > 0 else 0)) 
+            
+            self.text_inputs[t_input].pos[1] =  (self.text_inputs[t_input].pos[1]+self.__GUIobjWinTop_Displacement if t_input == 0 else 0) 
             self.text_inputs[t_input].pos[0] = (self.pos[0] + 10*self._SIZE_SF)
  
     def move_window(self,mousepos):
@@ -187,7 +188,8 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
                                      [(self.__s[0]/self._SIZE_SF),self.__s[1]/self._SIZE_SF])
         
         
-        self._calc_TextInput_rel_pos()
+        for t_input in range(len(self.text_inputs)):
+            pass #do later
 
     #this might be right?
     def display(self,dis:pygame.Surface):
