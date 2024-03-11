@@ -108,6 +108,9 @@ class GUIobj(GUIbaseClass):
     def check_windowcollide(self,xval,yval):
         return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.clickableborder_pos[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.clickableborder_pos[1])))) else False
 
+    def check_objcollide(self,xval,yval):
+        return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.window_size[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.window_size[1])))) else False
+
     def check_closebuttoncollide(self,xval,yval):
         return True if (xval in range(int(round(self.clickable_cross.button_rect.left)), int(round(self.clickable_cross.button_rect.right))) and yval in range(int(round(self.clickable_cross.pos[1])), int(round(self.clickable_cross.button_rect.bottom)))) else False
 
@@ -148,26 +151,23 @@ class TextInput(GUIbaseClass):
         self.to_input = False
         self.text_box_width = max(300*self._SIZE_SF,self.text.get_width()*self._SIZE_SF*len(text))
         self.text_box_height = (self.font.get_height()+4)*self._SIZE_SF
+        self.text_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_height)
         
-    
-    @property
-    def text_input_rect(self):
-        return pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_height)
         
     def display(self,dis:pygame.Surface):
         dis.blit(self.text,(self.pos))
 
-    def update_text(self,text):
+    def update_text(self,text:str):
         self.raw_text = text
         self.text = self.font.render(text,True,(0,0,0))
         self.text_box_width = max(100*self._SIZE_SF,self.text.get_width()*self.text_box_width)
-        self.text_input_rect.width = self.text_box_width
+        self.text_rect.width = self.text_box_width
 
 
 
 
 class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it collates TextInputs together to be handled 
-    def __init__(self,pos,window_size,text_inputs:typing.List[TextInput],title:str=None):
+    def __init__(self,pos,window_size,text_inputs:typing.List[TextInput],title:str=None, _topdisplacement:float=None):
         self.text_inputs = text_inputs
         super().__init__(pos,window_size,title)
         self.height = len(self.text_inputs) * self.text_inputs[0].text_box_height + 60*self._SIZE_SF
@@ -177,24 +177,28 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
         self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],
                                      "Confirm",
                                      [(self.__s[0]/self._SIZE_SF),self.__s[1]/self._SIZE_SF])
-        self.__GUIobjWinTop_Displacement = 50*self._SIZE_SF
+        self.__GUIobjWinTop_Displacement = _topdisplacement or 50*self._SIZE_SF
         
-    def _calc_TextInput_rel_pos(self):
         for t_input in range(len(self.text_inputs)):
-            
-            self.text_inputs[t_input].pos[1] =  (self.text_inputs[t_input].pos[1]+self.__GUIobjWinTop_Displacement if t_input == 0 else 0) 
+            self.text_inputs[t_input].pos[1] = self.pos[1] + (self.__GUIobjWinTop_Displacement) + 60*self._SIZE_SF*t_input
             self.text_inputs[t_input].pos[0] = (self.pos[0] + 10*self._SIZE_SF)
+            self.text_inputs[t_input].text_rect.y = self.text_inputs[t_input].pos[1]
+            self.text_inputs[t_input].text_rect.x = self.text_inputs[t_input].pos[0]
+
  
     def move_window(self,mousepos):
         super().move_window(mousepos)
         self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],
                                      "Confirm",
                                      [(self.__s[0]/self._SIZE_SF),self.__s[1]/self._SIZE_SF])
-        
-        
         for t_input in range(len(self.text_inputs)):
-            pass #do later
+            self.text_inputs[t_input].pos[1] = self.pos[1] + (self.__GUIobjWinTop_Displacement) + 60*self._SIZE_SF*t_input #adjust distance dependent multiple of font size (figure out later)
+            self.text_inputs[t_input].pos[0] = (self.pos[0] + 10*self._SIZE_SF)
 
+            self.text_inputs[t_input].text_rect.y = self.text_inputs[t_input].pos[1]
+            self.text_inputs[t_input].text_rect.x = self.text_inputs[t_input].pos[0]
+            
+        
     #this might be right?
     def display(self,dis:pygame.Surface):
         self.display_window(dis)
@@ -202,9 +206,7 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
         self.confirm_button._NSdis(dis)
         
         for _ in range(len(self.text_inputs)):
-            input_table = self.text_inputs[_]
-            input_table.pos[1] += _*self._SIZE_SF #??? what the hell is this line? this is not how we scale stuff?
-            input_table.display(dis) 
+            self.text_inputs[_].display(dis)
 
 
     
