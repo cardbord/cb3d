@@ -11,7 +11,8 @@ from utils import pgui
 
 def create_random_textbox_for_the_funsies():
     tb1 = pgui.TextInput([0,0],"hi")
-    tib1 = pgui.TextInputBox([50,100],[600,500],[tb1],"this is a demo")
+    tb2 = pgui.TextInput([0,0],"hi2")
+    tib1 = pgui.TextInputBox([50,100],[600,500],[tb1,tb2],"this is a demo")
     return tib1
 
 darr = []
@@ -23,15 +24,14 @@ print(pygame.display.get_desktop_sizes()[0])
 
 wecheck = False
 tb1 = pgui.TextInput([0,0],"hi")
-tib1 = pgui.TextInputBox([50,100],[600,500],[tb1],"this is a demo")
+tb2 = pgui.TextInput([0,0],"hi2")
+tib1 = pgui.TextInputBox([50,100],[600,500],[tb1,tb2],"this is a demo")
 darr.append(tib1)
 previously_moved = 0
 while 1: #main loop
     dis.fill((255,255,255))
     for i in range(len(darr),0,-1):
         darr[i-1].display(dis)
-    #tib1.display(dis)
-    
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -44,18 +44,23 @@ while 1: #main loop
             elif event.key == pygame.K_e:
                 darr.append(create_random_textbox_for_the_funsies())
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            for tib in darr:
-                if tib.check_closebuttoncollide(x,y):
-                    darr.pop(darr.index(tib))
+            
+            if len(darr) > 0 and darr[0].check_closebuttoncollide(x,y):
+                darr.pop(0)
             else:
-                wecheck = True
+                wecheck = True #check for collisions in this cycle
+        
         elif event.type == pygame.MOUSEBUTTONUP:
             wecheck = False
+        
         moved_in_cycle = False
         if len(darr) > 1 and previously_moved != 0:
             darr[0], darr[previously_moved] = darr[previously_moved], darr[0]
+            previously_moved = 0
+        
+        
         for tib in darr:
-            if wecheck and tib.check_windowcollide(x,y):
+            if wecheck and tib.check_windowcollide(x,y) and (not darr[0].check_objcollide(x,y) if darr.index(tib) != 0 else True):
                 if not moved_in_cycle:
                     
                     newx, newy = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
@@ -69,7 +74,7 @@ while 1: #main loop
                 tib.clickable_cross.highlighted = True
             else:
                 tib.clickable_cross.highlighted = False
-                
+            
     x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
 
     pygame.display.flip()
