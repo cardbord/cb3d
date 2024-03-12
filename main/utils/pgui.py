@@ -98,7 +98,7 @@ class GUIobj(GUIbaseClass):
         pygame.draw.rect(dis,(0,0,0),self.clickableborder_area,width=1)
         if self.title != None:
             trect = self.font.render(self.title,True,(0,0,0))
-            dis.blit(trect,[(self.pos[0]+30), (self.pos[1]+10)])
+            dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)])
         for display_obj in self.content:
             for content_obj in display_obj.content:
                 content_obj.display() 
@@ -149,20 +149,29 @@ class TextInput(GUIbaseClass):
         self.raw_text = text
         self.text = self.font.render(text,True,(0,0,0))
         self.to_input = False
-        self.text_box_width = max(300*self._SIZE_SF,self.text.get_width()*self._SIZE_SF*len(text))
-        self.text_box_height = (self.font.get_height()+4)*self._SIZE_SF
+        __s = self.text.get_size()
+        self.text_box_width = __s[0]
+        self.text_box_height = __s[1]
         self.text_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_height)
+        
+        self.user_text = ""
+        #render within display method
+        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0])
+        self.user_text_rect = pygame.Rect(self.pos[0]+self.text_box_width+10*self._SIZE_SF,self.pos[1],self.user_text_width,__s[1])
+        
+        
         
         
     def display(self,dis:pygame.Surface):
         dis.blit(self.text,(self.pos))
+        pygame.draw.rect(dis,(0,0,0),self.user_text_rect,width=1)
+        render_text = self.font.render(self.user_text,True,(90,90,90))
+        dis.blit(render_text,self.user_text_rect.topleft)
 
-    def update_text(self,text:str):
-        self.raw_text = text
-        self.text = self.font.render(text,True,(0,0,0))
-        self.text_box_width = max(100*self._SIZE_SF,self.text.get_width()*self.text_box_width)
-        self.text_rect.width = self.text_box_width
-
+    def update_text(self,text:str): #change to use user_text instead of raw_text. raw_text is actually pretty useless.
+        self.user_text = text
+        self.user_text_width = max(200*self._SIZE_SF,self.font.size(text)[0])
+        self.user_text_rect.w = self.user_text_width
 
 
 
@@ -184,6 +193,9 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
             self.text_inputs[t_input].pos[0] = (self.pos[0] + 10*self._SIZE_SF)
             self.text_inputs[t_input].text_rect.y = self.text_inputs[t_input].pos[1]
             self.text_inputs[t_input].text_rect.x = self.text_inputs[t_input].pos[0]
+            
+            self.text_inputs[t_input].user_text_rect.y = self.text_inputs[t_input].text_rect.y
+            self.text_inputs[t_input].user_text_rect.x = self.text_inputs[t_input].pos[0] + self.text_inputs[t_input].text_rect.width + 20*self._SIZE_SF
 
  
     def move_window(self,mousepos):
@@ -197,6 +209,10 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
 
             self.text_inputs[t_input].text_rect.y = self.text_inputs[t_input].pos[1]
             self.text_inputs[t_input].text_rect.x = self.text_inputs[t_input].pos[0]
+            
+            self.text_inputs[t_input].user_text_rect.y = self.text_inputs[t_input].pos[1]
+            self.text_inputs[t_input].user_text_rect.x = self.text_inputs[t_input].pos[0] + self.text_inputs[t_input].text_rect.width + 20*self._SIZE_SF
+            
             
         
     #this might be right?
