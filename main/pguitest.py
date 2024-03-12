@@ -41,8 +41,16 @@ while 1: #main loop
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 quit()
-            elif event.key == pygame.K_e:
+            elif event.key == pygame.K_BACKSPACE:
+                darr[0].text_inputs[0].update_text(darr[0].text_inputs[0].user_text[:len(darr[0].text_inputs[0].user_text)-1] if len(darr[0].text_inputs[0].user_text) > 0 else "")
+                
+            
+            
+            elif event.key == pygame.K_INSERT:
                 darr.append(create_random_textbox_for_the_funsies())
+            else:
+                darr[0].text_inputs[0].update_text(darr[0].text_inputs[0].user_text+event.unicode)
+                
         elif event.type == pygame.MOUSEBUTTONDOWN:
             
             if len(darr) > 0 and darr[0].check_closebuttoncollide(x,y):
@@ -69,11 +77,12 @@ while 1: #main loop
                     previously_moved = darr.index(tib) # this is getting sketchy now, i'm smelling a big rewrite for optimisation in the future!
 
                 
-            if tib.check_closebuttoncollide(x,y):
+        if len(darr) > 0:    
+            if darr[0].check_closebuttoncollide(x,y):
             
-                tib.clickable_cross.highlighted = True
+                darr[0].clickable_cross.highlighted = True
             else:
-                tib.clickable_cross.highlighted = False
+                darr[0].clickable_cross.highlighted = False
             
     x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
 
