@@ -28,6 +28,8 @@ tb2 = pgui.TextInput([0,0],"hi2")
 tib1 = pgui.TextInputBox([50,100],[600,500],[tb1,tb2],"this is a demo")
 darr.append(tib1)
 previously_moved = 0
+
+
 while 1: #main loop
     dis.fill((255,255,255))
     for i in range(len(darr),0,-1):
@@ -42,20 +44,34 @@ while 1: #main loop
                 pygame.quit()
                 quit()
             elif event.key == pygame.K_BACKSPACE:
-                darr[0].text_inputs[0].update_text(darr[0].text_inputs[0].user_text[:len(darr[0].text_inputs[0].user_text)-1] if len(darr[0].text_inputs[0].user_text) > 0 else "")
+                if len(darr)>0:
+                    for t_input in darr[0].text_inputs:
+                        if t_input.to_input:
+                            t_input.backspace()
                 
             
             
-            elif event.key == pygame.K_INSERT:
+            elif event.key == pygame.K_DELETE: #changed to del because my silly little 75% keyboard doesn't have an insert key!
                 darr.append(create_random_textbox_for_the_funsies())
             else:
-                darr[0].text_inputs[0].update_text(darr[0].text_inputs[0].user_text+event.unicode)
+                if len(darr) > 0:
+                    for t_input in darr[0].text_inputs:
+                        if t_input.to_input:    
+                            t_input.add_char(event.unicode)
                 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             
+
             if len(darr) > 0 and darr[0].check_closebuttoncollide(x,y):
                 darr.pop(0)
+            
             else:
+                for d in range(len(darr)):
+                    if d==0:
+                        darr[d].on_collide(x,y)
+                    else:
+                        for t_input in darr[d].text_inputs:
+                            t_input.to_input = False
                 wecheck = True #check for collisions in this cycle
         
         elif event.type == pygame.MOUSEBUTTONUP:
