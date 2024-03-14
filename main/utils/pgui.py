@@ -150,31 +150,46 @@ class TextInput(GUIbaseClass):
         self.text = self.font.render(text,True,(0,0,0))
         self.to_input = False
         __s = self.text.get_size()
+        self._pipeline_size = self.font.size("|")[0]
         self.text_box_width = __s[0]
         self.text_box_height = __s[1]
         self.text_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_height)
-        
+        self.current_userinp_index = 0
         self.user_text = ""
         #render within display method
-        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0])
+        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size)
         self.user_text_rect = pygame.Rect(self.pos[0]+self.text_box_width+10*self._SIZE_SF,self.pos[1],self.user_text_width,__s[1])
         
         
-        
+    
         
     def display(self,dis:pygame.Surface):
         dis.blit(self.text,(self.pos))
         pygame.draw.rect(dis,(0,0,0),self.user_text_rect,width=1)
         render_text = self.font.render(self.user_text,True,(90,90,90))
+        
+        if self.to_input:
+            pos_sym = "|"
+            pos_sym = self.font.render(pos_sym,True,(10,10,10))
+            dis.blit(pos_sym,(self.user_text_rect.topleft[0]+render_text.get_size()[0],self.user_text_rect.topleft[1]))
+            
         dis.blit(render_text,self.user_text_rect.topleft)
+        
 
-    def update_text(self,text:str): #change to use user_text instead of raw_text. raw_text is actually pretty useless.
-        self.user_text = text
-        self.user_text_width = max(200*self._SIZE_SF,self.font.size(text)[0])
+    def add_char(self,newletter:str): #change to use user_text instead of raw_text. raw_text is actually pretty useless.
+        self.user_text = (self.user_text[:self.current_userinp_index] + newletter + self.user_text[self.current_userinp_index:] if self.current_userinp_index != len(self.user_text)-1 else "") if len(self.user_text) > 0 else newletter
+        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size)
         self.user_text_rect.w = self.user_text_width
+        self.current_userinp_index+=1
 
+    def backspace(self):
+        self.user_text = self.user_text[:self.current_userinp_index-1] + self.user_text[self.current_userinp_index+1:]
+        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0])
+        self.user_text_rect.w = self.user_text_width
+        self.current_userinp_index = self.current_userinp_index-1 if self.current_userinp_index != 0 else 0
 
-
+    
+        
 class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it collates TextInputs together to be handled 
     def __init__(self,pos,window_size,text_inputs:typing.List[TextInput],title:str=None, _topdisplacement:float=None):
         self.text_inputs = text_inputs
@@ -213,7 +228,16 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
             self.text_inputs[t_input].user_text_rect.y = self.text_inputs[t_input].pos[1]
             self.text_inputs[t_input].user_text_rect.x = self.text_inputs[t_input].pos[0] + self.text_inputs[t_input].text_rect.width + 20*self._SIZE_SF
             
-            
+    def on_collide(self,xval,yval):
+        for t_input in range(len(self.text_inputs)):
+            if xval in range(self.text_inputs[t_input].user_text_rect.left,self.text_inputs[t_input].user_text_rect.right) and yval in range(self.text_inputs[t_input].user_text_rect.top,self.text_inputs[t_input].user_text_rect.bottom):
+                self.text_inputs[t_input].to_input = True
+
+                for t2_input in range(len(self.text_inputs)):
+                    if t2_input != t_input:
+                        self.text_inputs[t2_input].to_input = False
+                break
+
         
     #this might be right?
     def display(self,dis:pygame.Surface):
