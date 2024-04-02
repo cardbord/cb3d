@@ -48,7 +48,7 @@ def createMenu():
         pgui.Button([0,0],"Save file",[200,50],None,save_file),
     ]    
     
-    _File = pgui.Dropdown([0,0], pgui.Button([0,0],"File",[200,50],(10,10,10)), [])#place button list in sq brackets
+    _File = pgui.Dropdown([0,0], pgui.Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
     _Help = pgui.Dropdown([pgui.scale_to_window(200),0], Button([pgui.scale_to_window(200),0],"Help",[200,50],(10,10,10)), []) 
 
     
@@ -82,6 +82,8 @@ user_text = ''
 input_rect = pygame.Rect(100, 450, 140, 56)
 default_font = pygame.font.get_default_font()
 font = pygame.font.Font(default_font,60)
+
+debug_font = pygame.font.Font(default_font,40)
 
 ###LEGACY INPUTS
 def take_input(): #legacy inputs; incompatible with main menu. honestly, these are like relics at this point, it would be shameful to remove them.
@@ -571,6 +573,8 @@ while 1:
         
         plane_dlists = quicksort(plane_dlists)
         
+        if debug:
+            plane_dlists_2REMOVELATER = [i for i in plane_dlists]
         
         
         for distance in plane_dlists:
@@ -589,9 +593,14 @@ while 1:
         
         for plane in plane_dlists:
             try:
-                gfxdraw.filled_polygon(dis,plane.render_points,plane.colour)
-            except:
-                pass
+                if debug:
+                    text = debug_font.render(f" PLANE {plane_dlists.index(plane)}: " +str(plane_dlists_2REMOVELATER[plane_dlists.index(plane)]),False,(0,0,0))
+                    dis.blit(text,plane.render_points[0])
+                else:
+                    gfxdraw.filled_polygon(dis,plane.render_points,plane.colour)
+                
+            except Exception as e:
+                print(e)
             
             for point in plane.render_points:
                 if show_points is True:
