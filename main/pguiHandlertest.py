@@ -1,6 +1,9 @@
 from utils import pgui
 import pygame
 
+'''
+mimics pguitest.py in functionality, but makes use of the GUIobj Handler class to abstract all obj movement/textinput additions/window priority away from the main program.
+'''
 
 def create_random_textbox_for_the_funsies():
         tb1 = pgui.TextInput([0,0],"hi")
@@ -17,10 +20,12 @@ dis = pygame.display.set_mode(pygame.display.get_desktop_sizes()[0])
 x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
 while 1:
     for event in pygame.event.get():
-        h3.handle2(event,x,y)
+        h3.handle_event(event,x,y)
+
         if event.type == pygame.QUIT:
             pygame.quit()
             quit()
+        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
