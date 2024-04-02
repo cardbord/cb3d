@@ -159,7 +159,7 @@ class Plane:
         self.points = points
         self.colour = colour
         self.connections = connections
-        self.rpoints = [] #init later
+        self.rpoints = []
         self.render_points = []
         self.avg_distance = 100
         
