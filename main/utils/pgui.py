@@ -52,7 +52,7 @@ class DisplayColumn(GUIbaseClass):
         for item in self.content:
             pass #i'm not sure how i'll manage this, maybe some sort of clever spacing?
 
-
+#print("hello world!")
 
 class GUIobj(GUIbaseClass):
 
@@ -315,3 +315,148 @@ class menu(GUIobj): # i wonder... will setting window size to 1080p remove any n
 
 class window(GUIobj):
     ... #here!
+    
+    
+    
+    
+    
+#HANDLER
+
+class Handler:
+    def __init__(self):
+        self.GUIobjs_array = []
+        self.wecheck = False
+        self.previously_moved = 0
+        self.moved_in_cycle = False
+        
+    def handle_inputs(self,x,y):
+        for event in pygame.event.get():
+            match event.type:
+                case pygame.KEYDOWN:
+                    match pygame.key:
+                        case pygame.K_BACKSPACE:
+                            
+                            if len(self.GUIobjs_array) > 0 and isinstance(self.GUIobjs_array[0],TextInputBox):
+                                for t_input in self.GUIobjs_array[0].text_inputs:
+                                
+                                    if t_input.to_input:
+                                        t_input.backspace()
+                    
+                        case _:
+                            if len(self.GUIobjs_array) > 0:
+                                for t_input in self.GUIobjs_array[0].text_inputs:
+                                    if t_input.to_input:    
+                                        t_input.add_char(event.unicode)   
+                                
+                case pygame.MOUSEBUTTONDOWN:
+                    if len(self.GUIobjs_array) > 0 and self.GUIobjs_array[0].check_closebuttoncollide(x,y):
+                        self.GUIobjs_array.pop(0)
+                    
+                    else:
+                        for d in range(len(self.GUIobjs_array)):
+                            if d==0:
+                                self.GUIobjs_array[d].on_collide(x,y)
+                            else:
+                                for t_input in self.GUIobjs_array[d].text_inputs:
+                                    t_input.to_input = False
+                        self.wecheck = True #check for collisions in this cycle
+                
+                case pygame.MOUSEBUTTONUP:
+                    self.wecheck = False
+        
+        self.moved_in_cycle = False
+        if len(self.GUIobjs_array) > 1 and self.previously_moved != 0:
+            self.GUIobjs_array[0], self.GUIobjs_array[self.previously_moved] = self.GUIobjs_array[self.previously_moved], self.GUIobjs_array[0]
+            self.previously_moved = 0
+        
+        for tib in self.GUIobjs_array:
+            if self.wecheck and tib.check_windowcollide(x,y) and (not self.GUIobjs_array[0].check_objcollide(x,y) if self.GUIobjs_array.index(tib) != 0 else True):
+                if not self.moved_in_cycle:
+                    
+                    newx, newy = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
+                    tib.move_window([tib.pos[0]+(newx-x),tib.pos[1]+(newy-y)]) #there's a hilarious logic problem here where you can merge windows by dragging them around, so we'll have to track one movement per cycle
+                    self.moved_in_cycle = True
+                    self.previously_moved = self.GUIobjs_array.index(tib) # this is getting sketchy now, i'm smelling a big rewrite for optimisation in the future!
+
+                
+        if len(self.GUIobjs_array) > 0:    
+            if self.GUIobjs_array[0].check_closebuttoncollide(x,y):
+            
+                self.GUIobjs_array[0].clickable_cross.highlighted = True
+            else:
+                self.GUIobjs_array[0].clickable_cross.highlighted = False
+        
+    def display(self,dis):
+        dis.fill((255,255,255))
+        for i in range(len(self.GUIobjs_array),0,-1):
+            self.GUIobjs_array[i-1].display(dis)
+        
+        
+    def handle2(self,event,x,y):
+        
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                quit()
+            
+            
+            elif event.key == pygame.K_BACKSPACE:
+                if len(self.GUIobjs_array)>0:
+                    for t_input in self.GUIobjs_array[0].text_inputs:
+                        if t_input.to_input:
+                            t_input.backspace()
+                            
+            else:
+                self.addTIBtext(event.unicode)
+
+                
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            
+
+            if len(self.GUIobjs_array) > 0 and self.GUIobjs_array[0].check_closebuttoncollide(x,y):
+                self.GUIobjs_array.pop(0)
+            
+            else:
+                for d in range(len(self.GUIobjs_array)):
+                    if d==0:
+                        self.GUIobjs_array[d].on_collide(x,y)
+                    else:
+                        for t_input in self.GUIobjs_array[d].text_inputs:
+                            t_input.to_input = False
+                self.wecheck = True #check for collisions in this cycle
+        
+        elif event.type == pygame.MOUSEBUTTONUP:
+            self.wecheck = False
+        
+        self.moved_in_cycle = False
+        if len(self.GUIobjs_array) > 1 and self.previously_moved != 0:
+            self.GUIobjs_array[0], self.GUIobjs_array[self.previously_moved] = self.GUIobjs_array[self.previously_moved], self.GUIobjs_array[0]
+            self.previously_moved = 0
+        
+        
+        for tib in self.GUIobjs_array:
+            if self.wecheck and tib.check_windowcollide(x,y) and (not self.GUIobjs_array[0].check_objcollide(x,y) if self.GUIobjs_array.index(tib) != 0 else True):
+                if not self.moved_in_cycle:
+                    
+                    newx, newy = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
+                    tib.move_window([tib.pos[0]+(newx-x),tib.pos[1]+(newy-y)]) #there's a hilarious logic problem here where you can merge windows by dragging them around, so we'll have to track one movement per cycle
+                    self.moved_in_cycle = True
+                    self.previously_moved = self.GUIobjs_array.index(tib) # this is getting sketchy now, i'm smelling a big rewrite for optimisation in the future!
+
+                    
+        if len(self.GUIobjs_array) > 0:    
+            if self.GUIobjs_array[0].check_closebuttoncollide(x,y):
+            
+                self.GUIobjs_array[0].clickable_cross.highlighted = True
+            else:
+                self.GUIobjs_array[0].clickable_cross.highlighted = False
+            
+    def addTIBtext(self,unicode):
+        
+        if len(self.GUIobjs_array) > 0:
+            for t_input in self.GUIobjs_array[0].text_inputs:
+                if t_input.to_input:    
+                    t_input.add_char(unicode)
