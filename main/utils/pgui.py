@@ -37,7 +37,52 @@ class GUIbaseClass: #provide attrs for other junk, because these things are incl
         self.font = Font(get_default_font(),int(round(self._fontSIZE*self._SIZE_SF)))
 
 
-class DisplayColumn(GUIbaseClass):
+
+class  DisplayRows(GUIbaseClass):
+    def __init__(self,
+        objs,
+        _parent_pos=None, #leave as None so that parents can auto-fill this later..
+        _parent_window_size=None
+    ):
+        super().__init__()
+        self.content = objs
+        self.parent_pos = _parent_pos
+        self.parent_window_size = _parent_window_size
+
+    def _calc_obj_rel_pos(self,displace_height):
+        avg_content_height = (self.parent_window_size[1] - displace_height)/len(self.content) #just make sure parent_window_size is provided by the time this is called, then things work!
+        for itemid in range(len(self.content)):
+            if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
+                    self.content[itemid].parent_pos = [self.parent_pos[0], displace_height+(avg_content_height)*itemid]
+                    self.content[itemid].parent_window_Size = [self.parent_window_size[0],avg_content_height]
+                    self.content[itemid]._calc_obj_rel_pos(displace_height) #recursively call _calc_obj_rel_pos on children, not before constraining scaling area to the current content block size.
+                    #this raises the oppurtunity for all sorts of content layout!
+            elif isinstance(self.content[itemid], Button):
+                
+
+                self.content[itemid]=Button(
+                    [
+                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                    ],
+                    self.content[itemid].text_overlay,
+                    self.content[itemid]._buttonblocksize,
+                    self.content[itemid].highlighted_colour,
+                    self.content[itemid].callback
+                    )
+            elif isinstance(self.content[itemid], TextInput):
+                self.content[itemid]=TextInput(
+                    [
+                        (self.parent_pos[0] + 10*self._SIZE_SF),
+                        displace_height + avg_content_height*(itemid-0.5) - self.content[itemid].text_box_height/2
+                    ],
+                    self.content[itemid].raw_text
+                )
+            #add support for raw images and raw text later...
+    
+                
+
+class DisplayColumns(GUIbaseClass):
     def __init__(self,
         parent_pos,
         parent_window_size,
@@ -45,14 +90,44 @@ class DisplayColumn(GUIbaseClass):
     ):
         super().__init__()
         self.content = objs
+        self.parent_pos = parent_pos
+        self.parent_window_size = parent_window_size
         
 
     def _calc_obj_rel_pos(self,displace_height):
+        avg_content_width = self.parent_window_size[0]/len(self.content)
         #justify position relative to the rest of the window, then calculate the position of everything else
-        for item in self.content:
-            pass #i'm not sure how i'll manage this, maybe some sort of clever spacing?
+        for itemid in range(len(self.content)):
+            if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
+                    self.content[itemid].parent_pos = [self.parent_pos+(itemid*avg_content_width), self.parent_pos[1]]
+                    self.content[itemid].parent_window_Size = [avg_content_width,self.parent_window_size[1]-displace_height]
+                    self.content[itemid]._calc_obj_rel_pos(0)
 
-#print("hello world!")
+            elif isinstance(self.content[itemid], Button):
+                
+
+                self.content[itemid]=Button(
+                    [
+                        self.parent_pos[0] + avg_content_width*(itemid+0.5) - self.content[itemid].button_rect.width/2,
+                        self.parent_pos[1] + displace_height + (self.window_size[1]-self.content[itemid].button_rect.height)/2
+                    ],
+                    self.content[itemid].text_overlay,
+                    self.content[itemid]._buttonblocksize,
+                    self.content[itemid].highlighted_colour,
+                    self.content[itemid].callback
+                    )
+            elif isinstance(self.content[itemid], TextInput):
+                self.content[itemid]=TextInput(
+                    [
+                        (self.parent_pos[0] + (avg_content_width*itemid) +(avg_content_width*(itemid-1)) + 10*self._SIZE_SF),
+                        self.parent_pos[1] + displace_height + (self.window_size[1]-self.content[itemid].text_box_height)/2
+                    ],
+                    self.content[itemid].raw_text
+                )
+            
+            
+            
+            
 
 class GUIobj(GUIbaseClass):
 
@@ -101,7 +176,7 @@ class GUIobj(GUIbaseClass):
             dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)])
         for display_obj in self.content:
             for content_obj in display_obj.content:
-                content_obj.display() 
+                content_obj.display(dis) if not isinstance(content_obj,Button) else content_obj._NSdis(dis) 
         
         self.clickable_cross.display(dis)
 
@@ -120,13 +195,13 @@ class Button(GUIbaseClass):
         self.pos = pos
         self.text_overlay = text_overlay
         self.text = self.font.render(self.text_overlay,True,(0,0,0))
-        self.text_box_width = max(42*self._SIZE_SF,self.text.get_width()*self._SIZE_SF*7) if not window_size else window_size[0] * self._SIZE_SF
+        self.text_box_width = max(42*self._SIZE_SF,self.font.size(self.text_overlay)[0]) if not window_size else window_size[0] * self._SIZE_SF
         self.text_box_height = (self.font.get_height()+4)*self._SIZE_SF if not window_size else window_size[1] * self._SIZE_SF
         self.highlighted_colour = colourvalue if colourvalue else (0,0,0)
         self.button_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width ,self.text_box_height)
         self.highlighted = False #we change this at some point in the main program to highlight with our selected colour, just by doing ```Button.highlighted = True; Button.display(dis)```
         self.callback = callback #function to execute once button is clicked
-
+        self._buttonblocksize = window_size
 
     def display(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
@@ -330,7 +405,7 @@ class Handler:
         self.moved_in_cycle = False
         
     
-        
+
     def display(self,dis):
         dis.fill((255,255,255))
         for i in range(len(self.GUIobjs_array),0,-1):
