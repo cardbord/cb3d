@@ -8,3 +8,5 @@ test.py
 *.cblog
 !_globals.cblog
 #there are going to be other user-specific log files with file type cblog, but they are not global.
+math/
+#the math folder is just some of my workings-out in ms paint (it's really helpful trust me!!) that i might need to help explain the questionable algos that i'm writing
