@@ -1,41 +1,50 @@
-from utils.pgui import TextInput, Button, DisplayColumns, DisplayRows, GUIobj, calc_rel_size
+from utils.pgui import TextInput, Button, DisplayColumns, DisplayRows, GUIobj, calc_rel_size, Handler, Anchor
 import pygame
 
-
+eventHandler = Handler()
 
 pygame.init()
 
-obj = GUIobj([200,200], [600,500],"content block test")
-obj.content = [
+obj = GUIobj([200,200], [1400,1000],"content block test")
+obj.add_content(
      DisplayColumns(
-               obj.pos, obj.window_size,
+               
                [
-               Button([0,0],"test button"),
-               TextInput([0,0],"hello there")
-               ],        
+                    
+                    DisplayRows(
+                         [
+                              Button([0,0],"hello"),
+                              Button([0,0],"hello2").anchor(Anchor.CENTER)
+                         ]
+                    ),
+                    
+                    DisplayRows(
+                         [
+                              Button([0,0],"helo2"),
+                              Button([0,0],"hello3")
+                         ]
+                    )
+                    
+               ],
+          )
      )
-]
-
 
 
 
 dis = pygame.display.set_mode(pygame.display.get_desktop_sizes()[0])
 size_Sf = calc_rel_size()
-print(obj.content[0].content[0].pos)
-print(obj.content[0].content[0].text_box_width)
-print(obj.content[0].content[0].button_rect.width)
-print(obj.content[0].content[0]._SIZE_SF)
 
-obj.content[0]._calc_obj_rel_pos(50*size_Sf)
+
+eventHandler.GUIobjs_array.append(obj)
 print("STARTING MAIN LOOP")
+xy = pygame.mouse.get_pos()
+x,y = xy[0], xy[1]
 while 1: #main loop
      dis.fill((255,255,255))
      
-     print(obj.content[0].content[0].pos)
-     print(obj.content[0].content[0].text_box_width)
-     print(obj.content[0].content[0].button_rect.width)
-     print(obj.content[0].content[0]._SIZE_SF)
      for event in pygame.event.get():
+          
+          eventHandler.handle_event(event,x,y)
           if event.type == pygame.QUIT:
                pygame.quit()
                quit()
@@ -44,6 +53,6 @@ while 1: #main loop
                     pygame.quit()
                     quit()
 
-     obj.display_window(dis)
-
+     eventHandler.display(dis)
+     x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
      pygame.display.update()
