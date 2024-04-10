@@ -2,6 +2,7 @@ import pygame #do we make enum class for types at some point? #no, are you stupi
 from pygame.font import get_default_font, Font
 import typing
 from math import sqrt, ceil
+from enum import IntEnum
 
 pygame.font.init()
 
@@ -12,14 +13,25 @@ def calc_rel_size() -> typing.Union[float,None]: #requies a running pyame displa
         winsize = pygame.display.get_desktop_sizes()[0]
         return round(sqrt((winsize[0]*winsize[1]))/1440,3)  #returns size scale factor
     
-def scale_to_window(value:typing.Union[int,float]) -> float:
-    return calc_rel_size() * value
+def scale_to_window(value:typing.Union[int,float]) -> float :
+    return calc_rel_size() * value 
 
 
 def CLOSE():
     if pygame.get_init():
         pygame.quit()
     exit()
+
+class Anchor(IntEnum):
+    TOP=0
+    BOTTOM=1
+    LEFT=2
+    RIGHT=3
+    TOPLEFT=4
+    TOPRIGHT=5
+    BOTTOMLEFT=6
+    BOTTOMRIGHT=7
+    CENTER = 8
 
 
 
@@ -36,7 +48,13 @@ class GUIbaseClass: #provide attrs for other junk, because these things are incl
         self._ASIZE_SF = round((self.window_size[0]*self.window_size[1])/2073600,2) #whelp, our area-based size scaling returns
         self.font = Font(get_default_font(),int(round(self._fontSIZE*self._SIZE_SF)))
 
+        self._anchor = Anchor.CENTER #set through method
 
+
+    def anchor(self, AnchorType:typing.Union[Anchor,int]):
+        self._anchor = AnchorType.value
+
+        return self
 
 class  DisplayRows(GUIbaseClass):
     def __init__(self,
@@ -48,50 +66,55 @@ class  DisplayRows(GUIbaseClass):
         self.content = objs
         self.parent_pos = _parent_pos
         self.parent_window_size = _parent_window_size
+        
 
     def _calc_obj_rel_pos(self,displace_height):
         avg_content_height = (self.parent_window_size[1] - displace_height)/len(self.content) #just make sure parent_window_size is provided by the time this is called, then things work!
         for itemid in range(len(self.content)):
             if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
                     self.content[itemid].parent_pos = [self.parent_pos[0], displace_height+(avg_content_height)*itemid]
-                    self.content[itemid].parent_window_Size = [self.parent_window_size[0],avg_content_height]
+                    self.content[itemid].parent_window_size = [self.parent_window_size[0],avg_content_height]
                     self.content[itemid]._calc_obj_rel_pos(displace_height) #recursively call _calc_obj_rel_pos on children, not before constraining scaling area to the current content block size.
                     #this raises the oppurtunity for all sorts of content layout!
-            elif isinstance(self.content[itemid], Button):
+            else:
+                 
+                if isinstance(self.content[itemid], Button):
                 
-
-                self.content[itemid]=Button(
-                    [
-                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
-                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
-                    ],
-                    self.content[itemid].text_overlay,
-                    self.content[itemid]._buttonblocksize,
-                    self.content[itemid].highlighted_colour,
-                    self.content[itemid].callback
+                    self.content[itemid]=Button(
+                        [
+                            self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                            self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                        ],
+                        self.content[itemid].text_overlay,
+                        self.content[itemid]._buttonblocksize,
+                        self.content[itemid].highlighted_colour,
+                        self.content[itemid].callback
+                        )
+                elif isinstance(self.content[itemid], TextInput):
+                    self.content[itemid]=TextInput(
+                        [
+                            (self.parent_pos[0] + 2*self._SIZE_SF),
+                            self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                        ],
+                        self.content[itemid].raw_text
                     )
-            elif isinstance(self.content[itemid], TextInput):
-                self.content[itemid]=TextInput(
-                    [
-                        (self.parent_pos[0] + 10*self._SIZE_SF),
-                        displace_height + avg_content_height*(itemid-0.5) - self.content[itemid].text_box_height/2
-                    ],
-                    self.content[itemid].raw_text
-                )
-            #add support for raw images and raw text later...
+                #add support for raw images and raw text later...
+        
+
     
-                
+
 
 class DisplayColumns(GUIbaseClass):
     def __init__(self,
-        parent_pos,
-        parent_window_size,
-        objs
+        objs,
+        _parent_pos=None,
+        _parent_window_size=None
     ):
         super().__init__()
         self.content = objs
-        self.parent_pos = parent_pos
-        self.parent_window_size = parent_window_size
+        self.parent_pos = _parent_pos
+        self.parent_window_size = _parent_window_size
+        self._anchors = None
         
 
     def _calc_obj_rel_pos(self,displace_height):
@@ -99,9 +122,9 @@ class DisplayColumns(GUIbaseClass):
         #justify position relative to the rest of the window, then calculate the position of everything else
         for itemid in range(len(self.content)):
             if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
-                    self.content[itemid].parent_pos = [self.parent_pos+(itemid*avg_content_width), self.parent_pos[1]]
-                    self.content[itemid].parent_window_Size = [avg_content_width,self.parent_window_size[1]-displace_height]
-                    self.content[itemid]._calc_obj_rel_pos(0)
+                    self.content[itemid].parent_pos = [self.parent_pos[0]+(itemid*avg_content_width), self.parent_pos[1]]
+                    self.content[itemid].parent_window_size = [avg_content_width,self.parent_window_size[1]-displace_height]
+                    self.content[itemid]._calc_obj_rel_pos(displace_height)
 
             elif isinstance(self.content[itemid], Button):
                 
@@ -109,7 +132,7 @@ class DisplayColumns(GUIbaseClass):
                 self.content[itemid]=Button(
                     [
                         self.parent_pos[0] + avg_content_width*(itemid+0.5) - self.content[itemid].button_rect.width/2,
-                        self.parent_pos[1] + displace_height + (self.window_size[1]-self.content[itemid].button_rect.height)/2
+                        self.parent_pos[1] + displace_height + (self.parent_window_size[1]/2 - self.content[itemid].button_rect.height/2)
                     ],
                     self.content[itemid].text_overlay,
                     self.content[itemid]._buttonblocksize,
@@ -119,8 +142,8 @@ class DisplayColumns(GUIbaseClass):
             elif isinstance(self.content[itemid], TextInput):
                 self.content[itemid]=TextInput(
                     [
-                        (self.parent_pos[0] + (avg_content_width*itemid) +(avg_content_width*(itemid-1)) + 10*self._SIZE_SF),
-                        self.parent_pos[1] + displace_height + (self.window_size[1]-self.content[itemid].text_box_height)/2
+                        (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
+                        self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
                     ],
                     self.content[itemid].raw_text
                 )
@@ -164,7 +187,12 @@ class GUIobj(GUIbaseClass):
         self.clickable_cross = Button([self.pos[0]+self.clickableborder_pos[0]-50*self._SIZE_SF,self.pos[1]],"×",[50,50],(255,0,0)) #too many attributes to change in the old one, let's just make a new button with our updated pos and clickable border
         #render updates should change automatically from this, maybe?
         
-    
+    def __recursive_Displayobj_display(self,obj,dis):
+        for item in obj.content:
+            if isinstance(item,(DisplayColumns,DisplayRows)):
+                self.__recursive_Displayobj_display(item,dis)
+            else:
+                item.display(dis) if not isinstance(item,Button) else item._NSdis(dis)
 
     def display_window(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
@@ -174,9 +202,8 @@ class GUIobj(GUIbaseClass):
         if self.title != None:
             trect = self.font.render(self.title,True,(0,0,0))
             dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)])
-        for display_obj in self.content:
-            for content_obj in display_obj.content:
-                content_obj.display(dis) if not isinstance(content_obj,Button) else content_obj._NSdis(dis) 
+        self.__recursive_Displayobj_display(self,dis)        
+                
         
         self.clickable_cross.display(dis)
 
@@ -188,6 +215,14 @@ class GUIobj(GUIbaseClass):
 
     def check_closebuttoncollide(self,xval,yval):
         return True if (xval in range(int(round(self.clickable_cross.button_rect.left)), int(round(self.clickable_cross.button_rect.right))) and yval in range(int(round(self.clickable_cross.pos[1])), int(round(self.clickable_cross.button_rect.bottom)))) else False
+
+    def add_content(self, display_obj: typing.Union[DisplayColumns, DisplayRows]):
+        display_obj.parent_pos = self.pos
+        display_obj.parent_window_size = self.window_size
+        self.content = [display_obj]
+        self.content[0]._calc_obj_rel_pos(self.clickableborder_pos[1])
+        
+
 
 class Button(GUIbaseClass):
     def __init__(self,pos,text_overlay,window_size:list = None,colourvalue:tuple=None,callback=None): #if no window_size, we approximate with text_overlay (mainly used for guiobj x button)
@@ -403,13 +438,12 @@ class Handler:
         self.wecheck = False
         self.previously_moved = 0
         self.moved_in_cycle = False
-        
     
 
     def display(self,dis):
         dis.fill((255,255,255))
         for i in range(len(self.GUIobjs_array),0,-1):
-            self.GUIobjs_array[i-1].display(dis)
+            self.GUIobjs_array[i-1].display(dis) if not isinstance(self.GUIobjs_array[i-1],GUIobj) else self.GUIobjs_array[i-1].display_window(dis)
         
         
     def handle_event(self,event,x,y):
@@ -442,7 +476,8 @@ class Handler:
             else:
                 for d in range(len(self.GUIobjs_array)):
                     if d==0:
-                        self.GUIobjs_array[d].on_collide(x,y)
+                        if not isinstance(self.GUIobjs_array[d], GUIobj):
+                            self.GUIobjs_array[d].on_collide(x,y)
                     else:
                         for t_input in self.GUIobjs_array[d].text_inputs:
                             t_input.to_input = False
@@ -457,15 +492,19 @@ class Handler:
             self.previously_moved = 0
         
         
-        for tib in self.GUIobjs_array:
-            if self.wecheck and tib.check_windowcollide(x,y) and (not self.GUIobjs_array[0].check_objcollide(x,y) if self.GUIobjs_array.index(tib) != 0 else True):
+        for display_object in self.GUIobjs_array:
+            if self.wecheck and display_object.check_windowcollide(x,y) and (not self.GUIobjs_array[0].check_objcollide(x,y) if self.GUIobjs_array.index(display_object) != 0 else True):
                 if not self.moved_in_cycle:
                     
                     newx, newy = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
-                    tib.move_window([tib.pos[0]+(newx-x),tib.pos[1]+(newy-y)]) #there's a hilarious logic problem here where you can merge windows by dragging them around, so we'll have to track one movement per cycle
+                    display_object.move_window([display_object.pos[0]+(newx-x),display_object.pos[1]+(newy-y)]) #there's a hilarious logic problem here where you can merge windows by dragging them around, so we'll have to track one movement per cycle
                     self.moved_in_cycle = True
-                    self.previously_moved = self.GUIobjs_array.index(tib) # this is getting sketchy now, i'm smelling a big rewrite for optimisation in the future!
+                    self.previously_moved = self.GUIobjs_array.index(display_object) # this is getting sketchy now, i'm smelling a big rewrite for optimisation in the future!
+                    if hasattr(display_object,"content"):
 
+                        for contentblock in display_object.content:
+                            contentblock.parent_pos = display_object.pos
+                            contentblock._calc_obj_rel_pos(50*display_object._SIZE_SF)
                     
         if len(self.GUIobjs_array) > 0:    
             if self.GUIobjs_array[0].check_closebuttoncollide(x,y):
