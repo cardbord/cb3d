@@ -72,34 +72,80 @@ class  DisplayRows(GUIbaseClass):
         avg_content_height = (self.parent_window_size[1] - displace_height)/len(self.content) #just make sure parent_window_size is provided by the time this is called, then things work!
         for itemid in range(len(self.content)):
             if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
-                    self.content[itemid].parent_pos = [self.parent_pos[0], displace_height+(avg_content_height)*itemid]
+                    self.content[itemid].parent_pos = [self.parent_pos[0], self.parent_pos[1]+ displace_height+(avg_content_height)*itemid]
                     self.content[itemid].parent_window_size = [self.parent_window_size[0],avg_content_height]
                     self.content[itemid]._calc_obj_rel_pos(displace_height) #recursively call _calc_obj_rel_pos on children, not before constraining scaling area to the current content block size.
                     #this raises the oppurtunity for all sorts of content layout!
             else:
-                 
-                if isinstance(self.content[itemid], Button):
-                
-                    self.content[itemid]=Button(
-                        [
-                            self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
-                            self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
-                        ],
-                        self.content[itemid].text_overlay,
-                        self.content[itemid]._buttonblocksize,
-                        self.content[itemid].highlighted_colour,
-                        self.content[itemid].callback
-                        )
-                elif isinstance(self.content[itemid], TextInput):
-                    self.content[itemid]=TextInput(
-                        [
-                            (self.parent_pos[0] + 2*self._SIZE_SF),
-                            self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
-                        ],
-                        self.content[itemid].raw_text
-                    )
-                #add support for raw images and raw text later...
-        
+                match self.content[itemid]._anchor:
+                    case 8:
+                        if isinstance(self.content[itemid], Button):
+                        
+                            self.content[itemid]=Button(
+                                [
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                                ],
+                                self.content[itemid].text_overlay,
+                                self.content[itemid]._buttonblocksize,
+                                self.content[itemid].highlighted_colour,
+                                self.content[itemid].callback
+                                )
+                        elif isinstance(self.content[itemid], TextInput):
+                            self.content[itemid]=TextInput(
+                                [
+                                    (self.parent_pos[0] + 2*self._SIZE_SF),
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                ],
+                                self.content[itemid].raw_text
+                            )
+                        #add support for raw images and raw text later...
+            
+                    
+                    case 0:
+                        
+                        if isinstance(self.content[itemid], Button):
+                        
+                            self.content[itemid]=Button(
+                                [
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5)
+                                ],
+                                self.content[itemid].text_overlay,
+                                self.content[itemid]._buttonblocksize,
+                                self.content[itemid].highlighted_colour,
+                                self.content[itemid].callback
+                                )
+                        elif isinstance(self.content[itemid], TextInput):
+                            self.content[itemid]=TextInput(
+                                [
+                                    (self.parent_pos[0] + 2*self._SIZE_SF),
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                ],
+                                self.content[itemid].raw_text
+                            )
+                            
+                    case _:
+                        if isinstance(self.content[itemid], Button):
+                        
+                            self.content[itemid]=Button(
+                                [
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                                ],
+                                self.content[itemid].text_overlay,
+                                self.content[itemid]._buttonblocksize,
+                                self.content[itemid].highlighted_colour,
+                                self.content[itemid].callback
+                                )
+                        elif isinstance(self.content[itemid], TextInput):
+                            self.content[itemid]=TextInput(
+                                [
+                                    (self.parent_pos[0] + 2*self._SIZE_SF),
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                ],
+                                self.content[itemid].raw_text
+                            )
 
     
 
@@ -327,7 +373,7 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
         super().move_window(mousepos)
         self.confirm_button = Button([self.window_size[0]+self.pos[0]-(self.__s[0]), (self.window_size[1]+self.pos[1])-(self.__s[1]) ],
                                      "Confirm",
-                                     [(self.__s[0]/self._SIZE_SF),self.__s[1]/self._SIZE_SF])
+                                     [(self.__s[0]/self._SIZE_SF),self.__s[1]/self._SIZE_SF], None, self.confirm_button.callback)
         for t_input in range(len(self.text_inputs)):
             self.text_inputs[t_input].pos[1] = self.pos[1] + (self.__GUIobjWinTop_Displacement) + 60*self._SIZE_SF*t_input #adjust distance dependent multiple of font size (figure out later)
             self.text_inputs[t_input].pos[0] = (self.pos[0] + 10*self._SIZE_SF)
@@ -339,6 +385,12 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
             self.text_inputs[t_input].user_text_rect.x = self.text_inputs[t_input].pos[0] + self.text_inputs[t_input].text_rect.width + 20*self._SIZE_SF
             
     def on_collide(self,xval,yval):
+        
+        if self.confirm_button.callback != None and xval in range(self.confirm_button.button_rect.left, self.confirm_button.button_rect.right) and yval in range(self.confirm_button.button_rect.top, self.confirm_button.button_rect.bottom):
+            print("calling confirm callback")
+            self.confirm_button.callback()
+
+            
         for t_input in range(len(self.text_inputs)):
             if xval in range(self.text_inputs[t_input].user_text_rect.left,self.text_inputs[t_input].user_text_rect.right) and yval in range(self.text_inputs[t_input].user_text_rect.top,self.text_inputs[t_input].user_text_rect.bottom):
                 self.text_inputs[t_input].to_input = True
@@ -443,7 +495,7 @@ class Handler:
     def display(self,dis):
         dis.fill((255,255,255))
         for i in range(len(self.GUIobjs_array),0,-1):
-            self.GUIobjs_array[i-1].display(dis) if not isinstance(self.GUIobjs_array[i-1],GUIobj) else self.GUIobjs_array[i-1].display_window(dis)
+            self.GUIobjs_array[i-1].display(dis) if isinstance(self.GUIobjs_array[i-1],TextInputBox) else self.GUIobjs_array[i-1].display_window(dis)
         
         
     def handle_event(self,event,x,y):
@@ -458,11 +510,11 @@ class Handler:
             
             
             elif event.key == pygame.K_BACKSPACE:
-                if len(self.GUIobjs_array)>0:
+                if len(self.GUIobjs_array)>0 and isinstance(self.GUIobjs_array[0],TextInputBox):
                     for t_input in self.GUIobjs_array[0].text_inputs:
                         if t_input.to_input:
                             t_input.backspace()
-                            
+                        
             else:
                 self.addTIBtext(event.unicode)
 
@@ -476,11 +528,12 @@ class Handler:
             else:
                 for d in range(len(self.GUIobjs_array)):
                     if d==0:
-                        if not isinstance(self.GUIobjs_array[d], GUIobj):
+                        if isinstance(self.GUIobjs_array[d], TextInputBox):
                             self.GUIobjs_array[d].on_collide(x,y)
                     else:
-                        for t_input in self.GUIobjs_array[d].text_inputs:
-                            t_input.to_input = False
+                        if isinstance(self.GUIobjs_array[0],TextInputBox):
+                            for t_input in self.GUIobjs_array[d].text_inputs:
+                                t_input.to_input = False
                 self.wecheck = True #check for collisions in this cycle
         
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -513,9 +566,18 @@ class Handler:
             else:
                 self.GUIobjs_array[0].clickable_cross.highlighted = False
             
+    def __recursive_displayobj_handling(self, obj):
+        if isinstance(obj, (DisplayColumns, DisplayRows)):
+            pass
+       
+        
     def addTIBtext(self,unicode):
         
-        if len(self.GUIobjs_array) > 0:
+        if len(self.GUIobjs_array) > 0 and isinstance(self.GUIobjs_array[0],TextInputBox):
             for t_input in self.GUIobjs_array[0].text_inputs:
                 if t_input.to_input:    
                     t_input.add_char(unicode)
+                    
+        #elif len(self.GUIobjs_array) > 0 and hasattr(self.GUIobjs_array[0], "content"):
+        #    for block in self.GUIobjs_array[0].content:
+                
