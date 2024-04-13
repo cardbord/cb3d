@@ -97,7 +97,7 @@ class  DisplayRows(GUIbaseClass):
                                     (self.parent_pos[0] + 2*self._SIZE_SF),
                                     self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
                                 ],
-                                self.content[itemid].raw_text
+                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             )
                         #add support for raw images and raw text later...
             
@@ -122,7 +122,7 @@ class  DisplayRows(GUIbaseClass):
                                     (self.parent_pos[0] + 2*self._SIZE_SF),
                                     self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
                                 ],
-                                self.content[itemid].raw_text
+                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             )
                             
                     case _:
@@ -144,7 +144,7 @@ class  DisplayRows(GUIbaseClass):
                                     (self.parent_pos[0] + 2*self._SIZE_SF),
                                     self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
                                 ],
-                                self.content[itemid].raw_text
+                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             )
 
     
@@ -191,7 +191,7 @@ class DisplayColumns(GUIbaseClass):
                         (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
                         self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
                     ],
-                    self.content[itemid].raw_text
+                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                 )
             
             
@@ -282,7 +282,7 @@ class Button(GUIbaseClass):
         self.button_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width ,self.text_box_height)
         self.highlighted = False #we change this at some point in the main program to highlight with our selected colour, just by doing ```Button.highlighted = True; Button.display(dis)```
         self.callback = callback #function to execute once button is clicked
-        self._buttonblocksize = window_size
+        self._buttonblocksize = window_size #this might be required to satisfy the recursive nature of content blocks, so i might remove it later
 
     def display(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
@@ -299,32 +299,32 @@ class Button(GUIbaseClass):
             return False
 
 class TextInput(GUIbaseClass):
-    def __init__(self,pos,text):
-        super().__init__()
+    def __init__(self,pos,text, _user_text=None, _current_userinp_index=None):
+        super().__init__() #init above GUIbaseClass
         self.pos = pos
         self.raw_text = text
         self.text = self.font.render(text,True,(0,0,0))
         self.to_input = False
-        __s = self.text.get_size()
+        __size_text = self.text.get_size()
         self._pipeline_size = self.font.size("|")[0]
-        self.text_box_width = __s[0]
-        self.text_box_height = __s[1]
+        self.text_box_width = __size_text[0]
+        self.text_box_height = __size_text[1]
         self.text_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width,self.text_box_height)
-        self.current_userinp_index = 0
-        self.user_text = ""
+        self.current_userinp_index = _current_userinp_index or 0
+        self.user_text = _user_text or ""
         #render within display method
-        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size)
-        self.user_text_rect = pygame.Rect(self.pos[0]+self.text_box_width+10*self._SIZE_SF,self.pos[1],self.user_text_width,__s[1])
+        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size) #chooses between 200px (at 1080p) or the user text + the size of the pipeline
+        self.user_text_rect = pygame.Rect(self.pos[0]+self.text_box_width+10*self._SIZE_SF,self.pos[1],self.user_text_width,__size_text[1])
         
         
     
         
-    def display(self,dis:pygame.Surface):
+    def display(self,dis:pygame.Surface): #draws the TextInput, normally called by TextInputBox
         dis.blit(self.text,(self.pos))
         pygame.draw.rect(dis,(0,0,0),self.user_text_rect,width=1)
         render_text = self.font.render(self.user_text,True,(90,90,90))
         
-        if self.to_input:
+        if self.to_input: #render a pipeline symbol at the end of the text if the TextInput is active for inputs
             pos_sym = "|"
             pos_sym = self.font.render(pos_sym,True,(10,10,10))
             dis.blit(pos_sym,(self.user_text_rect.topleft[0]+render_text.get_size()[0],self.user_text_rect.topleft[1]))
@@ -332,17 +332,18 @@ class TextInput(GUIbaseClass):
         dis.blit(render_text,self.user_text_rect.topleft)
         
 
-    def add_char(self,newletter:str): #change to use user_text instead of raw_text. raw_text is actually pretty useless.
-        self.user_text = (self.user_text[:self.current_userinp_index] + newletter + self.user_text[self.current_userinp_index:] if self.current_userinp_index != len(self.user_text)-1 else "") if len(self.user_text) > 0 else newletter
+    def add_char(self,newletter:str): #adds a single character a time (multiple characters not required as the limit is adding once per loop through event.unicode)
+        self.user_text = (self.user_text[:self.current_userinp_index]+newletter+self.user_text[self.current_userinp_index:] if self.current_userinp_index!=len(self.user_text)-1 else "") if len(self.user_text)>0 else newletter
+        #inserts the character into the middle of the current position (you can move through the text with arrow keys)
         self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size)
         self.user_text_rect.w = self.user_text_width
         self.current_userinp_index+=1
 
-    def backspace(self):
-        self.user_text = self.user_text[:self.current_userinp_index-1] + self.user_text[self.current_userinp_index+1:]
+    def backspace(self): #removes a character at the current pipeline position
+        self.user_text = self.user_text[:self.current_userinp_index-1] + self.user_text[self.current_userinp_index+1:] 
         self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0])
-        self.user_text_rect.w = self.user_text_width
-        self.current_userinp_index = self.current_userinp_index-1 if self.current_userinp_index != 0 else 0
+        self.user_text_rect.w = self.user_text_width #shortens the user text width of the user text rect
+        self.current_userinp_index = self.current_userinp_index-1 if self.current_userinp_index != 0 else 0 #can't have a negative index, so i've just added a small check
 
     
         
@@ -399,6 +400,7 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
                     if t2_input != t_input:
                         self.text_inputs[t2_input].to_input = False
                 break
+            
 
         
     #this might be right?
@@ -491,7 +493,41 @@ class Handler:
         self.previously_moved = 0
         self.moved_in_cycle = False
     
+    def __recursive_displayobj_texthandling(self, obj,unicode, _backspace=False):
+        for item in obj.content:
+            if isinstance(item, (DisplayColumns, DisplayRows)):
+                self.__recursive_displayobj_texthandling(item,unicode,_backspace)
+            else:
+                if isinstance(item,TextInput) and item.to_input:
+                    if not _backspace:
+                        item.add_char(unicode)
+                    else:
+                        item.backspace()
+    
+    def __recursive_displayobj_disableinput(self,obj,hashval):
+        for item in obj.content:
+            if isinstance(item,(DisplayColumns,DisplayRows)):
+                self.__recursive_displayobj_disableinput(item,hashval)
+            else:
+                if isinstance(item,TextInput) and hash(item) != hashval:
+                    item.to_input = False
+    
+    def __recursive_displayobj_onclick(self,obj,xval,yval,_original_object=None):
+        
+        for item in obj.content:
+            if isinstance(item,(DisplayRows,DisplayColumns)):
+                self.__recursive_displayobj_onclick(item,xval,yval,obj)
+                
+            else:
+                print("how did we get here")
+                if isinstance(item,TextInput) and xval in range(item.user_text_rect.left,item.user_text_rect.right) and yval in range(item.user_text_rect.top,item.user_text_rect.bottom):
+                    item.to_input = True
+                    print("THIS HAS BEEN SOMETHINGed")
+                    self.__recursive_displayobj_disableinput(_original_object,hash(item))
+                    break
 
+
+    
     def display(self,dis):
         dis.fill((255,255,255))
         for i in range(len(self.GUIobjs_array),0,-1):
@@ -514,6 +550,7 @@ class Handler:
                     for t_input in self.GUIobjs_array[0].text_inputs:
                         if t_input.to_input:
                             t_input.backspace()
+                self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True)
                         
             else:
                 self.addTIBtext(event.unicode)
@@ -530,10 +567,14 @@ class Handler:
                     if d==0:
                         if isinstance(self.GUIobjs_array[d], TextInputBox):
                             self.GUIobjs_array[d].on_collide(x,y)
+                        elif isinstance(self.GUIobjs_array[0],GUIobj):
+                            self.__recursive_displayobj_onclick(self.GUIobjs_array[0],x,y)
+                            
                     else:
                         if isinstance(self.GUIobjs_array[0],TextInputBox):
                             for t_input in self.GUIobjs_array[d].text_inputs:
                                 t_input.to_input = False
+                        
                 self.wecheck = True #check for collisions in this cycle
         
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -559,16 +600,15 @@ class Handler:
                             contentblock.parent_pos = display_object.pos
                             contentblock._calc_obj_rel_pos(50*display_object._SIZE_SF)
                     
-        if len(self.GUIobjs_array) > 0:    
-            if self.GUIobjs_array[0].check_closebuttoncollide(x,y):
+        for contentblock in self.GUIobjs_array:
+                
+            if contentblock.check_closebuttoncollide(x,y):
             
-                self.GUIobjs_array[0].clickable_cross.highlighted = True
+                contentblock.clickable_cross.highlighted = True
             else:
-                self.GUIobjs_array[0].clickable_cross.highlighted = False
+                contentblock.clickable_cross.highlighted = False
             
-    def __recursive_displayobj_handling(self, obj):
-        if isinstance(obj, (DisplayColumns, DisplayRows)):
-            pass
+    
        
         
     def addTIBtext(self,unicode):
@@ -578,6 +618,7 @@ class Handler:
                 if t_input.to_input:    
                     t_input.add_char(unicode)
                     
-        #elif len(self.GUIobjs_array) > 0 and hasattr(self.GUIobjs_array[0], "content"):
-        #    for block in self.GUIobjs_array[0].content:
+        elif len(self.GUIobjs_array) > 0 and hasattr(self.GUIobjs_array[0], "content"):
+            for contentblock in self.GUIobjs_array[0].content:
+                self.__recursive_displayobj_texthandling(contentblock,unicode)
                 
