@@ -277,7 +277,7 @@ class Button(GUIbaseClass):
         self.text_overlay = text_overlay
         self.text = self.font.render(self.text_overlay,True,(0,0,0))
         self.text_box_width = max(42*self._SIZE_SF,self.font.size(self.text_overlay)[0]) if not window_size else window_size[0] * self._SIZE_SF
-        self.text_box_height = (self.font.get_height()+4)*self._SIZE_SF if not window_size else window_size[1] * self._SIZE_SF
+        self.text_box_height = self.font.get_height() if not window_size else window_size[1] * self._SIZE_SF
         self.highlighted_colour = colourvalue if colourvalue else (0,0,0)
         self.button_rect = pygame.Rect(self.pos[0],self.pos[1],self.text_box_width ,self.text_box_height)
         self.highlighted = False #we change this at some point in the main program to highlight with our selected colour, just by doing ```Button.highlighted = True; Button.display(dis)```
