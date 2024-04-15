@@ -7,28 +7,15 @@ pygame.init()
 
 obj = GUIobj([200,200], [1400,1000],"content block test")
 obj.add_content(
-     DisplayColumns(
-               
-               [
-                    
-                    DisplayRows(
-                         [
-                              Button([0,0],"hello"),
-                              Button([0,0],"hello2").anchor(Anchor.CENTER)
-                         ]
-                    ),
-                    
-                    DisplayRows(
-                         [
-                              Button([0,0],"helo2"),
-                              Button([0,0],"hello3")
-                         ]
-                    )
-                    
-               ],
-          )
+     DisplayRows(
+          [
+               Button([0,0],"ce").anchor(Anchor.CENTER),
+               Button([0,0],"to").anchor(Anchor.TOP),
+               Button([0,0],"bo").anchor(Anchor.BOTTOM),
+               Button([0,0],"br").anchor(Anchor.BOTTOMRIGHT)
+          ]
      )
-
+)
 
 
 dis = pygame.display.set_mode(pygame.display.get_desktop_sizes()[0])
@@ -54,5 +41,9 @@ while 1: #main loop
                     quit()
 
      eventHandler.display(dis)
+     displace_height = 50*obj._SIZE_SF
+     avg_h = (obj.content[0].parent_window_size[1] - displace_height)/len(obj.content[0].content)
+     for i in range(len(obj.content[0].content)):
+          pygame.draw.line(dis,(0,0,0),(obj.pos[0],obj.pos[1] +displace_height + avg_h*i),(obj.pos[0]+obj.window_size[0], obj.pos[1]+displace_height+avg_h*i))
      x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
      pygame.display.update()
