@@ -513,7 +513,6 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
     def on_collide(self,xval,yval):
         
         if self.confirm_button.callback != None and xval in range(self.confirm_button.button_rect.left, self.confirm_button.button_rect.right) and yval in range(self.confirm_button.button_rect.top, self.confirm_button.button_rect.bottom):
-            print("calling confirm callback")
             self.confirm_button.callback()
 
             
