@@ -148,7 +148,27 @@ class  DisplayRows(GUIbaseClass):
 
 
 
-
+                    case 5: #topright
+                        if isinstance(self.content[itemid], Button):
+                        
+                            self.content[itemid]=Button(
+                                [
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                    self.parent_pos[1] + displace_height + avg_content_height*itemid
+                                ],
+                                self.content[itemid].text_overlay,
+                                self.content[itemid]._buttonblocksize,
+                                self.content[itemid].highlighted_colour,
+                                self.content[itemid].callback
+                                ).anchor(self.content[itemid]._anchor)
+                        elif isinstance(self.content[itemid], TextInput):
+                            self.content[itemid]=TextInput(
+                                [
+                                    (self.parent_pos[0] + self.content[itemid].user_text_width/2) ,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                ],
+                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                            ).anchor(self.content[itemid]._anchor)
 
 
                     
@@ -194,7 +214,7 @@ class  DisplayRows(GUIbaseClass):
                             self.content[itemid]=TextInput(
                                 [
                                     (self.parent_pos[0] + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid)
                                 ],
                                 self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             ).anchor(self.content[itemid]._anchor)
@@ -493,7 +513,6 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
     def on_collide(self,xval,yval):
         
         if self.confirm_button.callback != None and xval in range(self.confirm_button.button_rect.left, self.confirm_button.button_rect.right) and yval in range(self.confirm_button.button_rect.top, self.confirm_button.button_rect.bottom):
-            print("calling confirm callback")
             self.confirm_button.callback()
 
             
