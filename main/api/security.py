@@ -1,9 +1,9 @@
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+import datetime
 from typing import Annotated
 from sqlalchemy import Table
 from databases import Database
@@ -21,9 +21,10 @@ class UploadHandler:
         query = self.users_schema.select().where(self.users_schema.c.userID==identifier)
         return await self.db.execute(query)
 
-    def authenticate_password(self,userID,password):
-        user = self._get_user(userID)
+    async def authenticate_password(self,userID,password):
+        user = await self._get_user(userID)
         if user:
+            print(user)
             user = eval(user)
 
             if self.pwd_ctx.verify(password,user['password']):
@@ -31,15 +32,15 @@ class UploadHandler:
         return None
     
     def create_access_token(self,data:dict):
-        data.update({"exp":datetime.utcnow()+timedelta(hours=10)}) #should be long enough to use, but not too long to leave open for bad actors
+        data.update({"exp":datetime.datetime.now(datetime.UTC)+datetime.timedelta(hours=10)}) #should be long enough to use, but not too long to leave open for bad actors
         return jwt.encode(data,SECRET)
     
-    async def authenticate_token(self,token:Annotated[str,oauth2scheme]):
+    async def authenticate_token(self,token:Annotated[str,Depends(oauth2scheme)]):
         try:
             decoded_token_payload = jwt.decode(token,SECRET)
             userID = decoded_token_payload.get("userID")
             if userID:
-                user = self._get_user(userID)
+                user = await self._get_user(userID)
                 if user:
                     return user
                 else:

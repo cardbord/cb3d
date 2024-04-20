@@ -46,7 +46,7 @@ async def startup():
 async def shutdown():
     await database.disconnect()
 
-@host_service.get("/models/",dependencies=[Depends(authentication_session.authenticate_password)])
+@host_service.get("/models/",dependencies=[Depends(authentication_session.authenticate_token)])
 async def fetch_models():
     query = models.select()
     return await database.fetch_all(query)
@@ -70,11 +70,10 @@ async def register(json:registrationItem):
         raise HTTPException(status_code=401,detail="Username is already registered.")
     
 @host_service.post("/login/",response_model = Token)
-async def login(submitted_room_id,data:Annotated[OAuth2PasswordRequestForm,Depends()]):
-    if submitted_room_id == room_id:
-        user =  authentication_session.authenticate_password(data.username,data.password)
-        if user:
-            access_token = authentication_session.create_access_token(data={"userID":data.username})
-            return Token(access_token=access_token,token_type="bearer")
-        
+async def login(data:Annotated[OAuth2PasswordRequestForm,Depends()]):
+    user =  authentication_session.authenticate_password(data.username,data.password)
+    if user:
+        access_token = authentication_session.create_access_token(data={"userID":data.username})
+        return Token(access_token=access_token,token_type="bearer")
+    
     raise HTTPException(status_code=401,detail="Invalid credentials",headers={"WWW-Authenticate":"Bearer"})
