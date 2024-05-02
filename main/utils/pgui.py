@@ -78,7 +78,7 @@ class  DisplayRows(GUIbaseClass):
                     #this raises the oppurtunity for all sorts of content layout!
             else:
                 match self.content[itemid]._anchor:
-                    case 8:
+                    case 8: #center
                         if isinstance(self.content[itemid], Button):
                         
                             self.content[itemid]=Button(
@@ -102,7 +102,7 @@ class  DisplayRows(GUIbaseClass):
                         #add support for raw images and raw text later...
             
 
-                    case 7:
+                    case 7: #bottomright
                         if isinstance(self.content[itemid], Button):
                         
                             self.content[itemid]=Button(
@@ -124,7 +124,7 @@ class  DisplayRows(GUIbaseClass):
                                 self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             ).anchor(self.content[itemid]._anchor)
 
-                    case 6:
+                    case 6: #bottomleft
                         if isinstance(self.content[itemid], Button):
                         
                             self.content[itemid]=Button(
@@ -153,7 +153,7 @@ class  DisplayRows(GUIbaseClass):
                         
                             self.content[itemid]=Button(
                                 [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width),
                                     self.parent_pos[1] + displace_height + avg_content_height*itemid
                                 ],
                                 self.content[itemid].text_overlay,
@@ -164,15 +164,37 @@ class  DisplayRows(GUIbaseClass):
                         elif isinstance(self.content[itemid], TextInput):
                             self.content[itemid]=TextInput(
                                 [
-                                    (self.parent_pos[0] + self.content[itemid].user_text_width/2) ,
+                                    (self.parent_pos[0] + self.parent_window_size[0]-self.content[itemid].user_text_width) ,
                                     self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
                                 ],
                                 self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             ).anchor(self.content[itemid]._anchor)
 
 
+                    case 4: #topleft
+                        if isinstance(self.content[itemid], Button):
+                        
+                            self.content[itemid]=Button(
+                                [
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width),
+                                    self.parent_pos[1] + displace_height + avg_content_height*itemid
+                                ],
+                                self.content[itemid].text_overlay,
+                                self.content[itemid]._buttonblocksize,
+                                self.content[itemid].highlighted_colour,
+                                self.content[itemid].callback
+                                ).anchor(self.content[itemid]._anchor)
+                        elif isinstance(self.content[itemid], TextInput):
+                            self.content[itemid]=TextInput(
+                                [
+                                    (self.parent_pos[0] + self.parent_window_size[0]-self.content[itemid].user_text_width) ,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                ],
+                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                            ).anchor(self.content[itemid]._anchor)
+
                     
-                    case 1:
+                    case 1: #bottom
                         if isinstance(self.content[itemid], Button):
                         
                             self.content[itemid]=Button(
@@ -195,7 +217,7 @@ class  DisplayRows(GUIbaseClass):
                             ).anchor(self.content[itemid]._anchor)
 
                     
-                    case 0:
+                    case 0: #top
                         
                         if isinstance(self.content[itemid], Button):
                         
@@ -219,7 +241,7 @@ class  DisplayRows(GUIbaseClass):
                                 self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             ).anchor(self.content[itemid]._anchor)
                             
-                    case _:
+                    case _: #default (center)
                         if isinstance(self.content[itemid], Button):
                         
                             self.content[itemid]=Button(
@@ -583,7 +605,6 @@ class Drawing(GUIobj): #this one will be harder, I'll have to really think about
 
 class menu(GUIobj): # i wonder... will setting window size to 1080p remove any need to descale?
     def __init__(self, window_dropdowns:typing.List[Dropdown]): #maybe just add dropdowns as a param?
-        self.content = [] #fill with columns/rows
         super().__init__([0,0],(1920,1080))
         self.clickable_cross.callback = CLOSE
         #we don't need a custom closebutton, this comes included... we just provide it with a different callback
@@ -617,6 +638,9 @@ class Handler:
         self.previously_moved = 0
         self.moved_in_cycle = False
     
+    def add(self, obj):
+        self.GUIobjs_array.append(obj)
+    
     def __recursive_displayobj_texthandling(self, obj,unicode, _backspace=False):
         for item in obj.content:
             if isinstance(item, (DisplayColumns, DisplayRows)):
@@ -649,6 +673,16 @@ class Handler:
                     break
 
 
+    def __recursive_textinput_itext(self,obj, _text_returns:dict={}):
+        
+        for item in obj.content:
+            if isinstance(item, (DisplayColumns, DisplayRows)):
+                _text_returns = self.__recursive_textinput_itext(item,_text_returns)
+            else:
+                if isinstance(item, TextInput):
+                    _text_returns[item.raw_text] = item.user_text
+        return _text_returns        
+        
     
     def display(self,dis):
         dis.fill((255,255,255))
@@ -730,7 +764,8 @@ class Handler:
             else:
                 contentblock.clickable_cross.highlighted = False
             
-    
+    def collate_textinput_inputs(self):
+        return self.__recursive_textinput_itext(self.GUIobjs_array[0])
        
         
     def addTIBtext(self,unicode):
