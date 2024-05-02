@@ -1,7 +1,3 @@
-import typing
-#sum([runtime_dis.observer.calc_dist_topoint(runtime_dis.rendered_pointmap[i]) for i in plane])/len(plane[1])
-
-
 def calc_rel_distance(arr,runtime_dis):
     return sum([runtime_dis.observer.calc_dist_topoint(arr.rpoints[i]) for i in arr.raw_rotates]) / len(arr.raw_rotates) #avg distance
 
