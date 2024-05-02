@@ -36,7 +36,7 @@ class menu_screen:
 
 class Observer:
     def __init__(self):
-        self.position = [0,0] #init through calcpos
+        self.position = [0,0,0] #init through calcpos
         
     def calcpos(self,angle_x,angle_y, scale):
         #nasty code, but it works!
@@ -45,7 +45,7 @@ class Observer:
         xlen = scale*m.cos(m.pi*2 - angle_x)
         zlen = scale*m.sin(m.pi*2 - angle_x)
         
-        ylen = abs(scale*m.cos(m.pi*2 - angle_y))
+        ylen = (scale*m.cos(m.pi*2 - angle_y))
         hidden_z = scale*m.sin(m.pi*2 - angle_y)
         
         sf = scale/hidden_z
@@ -54,7 +54,8 @@ class Observer:
     def calc_dist_topoint(self,point):
         try:
             return m.sqrt(abs((self.position[0] - point[0][0])**2 + (self.position[1] - point[1][0])**2 + (self.position[2] - point[2][0])**2))
-        except:
+        except Exception as e:
+            print(f"erred on here, here's why: {e}")
             return 10000
         
 
@@ -86,7 +87,7 @@ class display_3Dgrid:
     def update_angles(self,angle_x,angle_y):
         self.angle_x =  angle_x
         self.angle_y = angle_y
-        self.observer.calcpos(self.angle_y,self.angle_x,self.scale)
+        self.observer.calcpos(self.angle_y,self.angle_z,self.scale)
 
     def update_scale(self,scale):
         self.scale = scale
