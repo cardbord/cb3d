@@ -42,14 +42,14 @@ class Observer:
         #nasty code, but it works!
         
         
-        xlen = scale*m.cos(m.pi*2 - angle_x)
-        zlen = scale*m.sin(m.pi*2 - angle_x)
+        xlen = abs(scale)*m.cos(m.pi*2 - angle_x)
+        zlen = abs(scale)*m.sin(m.pi*2 - angle_x)
         
-        ylen = (scale*m.cos(m.pi*2 - angle_y))
+        ylen = (abs(scale)*m.cos(m.pi*2 - angle_y))
         hidden_z = scale*m.sin(m.pi*2 - angle_y)
         
-        sf = scale/hidden_z
-        self.position = [xlen/sf, zlen/sf, ylen]
+        sf = (scale**2)/hidden_z
+        self.position = [xlen/(sf**2), zlen/(sf**2), ylen]
 
     def calc_dist_topoint(self,point):
         try:
