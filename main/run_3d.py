@@ -67,10 +67,10 @@ def createMenu():
 
 ###GRID POINT INITS
 grid_points = []
-grid_points.append([0,0,0])
-grid_points.append([10000,0,0])
-grid_points.append([0,10000,0])
-grid_points.append([0,0,10000])
+grid_points.append(Point([0,0,0]))
+grid_points.append(Point([10000,0,0]))
+grid_points.append(Point([0,10000,0]))
+grid_points.append(Point([0,0,10000]))
 
 ###TO BE REMOVED
 answer = '' #these globals have no place here, I shall smite them when I move to guizero fully.
@@ -232,7 +232,7 @@ my = mousepos[1]
 while 1: 
     clock.tick(75) #runs at 75fps
 
-    runtime_dis.project_points((winsize[0]/2,winsize[1]/2),False)
+    runtime_dis.project_points()
     
     
     for event in pygame.event.get():
@@ -621,7 +621,7 @@ while 1:
             print(plane_dlists[len(plane_dlists)-1].render_points)
     
     if show_grid is True:
-        runtime_grid.project_points((winsize[0]/2,winsize[1]/2),False)
+        runtime_grid.project_points()
 
         pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
         pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
