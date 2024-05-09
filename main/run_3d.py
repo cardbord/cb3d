@@ -8,7 +8,7 @@ from utils import pgui
 
 ###GLOBALS
 
-debug = False #SET FALSE WHEN NOT TESTING
+debug = False #SET FALSE WHEN NOT TESTING (can be toggled through F9)
 
 winsize = pygame.display.get_desktop_sizes()[0]
 global cbmod
@@ -64,6 +64,7 @@ def createMenu():
 
 
 
+
 ###GRID POINT INITS
 grid_points = []
 grid_points.append([0,0,0])
@@ -73,13 +74,6 @@ grid_points.append([0,0,10000])
 
 ###TO BE REMOVED
 answer = '' #these globals have no place here, I shall smite them when I move to guizero fully.
-inputable = False
-inputable_load = False
-inputable_save = False
-load_answer = ''
-save_answer = ''
-user_text = ''
-input_rect = pygame.Rect(100, 450, 140, 56)
 default_font = pygame.font.get_default_font()
 font = pygame.font.Font(default_font,60)
 
@@ -103,21 +97,6 @@ def take_input(): #legacy inputs; incompatible with main menu. honestly, these a
     point = Point([inpx,inpy,inpz])
     cbmod.add(point)
     
-#these are garbage, i'll make some guizero-based ones that aren't as horrible        
-def take_input2():
-    global answer
-    global inputable
-    inputable = True
-    
-def take_input_load():
-    global load_answer
-    global inputable_load
-    inputable_load = True
-
-def take_input_save():
-    global save_answer
-    global inputable_save
-    inputable_save = True
 
 def take_input_plane():
     numoftimes = int(input("Enter how many points>>>"))
@@ -155,6 +134,11 @@ show_points = True
 rotatez = False
 rotatey=False
 rotatex=False
+
+inv_rotatex = False
+inv_rotatey = False
+
+
 rotate_xyz = False
 
 delete_on_click = False
@@ -204,22 +188,39 @@ def show_point():
     global show_points
     show_points = not show_points
 
+def place_example_plane_model():
+    cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+    cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
 
-###TO BE REMOVED
-commands = [ #to be removed
-    #what is wrong with me why is this all manually placed
-    Button(120,120,160,47,'CLEAR',clear),
-    Button(120,168,400,47,f'SHOW GRID LINES: {show_grid}',show_grid_lines),
-    Button(120,216,400,47,'PLACE EXAMPLE CUBE',place_example_cube),
-    Button(120,264,320,47,f'SHOW POINTS: {show_points}',show_point),
-    Button(120,312,320,47,'SAVE FILE',take_input_save),
-    Button(120,360,320,47,'LOAD FILE',take_input_load),
-    Button(120,408,320,47,'ADD POINT',take_input2),
-    Button(120,456,320,47,'ADD PLANE',take_input_plane),
+    cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+    cbmod.add_plane([Point((1,1,1)), Point((1,1,-1)), Point((1,-1,-1)), Point((1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+    
 
-]
+    #[[1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]]
+    cbmod.add_plane([Point((1,-1,1)), Point((-1,-1,1)), Point((-1,-1,-1)), Point((1,-1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+    cbmod.add_plane([Point((1,1,1)), Point((-1,1,1)), Point((-1,1,-1)), Point((1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
 
-menu = menu_screen(False,commands) #to be removed
+    cbmod.add_plane([Point((0.2,1,1)), Point((-0.2,1,1)), Point((-0.2,1,-1)), Point((0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+    cbmod.add_plane([Point((-0.2,0.2,-1)), Point((0.2,0.2,-1)), Point((0.2,1,-1)), Point((-0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+    cbmod.add_plane([Point((-0.2,0.2,1)),Point((0.2,0.2,1)),Point((0.2,1,1)),Point((-0.2,1,1))], [0,1,1,2,0,3,2,3], (214,164,107))
+
+
+handler = pgui.Handler()
+def createoptMenu():
+    
+    content = pgui.DisplayRows([
+        pgui.Button(None,"clear model",None,None,clear).anchor(pgui.Anchor.LEFT),
+        pgui.Button(None,"toggle grid lines",None,None,show_grid_lines).anchor(pgui.Anchor.LEFT),
+        pgui.Button(None,"toggle points",None,None,show_point).anchor(pgui.Anchor.LEFT),
+        pgui.Button(None,"place example cube",None,None,place_example_cube).anchor(pgui.Anchor.LEFT),
+        pgui.Button(None,"place example model",None,None, place_example_plane_model).anchor(pgui.Anchor.LEFT)
+    ])
+
+    options_menu = pgui.GUIobj([0,0],[700,500],"cb3d menu")
+    options_menu.add_content(content)
+
+    return options_menu
+
 
 ###MOUSE INITS
 mousepos = pygame.mouse.get_pos() #must init because we have newpos tracking
@@ -235,13 +236,7 @@ while 1:
     
     
     for event in pygame.event.get():
-        if menu.active is True:
-            for button in commands:
-                button.when_clicked(event)
-                if 'SHOW GRID' in button.text:
-                    button.text = f'SHOW GRID LINES: {show_grid}'
-                elif 'SHOW POINTS' in button.text:
-                    button.text = f'SHOW POINTS: {show_points}'
+        handler.handle_event(event,mx,my)
         
         match event.type:
             case pygame.QUIT:
@@ -266,54 +261,16 @@ while 1:
                         except Exception as e:
                             print(e)
                         user_text = ''
-                    elif inputable_save is True:
-                        inputable_save = False
+                    
+                    
+
+                
+                
+
                         
-                        name = user_text
-                        user_text = ''
-                        if name.lower() == 'exit':
-                            pass
-                        else:
-                            with open(f'{path}/{name}.CBmodel','w') as writable:
-                                
-                                writable.write(str(cbmod.pointmap) + '\n')
-                                writable.write(str(cbmod.connected_points)+ '\n')
-                                writable.close()
-                            print(f'SAVED {name}.CBmodel')
-
-                    elif inputable_load is True:
-                        inputable_load = False
-                        name = user_text
-                        user_text = ''
-                        if name.lower() == 'exit':
-                            pass
-                        else:
-                            
-                            runtime_dis.point_map = []
-                            try:
-                                with open(f'{path}/{name}.CBmodel','r') as model:
-                                    model_info = model.readlines()
-                                    model_points = eval((model_info[0]).replace('\n',''))
-                                    model_connections = eval((model_info[1]).replace('\n',''))
-
-                                    
-                                    model.close()
-                                cbmod.connected_points = model_connections
-                                cbmod.add(model_points)
-
-                            except FileNotFoundError:
-                                print(f'Could not find file {name}.CBmodel; please check your local files.')
 
 
                 
-                if event.key == pygame.K_BACKSPACE and (inputable is True or inputable_load is True or inputable_save is True):
-                    user_text = user_text[:-1]
-
-                        
-
-
-                elif inputable is True or inputable_load is True or inputable_save is True:
-                    user_text+=event.unicode
                 else:
                     match event.key:
                         case pygame.K_0:
@@ -341,10 +298,19 @@ while 1:
                         case pygame.K_c:
                             cbmod.delete_all()
                         case pygame.K_h:
+                            rotate_x = False
+                            rotate_y = False
+                            rotate_z = False
+                            inv_rotatex = False
+                            inv_rotatey = False
+                            rotate_xyz = False
                             runtime_dis.update_angles(0,0)
                             runtime_grid.update_angles(0,0)
                             runtime_dis.movable_position = [0,0]
                             runtime_grid.movable_position = [0,0]
+
+                        case pygame.K_F9:
+                            debug = not debug
 
                         case pygame.K_e:
                             
@@ -444,35 +410,33 @@ while 1:
                     
                     else:
                         rotate_xyz = True
-                
+                        if rotatex:
+                            rotatex = False
+                        if rotatey:
+                            rotatey = False
+                        if inv_rotatex:
+                            inv_rotatex = False
+                        if inv_rotatey:
+                            inv_rotatey = False
                 
                 #MOUSECLICKS
 
                 if event.button == 1:
 
-                    if menu.active is True:
+                    
+                    if mx in range(30,80) and my in range(30,90) and "cb3d menu" not in [i.title for i in handler.GUIobjs_array]:
+                        handler.add(createoptMenu())
                         
                         
-                        if mx in range(30,80) and my in range(30,90):
-                            menu.active = not menu.active
                             
                 
 
                     elif pointed == True:
-                        
-                        
-                        if mx in range(20,60) and my in range(20,60):
-                            menu.active = not menu.active
-
-                        elif mx in range(60,100) and my in range(20,60):
-                            menu._commands[6]._command()
                             
-                            
-                        else:
-                            for point in runtime_dis.rendered_pointmap:
-                                if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
-                                    cbmod.connected_points.append(runtime_dis.rendered_pointmap.index(point))
-                    
+                        for point in runtime_dis.rendered_pointmap:
+                            if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
+                                cbmod.connected_points.append(runtime_dis.rendered_pointmap.index(point))
+                
 
                 
 
@@ -500,20 +464,52 @@ while 1:
 
 
     if rotatez is True:
-        runtime_dis.angle_z +=0.01
         runtime_grid.angle_z +=0.01
+        runtime_dis.angle_z+=0.01
+        
     if rotatey is True:
-        runtime_dis.angle_y +=0.01
         runtime_grid.angle_y += 0.01
+        runtime_dis.angle_y += 0.01
     if rotatex is True:
         runtime_dis.angle_x +=0.01
         runtime_grid.angle_x+=0.01
+    if inv_rotatey is True:
+        runtime_grid.angle_y -= 0.01
+        runtime_dis.angle_y -= 0.01
+    if inv_rotatex is True:
+        runtime_dis.angle_x -=0.01
+        runtime_grid.angle_x -=0.01
+    
+    
+    
+    
     if rotate_xyz is True:
         
         newpos = pygame.mouse.get_pos()
         npmx = newpos[0]
         npmy = newpos[1]
 
+
+        #boolean hell
+        if npmx-mx > 40:
+            rotatey = True
+            if rotatex:
+                rotatex = False
+        elif npmy-my > 40:
+            rotatex = True
+            if rotatey:
+                rotatey =False
+        elif npmx-mx < -40:
+            inv_rotatey = True
+            if inv_rotatex:
+                inv_rotatex = False
+        elif npmy-my < -40:
+            inv_rotatex = True
+            if inv_rotatey:
+                inv_rotatey = False
+        else:
+            rotatex = False
+            rotatey = False
         
         runtime_grid.angle_y += (npmx-mx) /100
         runtime_grid.angle_x += (npmy-my) / 100
@@ -631,29 +627,9 @@ while 1:
         pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
         pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
                 
-
-    if menu.active is True:
-        pygame.draw.rect(dis,(180,180,180),menu.menurect)
-        menu.display(dis)
-
-    if inputable is True:
-        pygame.draw.rect(dis,pygame.Color('gray'),input_rect)
-        
-        text_surface = font.render(user_text,True,(255,255,255))
-        dis.blit(text_surface,(input_rect.x+5,input_rect.y+5))
-        input_rect.w = max(100,text_surface.get_width()+10)
     
-    if inputable_load is True:
-        pygame.draw.rect(dis,pygame.Color('gray'),input_rect)
-        text_surface = font.render(user_text,True,(255,255,255))
-        dis.blit(text_surface,(input_rect.x+5,input_rect.y+5))
-        input_rect.w = max(100,text_surface.get_width()+10)
+    handler.display(dis)
 
-    if inputable_save is True:
-        pygame.draw.rect(dis,pygame.Color('gray'),input_rect)
-        text_surface = font.render(user_text,True,(255,255,255))
-        dis.blit(text_surface,(input_rect.x+5,input_rect.y+5))
-        input_rect.w = max(100,text_surface.get_width()+10)
 
     mousepos = pygame.mouse.get_pos()
     mx = mousepos[0]
@@ -663,10 +639,10 @@ while 1:
 
     ###DEBUG SPACE
     if debug:
-        gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255))
+        #gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255)) debug polygon, make plane shuffler to prevent these from happening
         print(runtime_dis.scale)
     
-    
+        print(f"rotatey state {rotatey}, rotatex state {rotatex}")
     
     
     pygame.display.update()
