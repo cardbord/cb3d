@@ -57,21 +57,17 @@ class Observer:
         except Exception as e:
             print(f"erred on here, here's why: {e}")
             return 10000
+
         
+
 
 class display_3Dgrid:
     def __init__(self,points,angle_x,angle_y,angle_z,scale):
-        self.observer = Observer()
         
-        self.cbmods = []
+        self.observer = Observer()
 
         self.point_map = points
-        
-        self.raw_rotations = []
-        
-        self.furthest_point = [] #remove in a sec
-        
-        
+
         self.angle_x = angle_x
         self.angle_z = angle_z
         self.angle_y = angle_y
@@ -94,49 +90,31 @@ class display_3Dgrid:
         self.observer.calcpos(self.angle_y,self.angle_z,self.scale)
         
     
-    
-    def project_points(self,position:tuple, debug:bool=False) -> list: #setter for rendered pointmap
+    def project_points(self): #setter for rendered pointmap
+        
+
         pointmap = []
         
         
         for point in self.point_map:
-            if isinstance(point,Point): #my versioning isn't great, so as we shift to encapsulated point objects i'll prevent error here
-                mat_point = point.xyz
-            else:
-                mat_point = point
+            mat_point = point.xyz #the point here is of the Point datatype, specified in model.py
             
             mat_point = np.matrix(mat_point)
             
-            rotationalz, rotationaly, rotationalx = self.rotation()
-            rotate = np.dot(rotationaly, mat_point.reshape((3,1)))
+            rotationalz, rotationaly, rotationalx = self.rotation() #generates rotation matrices based on x,y,z angles
             
-            
+            rotate = np.dot(rotationaly, mat_point.reshape((3,1))) #applies rotation matrices one by one
             rotate = np.dot(rotationalz, rotate)
             rotate = np.dot(rotationalx,rotate)
-            self.raw_rotations.append(rotate)
             
-            
-            
-            #furthest = self.point_map.index(point)
-            
-            
-            
-            projection = np.dot(self.manipulation_matrix,rotate)
-            x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
-            y = self.window_size[1] - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
+            projection = np.dot(self.manipulation_matrix,rotate) #calcs product to cast to a 2D form
+
+            x = int(projection[0][0]*(200-self.scale)) + self.window_size[0]/2 + self.movable_position[0] 
+            y = self.window_size[1]/2 - (int(projection[1][0]*(200-self.scale))) + self.movable_position[1]
             pointmap.append((x,y))
         
-        #DELETE LATER
-        if debug:
 
-            sc = 100 
-            print(sc)
-            projection = np.dot(self.manipulation_matrix,np.matrix(self.observer.position).reshape((3,1)))
-            x = int(projection[0][0])*sc + position[0] + self.movable_position[0]
-            y = self.window_size[1] - (int(projection[1][0])*sc + position[1]) + self.movable_position[1]
-            pointmap.append((x,y))
-            #
-        self.rendered_pointmap = pointmap
+        self.rendered_pointmap = pointmap #this will be referenced in main loop to render everything...
         
         
     def plane_project(self,points,position:tuple) -> list: #returns arr of points, used for rendering planes seperately
@@ -170,7 +148,9 @@ class display_3Dgrid:
             pointmap.append((x,y))
         return raw_rotates, pointmap
 
-    def rotation(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def rotation(self):
+        #returns 3 unique rotation matrices based on the x,y,z angles
+        
         rotationalz = np.array([
             [m.cos(self.angle_z), -m.sin(self.angle_z),0],
             [m.sin(self.angle_z), m.cos(self.angle_z),0],
