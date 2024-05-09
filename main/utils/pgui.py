@@ -176,7 +176,7 @@ class  DisplayRows(GUIbaseClass):
                         
                             self.content[itemid]=Button(
                                 [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width),
+                                    self.parent_pos[0],
                                     self.parent_pos[1] + displace_height + avg_content_height*itemid
                                 ],
                                 self.content[itemid].text_overlay,
@@ -187,12 +187,36 @@ class  DisplayRows(GUIbaseClass):
                         elif isinstance(self.content[itemid], TextInput):
                             self.content[itemid]=TextInput(
                                 [
-                                    (self.parent_pos[0] + self.parent_window_size[0]-self.content[itemid].user_text_width) ,
+                                    self.parent_pos[0],
                                     self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
                                 ],
                                 self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             ).anchor(self.content[itemid]._anchor)
 
+                    
+                    case 2: #left
+                        if isinstance(self.content[itemid], Button):
+                        
+                            self.content[itemid]=Button(
+                                [
+                                    self.parent_pos[0],
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                                ],
+                                self.content[itemid].text_overlay,
+                                self.content[itemid]._buttonblocksize,
+                                self.content[itemid].highlighted_colour,
+                                self.content[itemid].callback
+                                ).anchor(self.content[itemid]._anchor)
+                        elif isinstance(self.content[itemid], TextInput):
+                            self.content[itemid]=TextInput(
+                                [
+                                    (self.parent_pos[0] + 2*self._SIZE_SF),
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                ],
+                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                            ).anchor(self.content[itemid]._anchor)
+                    
+                    
                     
                     case 1: #bottom
                         if isinstance(self.content[itemid], Button):
@@ -420,7 +444,7 @@ class GUIobj(GUIbaseClass):
 class Button(GUIbaseClass):
     def __init__(self,pos,text_overlay,window_size:list = None,colourvalue:tuple=None,callback=None): #if no window_size, we approximate with text_overlay (mainly used for guiobj x button)
         super().__init__()
-        self.pos = pos
+        self.pos = pos if isinstance(pos, (tuple,list)) else [0,0]
         self.text_overlay = text_overlay
         self.text = self.font.render(self.text_overlay,True,(0,0,0))
         self.text_box_width = max(42*self._SIZE_SF,self.font.size(self.text_overlay)[0]) if not window_size else window_size[0] * self._SIZE_SF
@@ -600,8 +624,20 @@ class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a 
 
 
 class Drawing(GUIobj): #this one will be harder, I'll have to really think about how to implement this.
-    def __init__(self,):
-        pass
+    def __init__(self,pos,window_size,title=None):
+        super().__init__(
+            pos,
+            window_size,
+            title if title else "Drawing"
+        )
+        self.drawdata = []
+    
+    def display(self,dis):
+        self.display_window(dis)
+        
+    #def on_click(self,x,y):
+        #if x in range(self.parent_window_rect)
+            
 
 class menu(GUIobj): # i wonder... will setting window size to 1080p remove any need to descale?
     def __init__(self, window_dropdowns:typing.List[Dropdown]): #maybe just add dropdowns as a param?
@@ -671,6 +707,9 @@ class Handler:
                     item.to_input = True
                     self.__recursive_displayobj_disableinput(_original_object,hash(item))
                     break
+                elif isinstance(item,Button) and xval in range(item.button_rect.left,item.button_rect.right) and yval in range(item.button_rect.top,item.button_rect.bottom):
+                    item.on_click(xval,yval)
+                    break
 
 
     def __recursive_textinput_itext(self,obj, _text_returns:dict={}):
@@ -685,7 +724,7 @@ class Handler:
         
     
     def display(self,dis):
-        dis.fill((255,255,255))
+        
         for i in range(len(self.GUIobjs_array),0,-1):
             self.GUIobjs_array[i-1].display(dis) if isinstance(self.GUIobjs_array[i-1],TextInputBox) else self.GUIobjs_array[i-1].display_window(dis)
         
