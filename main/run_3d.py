@@ -122,7 +122,7 @@ def take_input_plane():
 
 
 ###GRID SETUP
-runtime_dis = display_3Dgrid([],0,0,0,2) # using disgrid module to setup a 3d environment
+runtime_dis = display_3Dgrid([],0,0,0,1) # using disgrid module to setup a 3d environment
 runtime_grid = display_3Dgrid(grid_points,0,0,0,2) # create another disgrid underlayed for the xyz axis
 
 
@@ -445,10 +445,12 @@ while 1:
                     rotate_xyz = False
 
             case pygame.MOUSEWHEEL:
-                runtime_dis.update_scale(runtime_dis.scale-event.y*5)
-                runtime_grid.scale -= event.y*5
-
-
+                if runtime_dis.scale <= 175: #max zoom constraint (otherwise you can zoom into negatives and crash)
+                    
+                    runtime_dis.update_scale(runtime_dis.scale-event.y*5) 
+                elif event.y > 0:
+                    runtime_dis.update_scale(runtime_dis.scale-event.y*5)
+                
     if left is True:
         runtime_dis.movable_position[0] -= 1
         runtime_grid.movable_position[0] -=1
@@ -491,6 +493,7 @@ while 1:
 
 
         #boolean hell
+        #positive movement (right and down)
         if npmx-mx > 40:
             rotatey = True
             if rotatex:
@@ -499,6 +502,8 @@ while 1:
             rotatex = True
             if rotatey:
                 rotatey =False
+        
+        #negative movement (left and up)
         elif npmx-mx < -40:
             inv_rotatey = True
             if inv_rotatex:
@@ -507,6 +512,7 @@ while 1:
             inv_rotatex = True
             if inv_rotatey:
                 inv_rotatey = False
+        
         else:
             rotatex = False
             rotatey = False
@@ -539,9 +545,10 @@ while 1:
                 
             for point in runtime_dis.rendered_pointmap:
                 
+                
                 if runtime_dis.rendered_pointmap.index(point) == indextocheck:
                     try: # this is to ensure that lines aren't rendered while loading files (which while extremely rare, can occasionally happen when running on slow memory)
-                        pygame.draw.line(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index],width=3)
+                        pygame.draw.line(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index],width=abs(round(3.91-runtime_dis.scale/75)))
                         
                     except:
                         pass
@@ -643,8 +650,10 @@ while 1:
         print(runtime_dis.scale)
     
         print(f"rotatey state {rotatey}, rotatex state {rotatex}")
-    
-    
+        print(f"inv states invrotatex {inv_rotatex}, invrotatey {inv_rotatey}")
+        print(f"line thickness state {abs(round(3.91-runtime_dis.scale/75))}")
+        
+        
     pygame.display.update()
     
     
