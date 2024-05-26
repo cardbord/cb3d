@@ -6,13 +6,29 @@ from pathlib import Path
 class Point:
     def __init__(self,xyz,colour=(0,0,0)):
         self.colour = colour
-        self.xyz = xyz
-        self.x = xyz[0]
-        self.y = xyz[1]
-        self.z = xyz[2]
+        self._xyz = xyz
+        
     
     def __repr__(self):
-        return str(self.xyz) # I forgot my zen of python for a minute there!
+        return str(self._xyz) # I forgot my zen of python for a minute there!
+
+    @property
+    def x(self):
+        return self._xyz[0]
+    @property
+    def y(self):
+        return self._xyz[1]
+    @property
+    def z(self):
+        return self._xyz[2]
+    @property
+    def xyz(self):
+        return self._xyz
+    @xyz.setter
+    def xyz(self, value):
+        self._xyz = value
+    
+    
 
     def rounded(self):
         return [round(self.x),round(self.y),round(self.z)]
