@@ -6,6 +6,10 @@ from pygame import gfxdraw
 from utils.plane_sorter import quicksort
 from utils import pgui
 
+from utils.textures.catalogue import Textures
+a = Textures()
+__glass = a.tmap["glass"]
+
 ###GLOBALS
 
 debug = False #SET FALSE WHEN NOT TESTING (can be toggled through F9)
@@ -15,6 +19,7 @@ global cbmod
 
 path = Path(__file__).parent #just in case python refuses to locate model files, this is a slight problem since older versions of pygame are pretty fussy
 cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
+
 
 
 ###BUTTON CALLBACKS
@@ -189,7 +194,7 @@ def show_point():
     show_points = not show_points
 
 def place_example_plane_model():
-    cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+    cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58), __glass)
     cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
 
     cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
@@ -594,13 +599,23 @@ while 1:
 
         
         
-        for plane in plane_dlists:
+        for pl in range(len(plane_dlists)):
+            plane = plane_dlists[pl]
+            
             try:
                 if debug:
-                    text = debug_font.render(f" PLANE {plane_dlists.index(plane)}: " +str(plane_dlists_2REMOVELATER[plane_dlists.index(plane)]),False,(0,0,0))
+                    text = debug_font.render(f" PLANE {plane_dlists[pl]}: " +str(plane_dlists_2REMOVELATER[pl]),False,(0,0,0))
                     dis.blit(text,plane.render_points[0])
                 else:
-                    gfxdraw.filled_polygon(dis,plane.render_points,plane.colour)
+                    if plane.texture:
+                        if plane.texture.transparency != 1:
+                            plane.texture.texture_map.set_alpha(int(round(255*(plane.texture.transparency + (len(plane_dlists)- pl)*0.05))))
+                        gfxdraw.textured_polygon(dis,plane.render_points,plane.texture.texture_map,plane.texture.tx,plane.texture.ty)
+                        
+                    else:
+                        gfxdraw.filled_polygon(dis,plane.render_points,plane.colour)
+                    
+                    
                 
             except Exception as e:
                 print(e)
@@ -646,7 +661,7 @@ while 1:
 
     ###DEBUG SPACE
     if debug:
-        #gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255)) debug polygon, make plane shuffler to prevent these from happening
+        #gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255)) #debug polygon, make plane shuffler to prevent these from happening
         print(runtime_dis.scale)
     
         print(f"rotatey state {rotatey}, rotatex state {rotatex}")
