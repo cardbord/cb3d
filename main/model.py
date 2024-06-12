@@ -1,8 +1,6 @@
 import typing
 from pathlib import Path
 
-
-
 class Point:
     def __init__(self,xyz,colour=(0,0,0)):
         self.colour = colour
@@ -62,12 +60,13 @@ class CBModel:
             for i in points:
                 self.pointmap.append(i)
 
-    def add_plane(self,points:typing.List[Point], connection_list:typing.List[int],colour:tuple=None):
+    def add_plane(self,points:typing.List[Point], connection_list:typing.List[int],colour:tuple=None, texture=None):
         
         #we also add point data and connection data to our connections and points array
         
         
-        newplane = Plane(points,connection_list,colour if colour else (255,255,255))
+        newplane = Plane(points,connection_list,colour if colour else (255,255,255), texture)
+        
         self.planes.append(newplane)
         
         
@@ -171,11 +170,11 @@ class CBModel:
         self.planes = []
       
 class Plane:
-    def __init__(self,points:typing.List[Point],connections:typing.List[int],colour):
+    def __init__(self,points:typing.List[Point],connections:typing.List[int],colour, texture=None):
         self.points = points
         self.colour = colour
         self.connections = connections
         self.rpoints = []
         self.render_points = []
         self.avg_distance = 100
-        
+        self.texture=texture
