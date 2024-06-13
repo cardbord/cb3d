@@ -31,25 +31,27 @@ class TextureCatalogue:
             texture_transparency=1.0
             tx=None
             ty=None
-            if _texts.tmap[t][0].endswith('.cbtx'):
-                with open(_texts.tmap[t][0], "r") as readable:
+            tm = _texts.tmap[t]
+            
+            if tm[0].endswith('.cbtx'):
+                with open(tm[0], "r") as readable:
                     texture_info = readable.readlines()
-                    texture_transparency = float(texture_info[1].replace('\n'))
+                    texture_transparency = float(texture_info[1].replace('\n', ''))
                     if len(texture_info) > 2:
-                        tx = int(texture_info[2].replace('\n'))
-                        ty = int(texture_info[3].replace('\n'))
-                imgpath = _texts.tmap[t][1]
+                        tx = int(texture_info[2].replace('\n', ''))
+                        ty = int(texture_info[3].replace('\n', ''))
+                imgpath = tm[1]
                 
 
             else:
-                with open(_texts.tmap[t][1], "r") as readable:
+                with open(tm[1], "r") as readable:
                     texture_info = readable.readlines()
-                    texture_transparency = float(texture_info[1].replace('\n'))
+                    texture_transparency = float(texture_info[1].replace('\n', ''))
                     if len(texture_info) > 2:
-                        tx = int(texture_info[2].replace('\n'))
-                        ty = int(texture_info[3].replace('\n'))
+                        tx = int(texture_info[2].replace('\n', ''))
+                        ty = int(texture_info[3].replace('\n', ''))
                 
-                imgpath = _texts.tmap[t][0]
+                imgpath = tm[0]
             
             
 
