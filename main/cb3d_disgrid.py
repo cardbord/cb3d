@@ -1,63 +1,14 @@
 import numpy as np
 import math as m
 import pygame
-from typing import Tuple
 from model import Point
-from model import CBModel
-from random import randrange
-from utils.textures.catalogue import Textures
+
 
 
 pygame.init()
 default_font = pygame.font.get_default_font()
 
 
-class Texture:
-    def __init__(self, filename, transparency_level=1, tx=None, ty=None):
-        self.filename = filename
-        self.texture_map = pygame.image.load(filename).convert_alpha()
-        self.transparency = transparency_level
-        
-        self.tx = tx or randrange(0,int(round(self.texture_map.get_width()/3))) #apply randomness to texture positions
-        self.ty = ty or randrange(0,int(round(self.texture_map.get_height()/3)))
-        
-class TextureCatalogue:
-    @property
-    def textures(self):
-        _textures = {}
-        _texts = Textures()
-        for t in _texts.tmap:
-            imgpath = ''
-            texture_transparency=1.0
-            tx=None
-            ty=None
-            tm = _texts.tmap[t]
-            
-            if tm[0].endswith('.cbtx'):
-                with open(tm[0], "r") as readable:
-                    texture_info = readable.readlines()
-                    texture_transparency = float(texture_info[1].replace('\n', ''))
-                    if len(texture_info) > 2:
-                        tx = int(texture_info[2].replace('\n', ''))
-                        ty = int(texture_info[3].replace('\n', ''))
-                imgpath = tm[1]
-                
-
-            else:
-                with open(tm[1], "r") as readable:
-                    texture_info = readable.readlines()
-                    texture_transparency = float(texture_info[1].replace('\n', ''))
-                    if len(texture_info) > 2:
-                        tx = int(texture_info[2].replace('\n', ''))
-                        ty = int(texture_info[3].replace('\n', ''))
-                
-                imgpath = tm[0]
-            
-            
-
-            _textures[t] = Texture(imgpath,texture_transparency,tx,ty)
-
-        return _textures
 
 
 class Button:
