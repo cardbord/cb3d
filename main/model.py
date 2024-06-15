@@ -1,5 +1,6 @@
 import typing
 from pathlib import Path
+from utils.textures.textureCatalogue import TextureCatalogue
 
 class Point:
     def __init__(self,xyz,colour=(0,0,0)):
@@ -34,6 +35,9 @@ class Point:
 class CBModel:
     def __init__(self,pointmap:typing.List[Point]=[],connected_points:typing.List[int]=[],__fname:str=None, __planes:typing.List[list]=None):
         self.pointmap = pointmap
+        
+        __textcat = TextureCatalogue()
+
         self.connected_points = connected_points
         self.__path = str(Path(__file__).parent).replace("\\","/")
         self.filename_modified = __fname #set when model opened, or saved. __fname should only be used by classmethods to maintain save data
@@ -41,7 +45,7 @@ class CBModel:
         if __planes:
             for plane in __planes:
                 
-                self.planes.append(Plane(eval(plane[0]),eval(plane[1]),eval(plane[2])))
+                self.planes.append(Plane(eval(plane[0]),eval(plane[1]),eval(plane[2]),__textcat.textures[plane[3].strip()] if len(plane) > 3 else None))
         
         self.plane_points = []
         self.plane_connections_raw = []
@@ -78,7 +82,7 @@ class CBModel:
             else: #write model, just clone CBModel.save()
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
-                writable.write(f"{[[str(i.points), str(i.connections), str(i.colour)] for i in self.planes]}" + "\n")
+                writable.write(f"{[[str(i.points), str(i.connections), str(i.colour), i.texture.name if i.texture != None else None] for i in self.planes]}" + "\n")
             writable.close()
     
     @classmethod
@@ -158,7 +162,7 @@ class CBModel:
             with open(f'{name}.CBmodel','w') as writable:
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
-                writable.write(f"{[[str(i.points), str(i.connections), str(i.colour)] for i in self.planes]}" + "\n")
+                writable.write(f"{[[str(i.points), str(i.connections), str(i.colour), i.texture.name if i.texture else None] for i in self.planes]}" + "\n")
                 writable.close()
         except:
             raise WindowsError("Could not save file.")
