@@ -11,16 +11,17 @@ clock = pygame.time.Clock()
 
 #OTHER IMPORTS
 from pathlib import Path
-from cb3d_disgrid import menu_screen, display_3Dgrid, Button, TextureCatalogue
+from cb3d_disgrid import menu_screen, display_3Dgrid, Button
 from model import Point, CBModel, Plane
 from pygame import gfxdraw
 from utils.plane_sorter import quicksort
 from utils import pgui
-
+from utils.textures.textureCatalogue import TextureCatalogue
 
 #REMOVELATER
 a = TextureCatalogue()
 __glass = a.textures['glass']
+
 
 ###GLOBALS
 
