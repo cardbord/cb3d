@@ -45,7 +45,7 @@ class CBModel:
         if __planes:
             for plane in __planes:
                 
-                self.planes.append(Plane(eval(plane[0]),eval(plane[1]),eval(plane[2]),__textcat.textures[plane[3].strip()] if len(plane) > 3 else None))
+                self.planes.append(Plane(eval(plane[0]),eval(plane[1]),eval(plane[2]),__textcat.textures[plane[3]] if plane[3] != None else None))
         
         self.plane_points = []
         self.plane_connections_raw = []
@@ -82,6 +82,7 @@ class CBModel:
             else: #write model, just clone CBModel.save()
                 writable.write(str(self.pointmap) + '\n')
                 writable.write(str(self.connected_points)+ '\n')
+                print([i.texture.name if i.texture else None for i in self.planes])
                 writable.write(f"{[[str(i.points), str(i.connections), str(i.colour), i.texture.name if i.texture != None else None] for i in self.planes]}" + "\n")
             writable.close()
     
@@ -94,6 +95,7 @@ class CBModel:
                 model_planes = None
                 if len(model_info) > 1: #this is a cbmodel file
                     model_points = eval((model_info[0]).replace('\n',''))
+                    model_points = [Point(i) for i in model_points]
                     model_connections = eval((model_info[1]).replace('\n',''))
                     if len(model_info) > 2:
                         model_planes = eval(model_info[2].replace('\n',''))
