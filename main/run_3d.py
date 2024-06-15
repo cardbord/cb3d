@@ -253,7 +253,7 @@ while 1:
             case pygame.QUIT:
                 cbmod.save_on_exit() #run a docs script here first, to add recents to globals, or whatever
                 pygame.quit()
-                quit()
+                exit()
 
 
             case pygame.KEYDOWN:
@@ -370,6 +370,7 @@ while 1:
                                 cbmod.filename_modified = savename
                                     
                         case pygame.K_ESCAPE:
+                            
                             cbmod.save_on_exit()
                             pygame.quit()
                             exit()
