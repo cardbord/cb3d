@@ -731,10 +731,8 @@ class Handler:
         
     def handle_event(self,event,x,y):
         
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            quit()
-        elif event.type == pygame.KEYDOWN:
+        
+        if event.type == pygame.KEYDOWN:
             
             if event.key == pygame.K_BACKSPACE:
                 if len(self.GUIobjs_array)>0 and isinstance(self.GUIobjs_array[0],TextInputBox):
