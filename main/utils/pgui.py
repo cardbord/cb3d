@@ -673,6 +673,8 @@ class Handler:
         self.wecheck = False
         self.previously_moved = 0
         self.moved_in_cycle = False
+        
+        self.menu:menu = None
     
     def add(self, obj):
         self.GUIobjs_array.append(obj)
@@ -739,7 +741,7 @@ class Handler:
                     for t_input in self.GUIobjs_array[0].text_inputs:
                         if t_input.to_input:
                             t_input.backspace()
-                self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True)
+                    self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True)
                         
             else:
                 self.addTIBtext(event.unicode)
@@ -812,3 +814,40 @@ class Handler:
             for contentblock in self.GUIobjs_array[0].content:
                 self.__recursive_displayobj_texthandling(contentblock,unicode)
                 
+                
+                
+    def handle_menu_event(self,event,x,y):
+        match event.type:
+            case pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if self.menu.check_objcollide()
+                    
+                    if self.menu.check_closebuttoncollide(x,y):
+                        pygame.quit()
+                        exit()
+                    
+        
+        if self.menu.check_closebuttoncollide(x,y):
+            self.menu.clickable_cross.highlighted=True
+        else:
+            self.menu.clickable_cross.highlighted=False
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+#mushroom! :333333333333333332
