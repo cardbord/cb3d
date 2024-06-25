@@ -17,6 +17,7 @@ from pygame import gfxdraw
 from utils.plane_sorter import quicksort
 from utils import pgui
 from utils.textures.textureCatalogue import TextureCatalogue
+from webbrowser import open_new_tab
 
 #REMOVELATER
 a = TextureCatalogue()
@@ -36,6 +37,14 @@ cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a
 
 
 ###BUTTON CALLBACKS
+
+def open_saved():
+    pass
+
+def new_file():
+    global cbmod
+    cbmod = CBModel()
+
 def load_file():
     global cbmod
     savename = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
@@ -58,16 +67,21 @@ def save_file():
         cbmod.save(savename)
         cbmod.filename_modified = savename
 
+def open_help():
+    open_new_tab('https://boxo.ovh/')
+
 
 ###GUI MENUS
 def createMenu():
     file_list = [
-        pgui.Button([0,0],"Load file",[200,50],None,load_file),
-        pgui.Button([0,0],"Save file",[200,50],None,save_file),
+        pgui.Button([0,0],"Load",[200,50],None,load_file),
     ]    
+    help_list = [
+        pgui.Button([0,0],"Docs",[200,50],None,open_help)
+    ]
     
     _File = pgui.Dropdown([0,0], pgui.Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
-    _Help = pgui.Dropdown([pgui.scale_to_window(200),0], pgui.Button([pgui.scale_to_window(200),0],"Help",[200,50],(10,10,10)), []) 
+    _Help = pgui.Dropdown([pgui.scale_to_window(200),0], pgui.Button([pgui.scale_to_window(200),0],"Help",[200,50],(10,10,10)), help_list) 
 
     
 
@@ -422,6 +436,7 @@ while 1:
                         
                         else:
                             rotate_xyz = True
+                            
                             if rotatex:
                                 rotatex = False
                             if rotatey:
@@ -674,7 +689,11 @@ while 1:
         
         for event in pygame.event.get():
             
-            handler.handle_menu_event(event,mx,my)
+            for callback in handler.handle_menu_event(event,mx,my):
+                if callback[1] == 'load_file' and callback[0] != None:
+                    start_menu_shown=False
+                
+            
             
             match event.type:
                 case pygame.QUIT:
@@ -694,9 +713,9 @@ while 1:
         
         handler.display(dis)
 
-        mousepos = pygame.mouse.get_pos()
-        mx = mousepos[0]
-        my = mousepos[1]
+    mousepos = pygame.mouse.get_pos()
+    mx = mousepos[0]
+    my = mousepos[1]
 
     
     pygame.display.update()

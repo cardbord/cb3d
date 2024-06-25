@@ -465,9 +465,10 @@ class Button(GUIbaseClass):
     
     def on_click(self,xval,yval):
         if (xval in range(int(round(self.button_rect.left)), int(round(self.button_rect.right))) and yval in range(int(round(self.pos[1])), int(round(self.button_rect.bottom)))):
-            return self.callback() if self.callback else True #if no callback is provided, use this as a collider so the main program can handle it
+            return (self.callback(), self.callback.__name__) if self.callback else True #if no callback is provided, use this as a collider so the main program can handle it
         else:
             return False
+    
 
 class TextInput(GUIbaseClass):
     def __init__(self,pos,text, _user_text=None, _current_userinp_index=None):
@@ -820,12 +821,25 @@ class Handler:
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if self.menu.check_objcollide()
+                    if self.menu.check_windowcollide(x,y):
                     
-                    if self.menu.check_closebuttoncollide(x,y):
-                        pygame.quit()
-                        exit()
-                    
+                        for dropdown in self.menu.dropdowns:
+                            dropdown.on_click(x,y)
+                        
+                            
+                        self.menu.clickable_cross.on_click(x,y)
+                
+                
+                    for dropdown in self.menu.dropdowns:
+                            if dropdown.is_dropped:
+                                for button in dropdown.buttons:
+                                    _record = button.on_click(x,y)
+                                    if isinstance(_record,tuple):
+                                        yield _record
+                                        
+
+                                        
+
         
         if self.menu.check_closebuttoncollide(x,y):
             self.menu.clickable_cross.highlighted=True
@@ -833,7 +847,7 @@ class Handler:
             self.menu.clickable_cross.highlighted=False
             
             
-            
+        
             
             
             
