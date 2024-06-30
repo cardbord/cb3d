@@ -28,6 +28,9 @@ __glass = a.textures['glass']
 
 debug = False #SET FALSE WHEN NOT TESTING (can be toggled through F9)
 start_menu_shown = True
+since_last_moved = 0
+curr_static_image = None
+show_static_image = False
 
 global cbmod
 
@@ -41,10 +44,6 @@ cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a
 def open_saved():
     pass
 
-def new_file():
-    global cbmod
-    cbmod = CBModel()
-
 def load_file():
     global cbmod
     savename = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
@@ -56,6 +55,9 @@ def load_file():
 
         cbmod = CBModel.load(savename)
         cbmod.filename_modified = savename
+        
+        return True
+    
     
 def save_file():
     global cbmod
@@ -67,17 +69,34 @@ def save_file():
         cbmod.save(savename)
         cbmod.filename_modified = savename
 
-def open_help():
-    open_new_tab('https://boxo.ovh/')
+def new_file():
+    global cbmod
+    cbmod = CBModel()
+    
+    return save_file()
 
+
+def open_help():
+    open_new_tab('https://boxo.ovh/') #make page soonish
+    
+def my_github():
+    open_new_tab('https://github.com/cardbord/cb3d') #link to github issues
+
+
+def show_instructions(): #i need something for the __name__checker to look at
+    pass
 
 ###GUI MENUS
 def createMenu():
     file_list = [
-        pgui.Button([0,0],"Load",[200,50],None,load_file),
+        pgui.Button([0,0],"Return",[200,60],None,open_saved),
+        pgui.Button([0,0],"New",[200,60],None,new_file),
+        pgui.Button([0,0],"Load",[200,60],None,load_file),
     ]    
     help_list = [
-        pgui.Button([0,0],"Docs",[200,50],None,open_help)
+        pgui.Button([0,0],"Docs",[200,60],None,open_help),
+        pgui.Button([0,0],"Keys",[200,60],None,show_instructions),
+        pgui.Button([0,0],"Github",[200,60],None,my_github),
     ]
     
     _File = pgui.Dropdown([0,0], pgui.Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
@@ -259,7 +278,7 @@ my = mousepos[1]
 
 ###MAIN LOOP
 while 1: 
-    clock.tick(75) #runs at 75fps
+    clock.tick(60) #runs at 60fps
 
     if not start_menu_shown:
     
@@ -390,10 +409,7 @@ while 1:
                                     cbmod.filename_modified = savename
                                         
                             case pygame.K_ESCAPE:
-                                
-                                cbmod.save_on_exit()
-                                pygame.quit()
-                                exit()
+                                start_menu_shown = True
 
 
                 case pygame.KEYUP:
@@ -670,15 +686,23 @@ while 1:
             pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
             pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
                     
-
+        if rotatex or rotatey or inv_rotatex or inv_rotatey or rotate_xyz:
+            since_last_moved=0
+        else:
+            since_last_moved+=1
+            
+        if since_last_moved >= 120: #120 ticks since last moved/2 seconds
+            curr_static_image=dis
+            show_static_image=True
+            
         
         
 
         ###DEBUG SPACE
         if debug:
             #gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255)) #debug polygon, make plane shuffler to prevent these from happening
-            print(runtime_dis.scale)
-        
+            print(f'{runtime_dis.scale} zoom scale factor')
+            print(f'{since_last_moved} ticks since last moved')
         
             print(f"rotatey state {rotatey}, rotatex state {rotatex}")
             print(f"inv states invrotatex {inv_rotatex}, invrotatey {inv_rotatey}")
@@ -690,9 +714,9 @@ while 1:
         for event in pygame.event.get():
             
             for callback in handler.handle_menu_event(event,mx,my):
-                if callback[1] == 'load_file' and callback[0] != None:
+                if (callback[1] == 'load_file' and callback[0] != None) or callback[1] == 'open_saved' or callback[1] == 'new_file':
                     start_menu_shown=False
-                
+
             
             
             match event.type:
@@ -711,7 +735,7 @@ while 1:
                     
                     
         
-        handler.display(dis)
+    handler.display(dis)
 
     mousepos = pygame.mouse.get_pos()
     mx = mousepos[0]

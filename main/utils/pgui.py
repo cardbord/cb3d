@@ -1,4 +1,4 @@
-import pygame #do we make enum class for types at some point? #no, are you stupid? - future me
+import pygame
 from pygame.font import get_default_font, Font
 import typing
 from math import sqrt, ceil
@@ -612,10 +612,10 @@ class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a 
             self.buttons[b_index].button_rect.x = self.buttons[b_index].pos[0]
 
     def display(self,dis:pygame.Surface):
-        self.placeholder.display(dis)
+        self.placeholder._NSdis(dis)
         if self.is_dropped:
             for button in self.buttons:
-                button.display(dis)
+                button._NSdis(dis)
 
     def on_click(self,xval,yval):
         return self.placeholder.on_click(xval,yval) #just use our on_click method now
