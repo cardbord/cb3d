@@ -410,6 +410,7 @@ while 1:
                                         
                             case pygame.K_ESCAPE:
                                 start_menu_shown = True
+                                handler.GUIobjs_array = []
 
 
                 case pygame.KEYUP:
