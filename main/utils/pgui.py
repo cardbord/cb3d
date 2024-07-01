@@ -1,6 +1,5 @@
-import pygame
+import pygame, requests, typing, os, pathlib, io
 from pygame.font import get_default_font, Font
-import typing
 from math import sqrt, ceil
 from enum import IntEnum
 
@@ -100,6 +99,14 @@ class  DisplayRows(GUIbaseClass):
                                 self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                             ).anchor(self.content[itemid]._anchor)
                         #add support for raw images and raw text later...
+
+                        elif isinstance(self.content[itemid], Image):
+                            self.content[itemid].scale((1,avg_content_height),sticky_y=True)
+                            self.content[itemid].pos = [
+                                self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].image_size[0])/2,
+                                self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].image_size[1]/2
+                            ]
+
             
 
                     case 7: #bottomright
@@ -649,7 +656,7 @@ class menu(GUIobj): # i wonder... will setting window size to 1080p remove any n
         self.dropdowns = window_dropdowns
     
     def move_window(self, mousepos):
-        #return super().move_window(mousepos) <- this is overrided as the menu window should ideally not be moved around! 
+        #return super().move_window(mousepos) <- this is overriden as the menu window should ideally not be moved around! 
         pass
     
     def display_window(self,dis): #override GUIobj display window for extra functionality
@@ -663,7 +670,65 @@ class window(GUIobj):
     ... #here!
     
     
+class Image(GUIbaseClass):
+    def __init__(self,
+                 pos,
+                 image:str,
+                 scaling:tuple=None
+    ):
+        super().__init__()
+        self.pos = pos
+        image_is_file = True
+        self.image = None
+        if image.split('.') > 2:
+            if not os.path.exists(image):
+                image_is_file = False
+            else:
+                self.image = pygame.image.load(image)
+
+        else:
+            path = str(pathlib.Path(__file__).parent.parent)+'\\content\\'
+            if not os.path.exists(path+image):
+                image_is_file=False
+            else:
+                self.image = pygame.image.load(path+image)
+
+        if not image_is_file: #assume url
+            try:
+                r = requests.get(image)
+                if r.status_code in range(200,299):
+
+                    _temp_stream = io.BytesIO(r.content)
+                    self.image = pygame.image.load(_temp_stream)
+                else:
+                    raise ConnectionError(f"{image} could not be resolved. Status code {r.status_code}")
+
+
+            except requests.exceptions.RequestException: #invalid url, format, or schema
+                raise ValueError(f"{image} is an invalid url. Please provide a url or valid file path for this image.")
+
+        self.image_size = scaling or self.image.get_size()
+        if scaling:
+            self.image=pygame.transform.scale(self.image,scaling)
+
     
+    def scale(self, new_size, *, sticky_x:bool=False,sticky_y:bool=False):
+        if new_size != self.image_size:
+            if sticky_x:
+                _scale_sf = self.image_size[0]/self.image_size[1] #div xlen by ylen for sticky scaling
+                new_size[1] = new_size[0]/_scale_sf
+            elif sticky_y:
+                _scale_sf = self.image_size[1]/self.image_size[0] #rely on ylen instead for sticky scaling
+                new_size[0] = new_size[1]/_scale_sf
+
+
+            self.image_size = new_size
+            self.image=pygame.transform.scale(self.image,new_size)
+        
+
+
+
+
     
     
 #HANDLER
@@ -848,7 +913,6 @@ class Handler:
             
             
         
-            
             
             
             
