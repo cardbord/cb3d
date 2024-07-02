@@ -125,6 +125,12 @@ class  DisplayRows(GUIbaseClass):
                                     self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].image_size[1]/2
                                 ]
 
+                            elif isinstance(self.content[itemid], Text):
+                                self.content[itemid].pos = [
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].text_rect.w)/2,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_rect.h/2
+                                ]
+
                 
 
                         case 7: #bottomright
@@ -700,43 +706,32 @@ class Text(GUIbaseClass):
                  italic:bool=False,
                  bold:bool=False,
                  strikethrough:bool=False,
-                 font:str=None,
+                 font:str=None, #assume font not instantiated yet, create a new instance here with type size too
+
                  ):
         super().__init__()
-        
+        if not pygame.font.get_init():
+            pygame.font.init()
         
         
         self.pos = pos
         self.raw_text=text_str
-        self.type = type.value or None
         self.colour = colour or (0,0,0)
+        print(font)
+        print(pygame.font.get_fonts())
         
-        
-        if font:
-            self.font = pygame.font.Font(font,type.value if type else TextType.p.value)
-        
+        self.font = pygame.font.SysFont(font,round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic) if font else pygame.font.SysFont(get_default_font(),round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic)
+
         self.font.set_underline(ul)
-        self.font.set_italic(italic)
-        self.font.set_bold(bold)
         self.font.set_strikethrough(strikethrough)
-        self.font:pygame.font.Font
-        a = pygame.font.SysFont('freesanbold.ttf',32)
         
         
-        if type:
-            match type:
-                case 0: #h1
-                    self.font = pygame.font.Font(self.font)
-                case 1:
-                    ...
-                case 2:
-                    ...
-                case 3:
-                    ...
-                case 4:
-                    ...
         
+
+            
         self.text = self.font.render(self.raw_text, True, self.colour)
+
+        self.text_rect=self.text.get_rect()
 
     def display(self,dis:pygame.Surface):
         dis.blit(self.text,self.pos)
