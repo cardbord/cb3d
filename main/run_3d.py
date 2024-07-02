@@ -111,6 +111,19 @@ def createMenu():
         ]
     )
     
+    _menu_content = pgui.DisplayColumns(
+        [
+            None,
+            pgui.DisplayRows(
+                [
+                pgui.Image([0,0],"backg.jpg"),
+            ])
+        ]
+    )
+                                         
+    
+    start_menu.add_content(_menu_content)
+    
     return start_menu
 
 
