@@ -113,11 +113,17 @@ def createMenu():
     
     _menu_content = pgui.DisplayColumns(
         [
-            None,
+
             pgui.DisplayRows(
                 [
-                pgui.Image([0,0],"backg.jpg"),
-            ])
+                    pgui.Text([0,0],'welcome back to cb3d',pgui.TextType.h1,font="comic sans ms",colour=(214,164,107))
+                ]
+            ),
+            pgui.DisplayRows(
+                [
+                    pgui.Image([0,0],"backg.jpg"),
+                ]
+            )
         ]
     )
                                          
@@ -423,6 +429,7 @@ while 1:
                                         
                             case pygame.K_ESCAPE:
                                 start_menu_shown = True
+                                pygame.image.save(dis,'_preview.jpg')
                                 handler.GUIobjs_array = []
 
 
