@@ -32,7 +32,24 @@ class Anchor(IntEnum):
     BOTTOMRIGHT=7
     CENTER = 8
 
+class TextType(IntEnum):
+    r'''
+    Markup text types-
+    
+    h1: header 1
+    h2: header 2
+    h3: header 3
+    
+    p: paragraph text
+    
+    '''
+    
+    h1=64
+    h2=48
+    h3=32
+    
 
+    p=16
 
 class GUIbaseClass: #provide attrs for other junk, because these things are included in everything
     def __init__(self):
@@ -76,225 +93,226 @@ class  DisplayRows(GUIbaseClass):
                     self.content[itemid]._calc_obj_rel_pos(displace_height) #recursively call _calc_obj_rel_pos on children, not before constraining scaling area to the current content block size.
                     #this raises the oppurtunity for all sorts of content layout!
             else:
-                match self.content[itemid]._anchor:
-                    case 8: #center
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-                        #add support for raw images and raw text later...
-
-                        elif isinstance(self.content[itemid], Image):
-                            self.content[itemid].scale((1,avg_content_height),sticky_y=True)
-                            self.content[itemid].pos = [
-                                self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].image_size[0])/2,
-                                self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].image_size[1]/2
-                            ]
-
-            
-
-                    case 7: #bottomright
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].button_rect.height
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0]) + self.parent_window_size[0]-self.content[itemid].text_box_width-10*self._SIZE_SF,
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].text_box_height
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-
-                    case 6: #bottomleft
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0],
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].button_rect.height
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-
-
-
-                    case 5: #topright
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width),
-                                    self.parent_pos[1] + displace_height + avg_content_height*itemid
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + self.parent_window_size[0]-self.content[itemid].user_text_width) ,
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-
-
-                    case 4: #topleft
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0],
-                                    self.parent_pos[1] + displace_height + avg_content_height*itemid
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    self.parent_pos[0],
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-
-                    
-                    case 2: #left
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0],
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-                    
-                    
-                    
-                    case 1: #bottom
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].button_rect.height
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].text_box_height
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-
-                    
-                    case 0: #top
-                        
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid)
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
-                                ).anchor(self.content[itemid]._anchor)
+                if self.content[itemid]!=None:
+                    match self.content[itemid]._anchor:
+                        case 8: #center
+                            if isinstance(self.content[itemid], Button):
                             
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid)
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
-                            
-                    case _: #default (center)
-                        if isinstance(self.content[itemid], Button):
-                        
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                                 ).anchor(self.content[itemid]._anchor)
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            ).anchor(self.content[itemid]._anchor)
+                            #add support for raw images and raw text later...
 
-    
+                            elif isinstance(self.content[itemid], Image):
+                                self.content[itemid].scale([1,avg_content_height],sticky_y=True)
+                                self.content[itemid].pos = [
+                                    self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].image_size[0])/2,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].image_size[1]/2
+                                ]
+
+                
+
+                        case 7: #bottomright
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width),
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].button_rect.height
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0]) + self.parent_window_size[0]-self.content[itemid].text_box_width-10*self._SIZE_SF,
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].text_box_height
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+
+                        case 6: #bottomleft
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0],
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].button_rect.height
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+
+
+
+                        case 5: #topright
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width),
+                                        self.parent_pos[1] + displace_height + avg_content_height*itemid
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + self.parent_window_size[0]-self.content[itemid].user_text_width) ,
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+
+
+                        case 4: #topleft
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0],
+                                        self.parent_pos[1] + displace_height + avg_content_height*itemid
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        self.parent_pos[0],
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+
+                        
+                        case 2: #left
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0],
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+                        
+                        
+                        
+                        case 1: #bottom
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].button_rect.height
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+1) - self.content[itemid].text_box_height
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+
+                        
+                        case 0: #top
+                            
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid)
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                                
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid)
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+                                
+                        case _: #default (center)
+                            if isinstance(self.content[itemid], Button):
+                            
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + (self.parent_window_size[0]-self.content[itemid].button_rect.width)/2,
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].button_rect.height/2
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    ).anchor(self.content[itemid]._anchor)
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                ).anchor(self.content[itemid]._anchor)
+
+        
 
 
 class DisplayColumns(GUIbaseClass):
@@ -319,30 +337,31 @@ class DisplayColumns(GUIbaseClass):
                     self.content[itemid].parent_window_size = [avg_content_width,self.parent_window_size[1]-displace_height]
                     self.content[itemid]._calc_obj_rel_pos(displace_height)
             else:
-                match self.content[itemid]._anchor:
-                    case 8:
-            
-                        if isinstance(self.content[itemid], Button):
-                            
+                if self.content[itemid]!=None:
+                    match self.content[itemid]._anchor:
+                        case 8:
+                
+                            if isinstance(self.content[itemid], Button):
+                                
 
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + avg_content_width*(itemid+0.5) - self.content[itemid].button_rect.width/2,
-                                    self.parent_pos[1] + displace_height + (self.parent_window_size[1]/2 - self.content[itemid].button_rect.height/2)
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + avg_content_width*(itemid+0.5) - self.content[itemid].button_rect.width/2,
+                                        self.parent_pos[1] + displace_height + (self.parent_window_size[1]/2 - self.content[itemid].button_rect.height/2)
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    )
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                                 )
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            )
 
 
 
@@ -350,29 +369,29 @@ class DisplayColumns(GUIbaseClass):
 
 
 
-                    case _:
-                        if isinstance(self.content[itemid], Button):
-                            
+                        case _:
+                            if isinstance(self.content[itemid], Button):
+                                
 
-                            self.content[itemid]=Button(
-                                [
-                                    self.parent_pos[0] + avg_content_width*(itemid+0.5) - self.content[itemid].button_rect.width/2,
-                                    self.parent_pos[1] + displace_height + (self.parent_window_size[1]/2 - self.content[itemid].button_rect.height/2)
-                                ],
-                                self.content[itemid].text_overlay,
-                                self.content[itemid]._buttonblocksize,
-                                self.content[itemid].highlighted_colour,
-                                self.content[itemid].callback
+                                self.content[itemid]=Button(
+                                    [
+                                        self.parent_pos[0] + avg_content_width*(itemid+0.5) - self.content[itemid].button_rect.width/2,
+                                        self.parent_pos[1] + displace_height + (self.parent_window_size[1]/2 - self.content[itemid].button_rect.height/2)
+                                    ],
+                                    self.content[itemid].text_overlay,
+                                    self.content[itemid]._buttonblocksize,
+                                    self.content[itemid].highlighted_colour,
+                                    self.content[itemid].callback
+                                    )
+                            elif isinstance(self.content[itemid], TextInput):
+                                self.content[itemid]=TextInput(
+                                    [
+                                        (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
+                                        self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
+                                    ],
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                                 )
-                        elif isinstance(self.content[itemid], TextInput):
-                            self.content[itemid]=TextInput(
-                                [
-                                    (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
-                                    self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
-                                ],
-                                self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
-                            )
-                        
+                            
                 
             
 
@@ -416,7 +435,8 @@ class GUIobj(GUIbaseClass):
             if isinstance(item,(DisplayColumns,DisplayRows)):
                 self.__recursive_Displayobj_display(item,dis)
             else:
-                item.display(dis) if not isinstance(item,Button) else item._NSdis(dis)
+                if item!=None:
+                    item.display(dis) if not isinstance(item,Button) else item._NSdis(dis)
 
     def display_window(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
@@ -669,25 +689,81 @@ class menu(GUIobj): # i wonder... will setting window size to 1080p remove any n
 class window(GUIobj):
     ... #here!
     
+class Text(GUIbaseClass):
+    def __init__(self,
+                 pos,
+                 text_str:str,
+                 type:TextType=None,
+                 *,
+                 colour:tuple=None,
+                 ul:bool=False,
+                 italic:bool=False,
+                 bold:bool=False,
+                 strikethrough:bool=False,
+                 font:str=None,
+                 ):
+        super().__init__()
+        
+        
+        
+        self.pos = pos
+        self.raw_text=text_str
+        self.type = type.value or None
+        self.colour = colour or (0,0,0)
+        
+        
+        if font:
+            self.font = pygame.font.Font(font,type.value if type else TextType.p.value)
+        
+        self.font.set_underline(ul)
+        self.font.set_italic(italic)
+        self.font.set_bold(bold)
+        self.font.set_strikethrough(strikethrough)
+        self.font:pygame.font.Font
+        a = pygame.font.SysFont('freesanbold.ttf',32)
+        
+        
+        if type:
+            match type:
+                case 0: #h1
+                    self.font = pygame.font.Font(self.font)
+                case 1:
+                    ...
+                case 2:
+                    ...
+                case 3:
+                    ...
+                case 4:
+                    ...
+        
+        self.text = self.font.render(self.raw_text, True, self.colour)
+
+    def display(self,dis:pygame.Surface):
+        dis.blit(self.text,self.pos)
+    
+
+        
+    
+    
     
 class Image(GUIbaseClass):
     def __init__(self,
                  pos,
                  image:str,
-                 scaling:tuple=None
+                 scaling:list=None
     ):
         super().__init__()
         self.pos = pos
         image_is_file = True
         self.image = None
-        if image.split('.') > 2:
+        if len(image.split('.')) > 2:
             if not os.path.exists(image):
                 image_is_file = False
             else:
                 self.image = pygame.image.load(image)
 
         else:
-            path = str(pathlib.Path(__file__).parent.parent)+'\\content\\'
+            path = str(pathlib.Path(__file__).parent)+'\\content\\'
             if not os.path.exists(path+image):
                 image_is_file=False
             else:
@@ -724,9 +800,12 @@ class Image(GUIbaseClass):
 
             self.image_size = new_size
             self.image=pygame.transform.scale(self.image,new_size)
+        return self
+        
         
 
-
+    def display(self,dis:pygame.Surface):
+        dis.blit(self.image,self.pos)
 
 
     
