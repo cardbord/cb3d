@@ -247,7 +247,11 @@ class  DisplayRows(GUIbaseClass):
                                     self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
                                 ).anchor(self.content[itemid]._anchor)
                         
-                        
+                            elif isinstance(self.content[itemid], Text):
+                                self.content[itemid].pos = [
+                                    self.parent_pos[0] + 12*self._SIZE_SF,
+                                    self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_rect.h/2
+                                ]
                         
                         case 1: #bottom
                             if isinstance(self.content[itemid], Button):
@@ -493,6 +497,7 @@ class Button(GUIbaseClass):
         dis.blit(self.text,(self.pos[0]+11*self._SIZE_SF,self.pos[1]-3*self._SIZE_SF))
 
     def _NSdis(self,dis:pygame.Surface): #method for Button which displays uncentered, use this for confirm buttons
+        pygame.draw.rect(dis,(255,255,255),self.button_rect)
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
         dis.blit(self.text,(self.pos[0],self.pos[1]))
     
@@ -714,19 +719,20 @@ class Text(GUIbaseClass):
             pygame.font.init()
         
         
+        
+        
         self.pos = pos
         self.raw_text=text_str
         self.colour = colour or (0,0,0)
-        print(font)
-        print(pygame.font.get_fonts())
-        
+        self.type=type
         self.font = pygame.font.SysFont(font,round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic) if font else pygame.font.SysFont(get_default_font(),round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic)
 
         self.font.set_underline(ul)
         self.font.set_strikethrough(strikethrough)
         
         
-        
+        self.inline_text={}
+        self._text_split = []
 
             
         self.text = self.font.render(self.raw_text, True, self.colour)
@@ -734,9 +740,21 @@ class Text(GUIbaseClass):
         self.text_rect=self.text.get_rect()
 
     def display(self,dis:pygame.Surface):
-        dis.blit(self.text,self.pos)
-    
+        if len(self._text_split) > 1 and len(self.inline_text) > 0:
+            
 
+    def inline(self,index,text, font,*,colour:tuple=None, ul:bool=False,italic:bool=False,bold:bool=False,strikethrough:bool=False):
+        self._text_split.extend([self.font.render(self.raw_text[index:],True,self.colour), self.font.render(self.raw_text[:index],True,self.colour)])
+        
+        type=self.type
+        tfont = pygame.font.SysFont(font,round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic) if font else pygame.font.SysFont(get_default_font(),round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic)
+        if strikethrough or ul:
+            tfont.set_underline(ul)
+            tfont.set_strikethrough(strikethrough)
+        self.inline_text[text] = (index,tfont)
+        
+        
+        
         
     
     
