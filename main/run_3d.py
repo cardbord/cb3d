@@ -19,6 +19,10 @@ from utils import pgui
 from utils.textures.textureCatalogue import TextureCatalogue
 from webbrowser import open_new_tab
 
+with open('_globals.cblog','r') as version_doc:
+    __VERSION = version_doc.read().replace("'","")
+    version_doc.close()
+
 #REMOVELATER
 a = TextureCatalogue()
 __glass = a.textures['glass']
@@ -58,6 +62,25 @@ def load_file():
         
         return True
     
+def createKeyMenu():
+    ttype = pgui.TextType.h3
+    ftype = 'Segoe UI'
+    content = pgui.DisplayRows([
+        pgui.Text([0,0],'c: clear current model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
+        pgui.Text([0,0],'k: load model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
+        pgui.Text([0,0],'j: save current model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
+        pgui.Text([0,0],'m: place demo box',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
+        pgui.Text([0,0],'h: centre model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
+        pgui.Text([0,0],'g: toggle grid lines',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
+        pgui.Text([0,0],'s: show points',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT)
+    ])
+
+    key_menu = pgui.GUIobj([0,0],[700,600],"keybinds")
+    key_menu.add_content(content)
+
+    return key_menu
+
+    
     
 def save_file():
     global cbmod
@@ -74,7 +97,6 @@ def new_file():
     cbmod = CBModel()
     
     return save_file()
-
 
 def open_help():
     open_new_tab('https://boxo.ovh/') #make page soonish
@@ -110,13 +132,21 @@ def createMenu():
             _Help
         ]
     )
-    
+   
     _menu_content = pgui.DisplayColumns(
         [
 
             pgui.DisplayRows(
                 [
-                    pgui.Text([0,0],'welcome back to cb3d',pgui.TextType.h1,font="comic sans ms",colour=(214,164,107))
+                    pgui.Text([0,0],f'cb3d v{__VERSION}',pgui.TextType.h1,font="Segoe UI",bold=True,colour=(214,164,107)),
+                    pgui.DisplayRows(
+                        [
+                            pgui.Text([0,0],'hit "file" to get started',pgui.TextType.h2, font="comic sans ms"),
+                            pgui.Text([0,0],'or hit "help" for some useful info',pgui.TextType.h2, font="comic sans ms"),
+                            None
+                        ]
+                    ),
+                    None
                 ]
             ),
             pgui.DisplayRows(
@@ -730,14 +760,17 @@ while 1:
             print(f"line thickness state {abs(round(3.91-runtime_dis.scale/75))}")
         
     else:
-        menu_screen.display_window(dis)
+        
         
         for event in pygame.event.get():
-            
+            handler.handle_event(event,mx,my)
             for callback in handler.handle_menu_event(event,mx,my):
                 if (callback[1] == 'load_file' and callback[0] != None) or callback[1] == 'open_saved' or callback[1] == 'new_file':
                     start_menu_shown=False
-
+                elif callback[1] == 'show_instructions' and len([i for i in handler.GUIobjs_array if i.title=='keybinds']) == 0:
+                    handler.add(createKeyMenu())
+                
+                    
             
             
             match event.type:
@@ -756,6 +789,8 @@ while 1:
                     
                     
         
+    
+    menu_screen.display_window(dis)
     handler.display(dis)
 
     mousepos = pygame.mouse.get_pos()
