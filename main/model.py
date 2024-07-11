@@ -102,11 +102,11 @@ class CBModel:
                     readable.close()
                     
                     
-                    return cls(model_points,model_connections,None,model_planes)
+                    return cls(model_points,model_connections,None,model_planes), True
                 else: #single line, so this is a path to a cbmodel
-                    return CBModel.load(model_info[0].replace('\n',''))
+                    return CBModel.load(model_info[0].replace('\n','')), True
         else:
-            return cls()
+            return cls(), False
 
 
     
