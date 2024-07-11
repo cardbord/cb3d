@@ -662,7 +662,7 @@ class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a 
 
 
 
-class Drawing(GUIobj): #this one will be harder, I'll have to really think about how to implement this.
+class Drawing(GUIobj):
     def __init__(self,pos,window_size,title=None):
         super().__init__(
             pos,
@@ -670,18 +670,29 @@ class Drawing(GUIobj): #this one will be harder, I'll have to really think about
             title if title else "Drawing"
         )
         self.drawdata = []
-        self.grid = ... 
         self.pos_on_grid = [0,0]
+        self.zoom_scale = 15
 
 
+        self.grid_size = [ (window_size[0]/self._SIZE_SF)//self.zoom_scale, (window_size[1]/self._SIZE_SF)//self.zoom_scale] 
+
+    def add_content(self): #override content addition since there's nowhere for it to go!
+        pass
 
     def display(self,dis):
         self.display_window(dis)
-            
-    def on_hover(self,mx,my):
+    
+    def scrolled_on(self,value,mx,my):
         if self.check_objcollide(mx,my):
-            self.pos_on_grid = [((mx-self.pos[0]+12)/self._SIZE_SF)//10 , ((self.pos[1]-my+self.window_size[1]+12)/self._SIZE_SF)//10 ]
-            print(self.pos_on_grid)
+            self.zoom_scale+=value/10
+
+    def on_hover(self,mx,my):
+        
+
+        if self.check_objcollide(mx,my):
+            self.pos_on_grid = [ ((mx-self.pos[0])/self._SIZE_SF**2)//self.zoom_scale , ((self.pos[1]-my+self.window_size[1])/self._SIZE_SF**2)//self.zoom_scale ]
+            print(self.pos_on_grid, self.grid_size)
+            
 
 
 class menu(GUIobj): # i wonder... will setting window size to 1080p remove any need to descale?
@@ -917,6 +928,11 @@ class Handler:
         
         elif event.type == pygame.MOUSEBUTTONUP:
             self.wecheck = False
+
+        elif event.type == pygame.MOUSEWHEEL:
+            for obj in self.GUIobjs_array:
+                if isinstance(obj,Drawing):
+                    obj.scrolled_on(event.y,x,y)
         
         self.moved_in_cycle = False
         if len(self.GUIobjs_array) > 1 and self.previously_moved != 0:
