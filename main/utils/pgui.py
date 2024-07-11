@@ -671,10 +671,10 @@ class Drawing(GUIobj):
         )
         self.drawdata = []
         self.pos_on_grid = [0,0]
-        self.zoom_scale = 15
+        self.zoom_scale = 18
 
 
-        self.grid_size = [ (window_size[0]/self._SIZE_SF)//self.zoom_scale, (window_size[1]/self._SIZE_SF)//self.zoom_scale] 
+        self.grid_size = [ (self.window_size[0]/self._SIZE_SF)//self.zoom_scale, (self.window_size[1]/self._SIZE_SF)//self.zoom_scale] 
 
     def add_content(self): #override content addition since there's nowhere for it to go!
         pass
@@ -685,12 +685,13 @@ class Drawing(GUIobj):
     def scrolled_on(self,value,mx,my):
         if self.check_objcollide(mx,my):
             self.zoom_scale+=value/10
+            self.grid_size = [ (self.window_size[0]/self._SIZE_SF)//self.zoom_scale, (self.window_size[1]/self._SIZE_SF)//self.zoom_scale] 
 
     def on_hover(self,mx,my):
         
 
         if self.check_objcollide(mx,my):
-            self.pos_on_grid = [ ((mx-self.pos[0])/self._SIZE_SF**2)//self.zoom_scale , ((self.pos[1]-my+self.window_size[1])/self._SIZE_SF**2)//self.zoom_scale ]
+            self.pos_on_grid = [ ((mx-self.pos[0])/self._SIZE_SF)//self.zoom_scale , ((self.pos[1]-my+self.window_size[1])/self._SIZE_SF)//self.zoom_scale ]
             print(self.pos_on_grid, self.grid_size)
             
 
