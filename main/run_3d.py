@@ -19,9 +19,7 @@ from utils import pgui
 from utils.textures.textureCatalogue import TextureCatalogue
 from webbrowser import open_new_tab
 
-with open('_globals.cblog','r') as version_doc:
-    __VERSION = version_doc.read().replace("'","")
-    version_doc.close()
+
 
 #REMOVELATER
 a = TextureCatalogue()
@@ -39,9 +37,15 @@ show_static_image = False
 global cbmod
 
 path = Path(__file__).parent #just in case python refuses to locate model files, this is a slight problem since older versions of pygame are pretty fussy
-cbmod = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
+cbmod, successful_load = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
+
+if successful_load: #if saved normally, there should be a preview for it
+    pass
 
 
+with open(str(path.parent)+'\\_globals.cblog','r') as version_doc:
+    __VERSION = version_doc.read().replace("'","")
+    version_doc.close()
 
 ###BUTTON CALLBACKS
 
@@ -459,7 +463,7 @@ while 1:
                                         
                             case pygame.K_ESCAPE:
                                 start_menu_shown = True
-                                pygame.image.save(dis,'_preview.jpg')
+                                pygame.image.save(dis,str(path)+'\\_preview.jpg')
                                 handler.GUIobjs_array = []
 
 
@@ -580,7 +584,7 @@ while 1:
         
         
         if rotate_xyz is True:
-            
+            since_last_moved = 0
             newpos = pygame.mouse.get_pos()
             npmx = newpos[0]
             npmy = newpos[1]
@@ -616,148 +620,143 @@ while 1:
             
             runtime_dis.update_angles(runtime_dis.angle_x + ((npmy-my)/100),runtime_dis.angle_y + ((npmx-mx)/100))
         
-        runtime_dis.point_map = cbmod.pointmap
-        dis.fill((104, 157, 242))
-        dis.blit(menusym,(30,30))
-        dis.blit(plussym,(70,30))
-        #print(pointmap)
-        for point in runtime_dis.rendered_pointmap:
-            point:Point
-            if show_points is True:
-                gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
+        if not show_static_image:
+            runtime_dis.point_map = cbmod.pointmap
+            dis.fill((104, 157, 242))
+            dis.blit(menusym,(30,30))
+            dis.blit(plussym,(70,30))
+            #print(pointmap)
+            for point in runtime_dis.rendered_pointmap:
+                point:Point
+                if show_points is True:
+                    gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
 
 
-        if len(cbmod.connected_points) > 1:
-            counter = 0
-            for i in range(0,len(cbmod.connected_points)-1,2):
-                i-=counter
-                indextocheck = cbmod.connected_points[i]
-                second_index = cbmod.connected_points[i+1]
-                if indextocheck == second_index:
-                    counter+=2
-                    del cbmod.connected_points[i:i+2] #just checking that no two points match, it's inefficient to render lines with no length
-                    
-                for point in runtime_dis.rendered_pointmap:
-                    
-                    
-                    if runtime_dis.rendered_pointmap.index(point) == indextocheck:
-                        try: # this is to ensure that lines aren't rendered while loading files (which while extremely rare, can occasionally happen when running on slow memory)
-                            pygame.draw.line(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index],width=abs(round(3.91-runtime_dis.scale/75)))
-                            
-                        except:
-                            pass
-        
-        if len(cbmod.planes)>0:
-            #sorter
-            
-            for plane in cbmod.planes:
-                
-                raw_renders,rendered_points = runtime_dis.plane_project(plane.points,(winsize[0]/2,winsize[1]/2))
-                
-                plane.rpoints = list(raw_renders)
-                plane.render_points = list(rendered_points)
-            #cbmod.planes = quicksort(runtime_dis,cbmod.planes)
-            #condition for sorting: sum([runtime_dis.observer.calc_dist_topoint(runtime_dis.rendered_pointmap[i]) for i in plane[1]])/len(plane[1])
-            #eww, it's horrible!
-            
-            plane_dlists = []
-            for a in cbmod.planes:
-                d_list = [runtime_dis.observer.calc_dist_topoint(distance) for distance in list(a.rpoints)]
-                avg_distance = round( sum(d_list)/len(d_list), 4) #remove floating point imprecision
-                plane_dlists.append(avg_distance)
-                a.avg_distance = avg_distance
-            
-            
-            plane_dlists = quicksort(plane_dlists)
-            
-            if debug:
-                plane_dlists_2REMOVELATER = [i for i in plane_dlists]
-            
-            
-            for distance in plane_dlists:
-                if isinstance(distance,Plane):
-                        pass
-                else:
-                    for plane in cbmod.planes:
+            if len(cbmod.connected_points) > 1:
+                counter = 0
+                for i in range(0,len(cbmod.connected_points)-1,2):
+                    i-=counter
+                    indextocheck = cbmod.connected_points[i]
+                    second_index = cbmod.connected_points[i+1]
+                    if indextocheck == second_index:
+                        counter+=2
+                        del cbmod.connected_points[i:i+2] #just checking that no two points match, it's inefficient to render lines with no length
                         
-                        if isinstance(distance,Plane):
-                            pass
-                        elif plane.avg_distance == distance:
-                            plane_dlists[plane_dlists.index(distance)] = plane
-            
-
-            
-            
-            for pl in range(len(plane_dlists)):
-                plane = plane_dlists[pl]
-                
-                try:
-                    if debug:
-                        text = debug_font.render(f" PLANE {plane_dlists[pl]}: " +str(plane_dlists_2REMOVELATER[pl]),False,(0,0,0))
-                        dis.blit(text,plane.render_points[0])
-                    else:
-                        if plane.texture:
-                            if plane.texture.transparency != 1:
-                                plane.texture.texture_map.set_alpha(int(round(255*(plane.texture.transparency + (len(plane_dlists)- pl)*0.01))))
+                    for point in runtime_dis.rendered_pointmap:
+                        
+                        
+                        if runtime_dis.rendered_pointmap.index(point) == indextocheck:
+                            try: # this is to ensure that lines aren't rendered while loading files (which while extremely rare, can occasionally happen when running on slow memory)
+                                pygame.draw.line(dis,(0,0,0),runtime_dis.rendered_pointmap[indextocheck],runtime_dis.rendered_pointmap[second_index],width=abs(round(3.91-runtime_dis.scale/75)))
                                 
-                            gfxdraw.textured_polygon(dis,plane.render_points,plane.texture.texture_map,plane.texture.tx,plane.texture.ty)
-                            
-                        else:
-                            gfxdraw.filled_polygon(dis,plane.render_points,plane.colour)
-                        
-                    
-                except Exception as e:
-                    print(e)
-                
-                for point in plane.render_points:
-                    if show_points is True:
-                        gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
-                
-                
-                for i in range(0,len(plane.connections)-1,2):
-                    indextocheck = plane.connections[i]
-                    second_index = plane.connections[i+1]
-                    for point in plane.render_points:
-                        
-                        if plane.render_points.index(point) == indextocheck:
-                            try: 
-                                pygame.draw.line(dis,(0,0,0),plane.render_points[indextocheck],plane.render_points[second_index],width=3)
                             except:
                                 pass
             
-            if debug:
-                gfxdraw.filled_polygon(dis,plane_dlists[len(plane_dlists)-1].render_points,(255,0,0))
-                print(plane_dlists[len(plane_dlists)-1].render_points)
-
-        
-        if show_grid is True:
-            runtime_grid.project_points()
-
-            pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
-            pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
-            pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
+            if len(cbmod.planes)>0:
+                #sorter
+                
+                for plane in cbmod.planes:
                     
+                    raw_renders,rendered_points = runtime_dis.plane_project(plane.points,(winsize[0]/2,winsize[1]/2))
+                    
+                    plane.rpoints = list(raw_renders)
+                    plane.render_points = list(rendered_points)
+                #cbmod.planes = quicksort(runtime_dis,cbmod.planes)
+                #condition for sorting: sum([runtime_dis.observer.calc_dist_topoint(runtime_dis.rendered_pointmap[i]) for i in plane[1]])/len(plane[1])
+                #eww, it's horrible!
+                
+                plane_dlists = []
+                for a in cbmod.planes:
+                    d_list = [runtime_dis.observer.calc_dist_topoint(distance) for distance in list(a.rpoints)]
+                    avg_distance = round( sum(d_list)/len(d_list), 4) #remove floating point imprecision
+                    plane_dlists.append(avg_distance)
+                    a.avg_distance = avg_distance
+                
+                
+                plane_dlists = quicksort(plane_dlists)
+                
+                if debug:
+                    plane_dlists_2REMOVELATER = [i for i in plane_dlists]
+                
+                
+                for distance in plane_dlists:
+                    if isinstance(distance,Plane):
+                            pass
+                    else:
+                        for plane in cbmod.planes:
+                            
+                            if isinstance(distance,Plane):
+                                pass
+                            elif plane.avg_distance == distance:
+                                plane_dlists[plane_dlists.index(distance)] = plane
+                
+
+                
+                
+                for pl in range(len(plane_dlists)):
+                    plane = plane_dlists[pl]
+                    
+                    try:
+                        if debug:
+                            text = debug_font.render(f" PLANE {plane_dlists[pl]}: " +str(plane_dlists_2REMOVELATER[pl]),False,(0,0,0))
+                            dis.blit(text,plane.render_points[0])
+                        else:
+                            if plane.texture:
+                                if plane.texture.transparency != 1:
+                                    plane.texture.texture_map.set_alpha(int(round(255*(plane.texture.transparency + (len(plane_dlists)- pl)*0.01))))
+                                    
+                                gfxdraw.textured_polygon(dis,plane.render_points,plane.texture.texture_map,plane.texture.tx,plane.texture.ty)
+                                
+                            else:
+                                gfxdraw.filled_polygon(dis,plane.render_points,plane.colour)
+                            
+                        
+                    except Exception as e:
+                        print(e)
+                    
+                    for point in plane.render_points:
+                        if show_points is True:
+                            gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
+                    
+                    
+                    for i in range(0,len(plane.connections)-1,2):
+                        indextocheck = plane.connections[i]
+                        second_index = plane.connections[i+1]
+                        for point in plane.render_points:
+                            
+                            if plane.render_points.index(point) == indextocheck:
+                                try: 
+                                    pygame.draw.line(dis,(0,0,0),plane.render_points[indextocheck],plane.render_points[second_index],width=3)
+                                except:
+                                    pass
+                
+                if debug:
+                    gfxdraw.filled_polygon(dis,plane_dlists[len(plane_dlists)-1].render_points,(255,0,0))
+                    print(plane_dlists[len(plane_dlists)-1].render_points)
+
+            
+            if show_grid is True:
+                runtime_grid.project_points()
+
+                pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
+                pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
+                pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
+                        
+            
+            
+        else:
+            dis.blit(curr_static_image, (0,0))
+        
+
         if rotatex or rotatey or inv_rotatex or inv_rotatey or rotate_xyz:
             since_last_moved=0
+            show_static_image=False
         else:
             since_last_moved+=1
             
         if since_last_moved >= 120: #120 ticks since last moved/2 seconds
             curr_static_image=dis
             show_static_image=True
-            
-        
-        
-
-        ###DEBUG SPACE
-        if debug:
-            #gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255)) #debug polygon, make plane shuffler to prevent these from happening
-            print(f'{runtime_dis.scale} zoom scale factor')
-            print(f'{since_last_moved} ticks since last moved')
-        
-            print(f"rotatey state {rotatey}, rotatex state {rotatex}")
-            print(f"inv states invrotatex {inv_rotatex}, invrotatey {inv_rotatey}")
-            print(f"line thickness state {abs(round(3.91-runtime_dis.scale/75))}")
         
     else:
         
@@ -767,6 +766,9 @@ while 1:
             for callback in handler.handle_menu_event(event,mx,my):
                 if (callback[1] == 'load_file' and callback[0] != None) or callback[1] == 'open_saved' or callback[1] == 'new_file':
                     start_menu_shown=False
+                    for dropdown in handler.menu.dropdowns:
+                        dropdown.is_dropped=False
+
                 elif callback[1] == 'show_instructions' and len([i for i in handler.GUIobjs_array if i.title=='keybinds']) == 0:
                     handler.add(createKeyMenu())
                 
@@ -784,18 +786,33 @@ while 1:
                             cbmod.save_on_exit()
                             pygame.quit()
                             exit()
+
+                        case pygame.K_F9:
+                            debug=not debug
                             
 
                     
                     
         
     
-    menu_screen.display_window(dis)
+        menu_screen.display_window(dis)
+
     handler.display(dis)
 
     mousepos = pygame.mouse.get_pos()
     mx = mousepos[0]
     my = mousepos[1]
 
+    ###DEBUG SPACE
+    if debug:
+        #gfxdraw.filled_polygon(dis,[(1093.0, 545.0), (925.0, 1020.0), (1635.0, 693.0), (1467.0, 1168.0)],(0,0,255)) #debug polygon, make plane shuffler to prevent these from happening
+        print(f'{runtime_dis.scale} zoom scale factor')
+        print(f'{since_last_moved} ticks since last moved')
+
+        print(f'{show_static_image} image freeze state')
+
+        print(f"rotatey state {rotatey}, rotatex state {rotatex}")
+        print(f"inv states invrotatex {inv_rotatex}, invrotatey {inv_rotatey}")
+        print(f"line thickness state {abs(round(3.91-runtime_dis.scale/75))}")
     
     pygame.display.update()
