@@ -461,13 +461,13 @@ class GUIobj(GUIbaseClass):
         
         self.clickable_cross.display(dis)
 
-    def check_windowcollide(self,xval,yval):
+    def check_windowcollide(self,xval,yval): #hover over window's top edge
         return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.clickableborder_pos[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.clickableborder_pos[1])))) else False
 
-    def check_objcollide(self,xval,yval):
+    def check_objcollide(self,xval,yval): #hover over entire window
         return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.window_size[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.window_size[1])))) else False
 
-    def check_closebuttoncollide(self,xval,yval):
+    def check_closebuttoncollide(self,xval,yval): #hover over window's close button in the top right corner
         return True if (xval in range(int(round(self.clickable_cross.button_rect.left)), int(round(self.clickable_cross.button_rect.right))) and yval in range(int(round(self.clickable_cross.pos[1])), int(round(self.clickable_cross.button_rect.bottom)))) else False
 
     def add_content(self, display_obj: typing.Union[DisplayColumns, DisplayRows]):
@@ -670,13 +670,19 @@ class Drawing(GUIobj): #this one will be harder, I'll have to really think about
             title if title else "Drawing"
         )
         self.drawdata = []
-    
+        self.grid = ... 
+        self.pos_on_grid = [0,0]
+
+
+
     def display(self,dis):
         self.display_window(dis)
-        
-    #def on_click(self,x,y):
-        #if x in range(self.parent_window_rect)
             
+    def on_hover(self,mx,my):
+        if self.check_objcollide(mx,my):
+            self.pos_on_grid = [((mx-self.pos[0]+12)/self._SIZE_SF)//10 , ((self.pos[1]-my+self.window_size[1]+12)/self._SIZE_SF)//10 ]
+            print(self.pos_on_grid)
+
 
 class menu(GUIobj): # i wonder... will setting window size to 1080p remove any need to descale?
     def __init__(self, window_dropdowns:typing.List[Dropdown]): #maybe just add dropdowns as a param?
@@ -729,30 +735,13 @@ class Text(GUIbaseClass):
 
         self.font.set_underline(ul)
         self.font.set_strikethrough(strikethrough)
-        
-        
-        self.inline_text={}
-        self._text_split = []
-
             
         self.text = self.font.render(self.raw_text, True, self.colour)
 
         self.text_rect=self.text.get_rect()
 
     def display(self,dis:pygame.Surface):
-        if len(self._text_split) > 1 and len(self.inline_text) > 0:
-            
-
-    def inline(self,index,text, font,*,colour:tuple=None, ul:bool=False,italic:bool=False,bold:bool=False,strikethrough:bool=False):
-        self._text_split.extend([self.font.render(self.raw_text[index:],True,self.colour), self.font.render(self.raw_text[:index],True,self.colour)])
-        
-        type=self.type
-        tfont = pygame.font.SysFont(font,round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic) if font else pygame.font.SysFont(get_default_font(),round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic)
-        if strikethrough or ul:
-            tfont.set_underline(ul)
-            tfont.set_strikethrough(strikethrough)
-        self.inline_text[text] = (index,tfont)
-        
+        dis.blit(self.text,self.pos)
         
         
         
