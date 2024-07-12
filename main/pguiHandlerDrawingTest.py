@@ -14,7 +14,7 @@ pygame.init()
 dis = pygame.display.set_mode(pygame.display.get_desktop_sizes()[0])
 x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
 while 1:
-    dis.fill((0,0,0))
+    dis.fill((255,255,255))
     for event in pygame.event.get():
         h3.handle_event(event,x,y)
 
