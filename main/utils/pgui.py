@@ -1,5 +1,6 @@
 import pygame, requests, typing, os, pathlib, io
 from pygame.font import get_default_font, Font
+from pygame.gfxdraw import aacircle
 from math import sqrt, ceil
 from enum import IntEnum
 
@@ -671,29 +672,72 @@ class Drawing(GUIobj):
         )
         self.drawdata = []
         self.pos_on_grid = [0,0]
-        self.zoom_scale = 18
-
+        self.zoom_scale = 40
+        self.text_highlight_font = pygame.font.SysFont('Segoe UI', int(round(15*self._SIZE_SF)))
+        self.grid_text = self.text_highlight_font.render(f'{self.pos_on_grid[0]}, {self.pos_on_grid[1]}', True, (100,100,100))
 
         self.grid_size = [ (self.window_size[0]/self._SIZE_SF)//self.zoom_scale, (self.window_size[1]/self._SIZE_SF)//self.zoom_scale] 
 
     def add_content(self): #override content addition since there's nowhere for it to go!
         pass
 
-    def display(self,dis):
-        self.display_window(dis)
+    def _convert_x(self,value):
+        return value*self.zoom_scale*self._SIZE_SF+self.pos[0]
+    
+    def _convert_y(self,value):
+        return abs(value*self._SIZE_SF*self.zoom_scale-self.window_size[1]-self.pos[1])
+
+    def display(self,dis:pygame.Surface): # override display_window functionality since parts need to be drawn without any clever components
+        pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
+        
+
+        pos_converted = (int(round(self._convert_x(self.pos_on_grid[0]))), int(round(self._convert_y(self.pos_on_grid[1]))))
+
+        
+        aacircle(dis,pos_converted[0] , pos_converted[1], 7, (104,115,174))  
+        
+        for i in range(int(self.grid_size[0])):
+            if i == 0:
+                pygame.draw.line(dis,(0,0,0),[self._convert_x(i) , self.pos[1]+self.window_size[1]], [self._convert_x(i) , self.pos[1]], 3)    
+            else:
+                pygame.draw.aaline(dis,(150,150,150,(210)),[self._convert_x(i) , self.pos[1]+self.window_size[1]], [self._convert_x(i) , self.pos[1]])
+        
+        for j in range(int(self.grid_size[1])):
+            if j == 0:
+                pygame.draw.line(dis, (0,0,0), [self.pos[0], self._convert_y(j)], [self.pos[0]+self.window_size[0], self._convert_y(j)], 3)
+            else:
+                pygame.draw.aaline(dis, (150,150,150,(210)), [self.pos[0], self._convert_y(j)], [self.pos[0]+self.window_size[0], self._convert_y(j)])
+
+        dis.blit(self.grid_text,[pos_converted[0] + 5*self._SIZE_SF, pos_converted[1] - 20*self._SIZE_SF])
+
+        pygame.draw.rect(dis,(255,255,255),self.clickableborder_area)
+        pygame.draw.rect(dis,(0,0,0),self.parent_window_rect,width=1)
+        
+        pygame.draw.rect(dis,(0,0,0),self.clickableborder_area,width=1)
+        if self.title != None:
+            trect = self.font.render(self.title,True,(0,0,0))
+            dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)])
+        
+        self.clickable_cross.display(dis)
     
     def scrolled_on(self,value,mx,my):
-        if self.check_objcollide(mx,my):
+        if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my):
             self.zoom_scale+=value/10
             self.grid_size = [ (self.window_size[0]/self._SIZE_SF)//self.zoom_scale, (self.window_size[1]/self._SIZE_SF)//self.zoom_scale] 
 
     def on_hover(self,mx,my):
         
 
-        if self.check_objcollide(mx,my):
+        if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my):
+            if not self.check_windowcollide(mx,my):
+                pygame.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
             self.pos_on_grid = [ ((mx-self.pos[0])/self._SIZE_SF)//self.zoom_scale , ((self.pos[1]-my+self.window_size[1])/self._SIZE_SF)//self.zoom_scale ]
-            print(self.pos_on_grid, self.grid_size)
             
+            self.grid_text = self.text_highlight_font.render(f'{self.pos_on_grid[0]}, {self.pos_on_grid[1]}', True, (10,10,10))
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
 
 class menu(GUIobj): # i wonder... will setting window size to 1080p remove any need to descale?
@@ -887,7 +931,7 @@ class Handler:
     def display(self,dis):
         
         for i in range(len(self.GUIobjs_array),0,-1):
-            self.GUIobjs_array[i-1].display(dis) if isinstance(self.GUIobjs_array[i-1],TextInputBox) else self.GUIobjs_array[i-1].display_window(dis)
+            self.GUIobjs_array[i-1].display(dis) if isinstance(self.GUIobjs_array[i-1],TextInputBox) or isinstance(self.GUIobjs_array[i-1],Drawing) else self.GUIobjs_array[i-1].display_window(dis)
         
         
     def handle_event(self,event,x,y):
