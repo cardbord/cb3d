@@ -413,6 +413,7 @@ class GUIobj(GUIbaseClass):
 
     param  `pos`    position of the window to be drawn to the pygame display (it helps if the pygame display is fullscreen)
     param  `window_size`    size of the GUIobj window, stored as width/height
+    param  `title`    title displayed at the top of the window
 
     Will be initialized automatically through other GUI objects. It is encouraged to use those instead, as they all inherit from this.
     '''
@@ -676,6 +677,9 @@ class Drawing(GUIobj):
         self.text_highlight_font = pygame.font.SysFont('Segoe UI', int(round(15*self._SIZE_SF)))
         self.grid_text = self.text_highlight_font.render(f'{self.pos_on_grid[0]}, {self.pos_on_grid[1]}', True, (100,100,100))
 
+        self.draw_button = Button([0,0],"Draw to...") #spawn child window from this, with x/y, y/z, and x/z planes, attach callback in main
+
+        
         self.grid_size = [ (self.window_size[0]/self._SIZE_SF)//self.zoom_scale, (self.window_size[1]/self._SIZE_SF)//self.zoom_scale] 
 
     def add_content(self): #override content addition since there's nowhere for it to go!
@@ -710,6 +714,10 @@ class Drawing(GUIobj):
 
         dis.blit(self.grid_text,[pos_converted[0] + 5*self._SIZE_SF, pos_converted[1] - 20*self._SIZE_SF])
 
+        for point in self.drawdata:
+            if point[0] <= self.grid_size[1] and point[1] <= self.grid_size[1]:
+                pygame.draw.circle(dis, (0,0,210), (self._convert_x(point[0]), self._convert_y(point[1])), 5)
+
         pygame.draw.rect(dis,(255,255,255),self.clickableborder_area)
         pygame.draw.rect(dis,(0,0,0),self.parent_window_rect,width=1)
         
@@ -719,26 +727,40 @@ class Drawing(GUIobj):
             dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)])
         
         self.clickable_cross.display(dis)
+        
+        self.draw_button.pos = [self.pos[0]+self.window_size[0]-self.draw_button.button_rect.w , self.pos[1]+self.window_size[1]-self.draw_button.button_rect.h]
+        self.draw_button.button_rect.x = self.pos[0]+self.window_size[0]-self.draw_button.button_rect.w
+        self.draw_button.button_rect.y = self.pos[1]+self.window_size[1]-self.draw_button.button_rect.h
+        
+        self.draw_button._NSdis(dis)
     
     def scrolled_on(self,value,mx,my):
-        if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my):
-            self.zoom_scale+=value/10
+        if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my) and not self.draw_button.button_rect.collidepoint(mx,my) and self.zoom_scale+value/2 > 0:
+            self.zoom_scale+=value/2 
             self.grid_size = [ (self.window_size[0]/self._SIZE_SF)//self.zoom_scale, (self.window_size[1]/self._SIZE_SF)//self.zoom_scale] 
 
     def on_hover(self,mx,my):
         
 
-        if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my):
-            if not self.check_windowcollide(mx,my):
-                pygame.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
-            else:
-                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my) and not self.draw_button.button_rect.collidepoint(mx,my):
+            pygame.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
+                
             self.pos_on_grid = [ ((mx-self.pos[0])/self._SIZE_SF)//self.zoom_scale , ((self.pos[1]-my+self.window_size[1])/self._SIZE_SF)//self.zoom_scale ]
             
             self.grid_text = self.text_highlight_font.render(f'{self.pos_on_grid[0]}, {self.pos_on_grid[1]}', True, (10,10,10))
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
+    def on_click(self,mx,my):
+        
+        if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my):
+            if self.draw_button.button_rect.collidepoint(mx,my):
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                return self.draw_button.callback(self.drawdata)
+            else:
+                self.drawdata.append(self.pos_on_grid)
+        
+            
 
 class menu(GUIobj): # i wonder... will setting window size to 1080p remove any need to descale?
     def __init__(self, window_dropdowns:typing.List[Dropdown]): #maybe just add dropdowns as a param?
@@ -808,12 +830,14 @@ class Image(GUIbaseClass):
     def __init__(self,
                  pos,
                  image:str,
-                 scaling:list=None
+                 scaling:list=None,
+                 callback=None #we can treat images as buttons by attaching the same callback functionality to them!
     ):
         super().__init__()
         self.pos = pos
         image_is_file = True
         self.image = None
+        self.callback = callback
         if len(image.split('.')) > 2:
             if not os.path.exists(image):
                 image_is_file = False
@@ -866,6 +890,16 @@ class Image(GUIbaseClass):
         dis.blit(self.image,self.pos)
 
 
+    def on_click(self,mx,my):
+        if mx in range(int(round(self.pos[0])), int(round(self.pos[0]+self.image_size[0]))) and my in range(int(round(self.pos[1])), int(round(self.pos[1]+self.image_size[1]))):
+            if self.callback != None:
+                return self.callback()
+            else:
+                return True
+            
+    def set_callback(self,callback):
+        self.callback = callback
+        return self
     
     
 #HANDLER
@@ -915,6 +949,9 @@ class Handler:
                 elif isinstance(item,Button) and xval in range(item.button_rect.left,item.button_rect.right) and yval in range(item.button_rect.top,item.button_rect.bottom):
                     item.on_click(xval,yval)
                     break
+                elif isinstance(item,Image) and xval in range(int(round(item.pos[0])), int(round(item.pos[0]+item.image_size[0]))) and yval in range(int(round(item.pos[1])), int(round(item.pos[1]+item.image_size[1]))):
+                    item.on_click(xval,yval)
+                    break
 
 
     def __recursive_textinput_itext(self,obj, _text_returns:dict={}):
@@ -933,6 +970,9 @@ class Handler:
         for i in range(len(self.GUIobjs_array),0,-1):
             self.GUIobjs_array[i-1].display(dis) if isinstance(self.GUIobjs_array[i-1],TextInputBox) or isinstance(self.GUIobjs_array[i-1],Drawing) else self.GUIobjs_array[i-1].display_window(dis)
         
+            if isinstance(self.GUIobjs_array[0], Drawing):
+                x,y = pygame.mouse.get_pos()
+                self.GUIobjs_array[0].on_hover(x,y)
         
     def handle_event(self,event,x,y):
         
@@ -951,24 +991,31 @@ class Handler:
 
                 
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
             
-
-            if len(self.GUIobjs_array) > 0 and self.GUIobjs_array[0].check_closebuttoncollide(x,y):
-                self.GUIobjs_array.pop(0)
-            
-            else:
-                for d in range(len(self.GUIobjs_array)):
-                    if d==0:
-                        if isinstance(self.GUIobjs_array[d], TextInputBox):
-                            self.GUIobjs_array[d].on_collide(x,y)
-                        elif isinstance(self.GUIobjs_array[0],GUIobj):
-                            self.__recursive_displayobj_onclick(self.GUIobjs_array[0],x,y)
+                if len(self.GUIobjs_array) > 0 and self.GUIobjs_array[0].check_closebuttoncollide(x,y):
+                    self.GUIobjs_array.pop(0)
+                
+                else:
+                    for d in range(len(self.GUIobjs_array)):
+                        if d==0:
+                            returntype = None
+                            if isinstance(self.GUIobjs_array[d], TextInputBox):
+                                returntype = self.GUIobjs_array[d].on_collide(x,y)
+                            elif isinstance(self.GUIobjs_array[0],Drawing): #drawing must be above GUIobj here, as it is a GUIobj itself
+                                returntype = self.GUIobjs_array[d].on_click(x,y)
+                            elif isinstance(self.GUIobjs_array[0],GUIobj):
+                                returntype = self.__recursive_displayobj_onclick(self.GUIobjs_array[0],x,y)
                             
-                    else:
-                        if isinstance(self.GUIobjs_array[0],TextInputBox):
-                            for t_input in self.GUIobjs_array[d].text_inputs:
-                                t_input.to_input = False
-                        
+                            if returntype != None and isinstance(returntype, GUIobj): #check for object creator buttons
+                                self.GUIobjs_array.insert(0,returntype)
+                                
+                                
+                        else:
+                            if isinstance(self.GUIobjs_array[0],TextInputBox):
+                                for t_input in self.GUIobjs_array[d].text_inputs:
+                                    t_input.to_input = False
+                            
                 self.wecheck = True #check for collisions in this cycle
         
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -978,6 +1025,7 @@ class Handler:
             for obj in self.GUIobjs_array:
                 if isinstance(obj,Drawing):
                     obj.scrolled_on(event.y,x,y)
+                    
         
         self.moved_in_cycle = False
         if len(self.GUIobjs_array) > 1 and self.previously_moved != 0:
