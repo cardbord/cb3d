@@ -2,10 +2,50 @@ from utils import pgui
 import pygame
 
 '''
-mimics pguitest.py in functionality, but makes use of the GUIobj Handler class to abstract all obj movement/textinput additions/window priority away from the main program.
+copied from pguiHandlerTest.py, just implementing a Drawing object specifically
 '''
 
+def transform(points:list, draw_plane:str,extrusion:int=None):
+    p_array = []
+    add_extrude = False
+    if extrusion != None:
+        add_extrude = True
+    
+    match draw_plane:
+        case 'xy':
+            for point in points:
+                p_array.append([point[0],point[1],0])
+                if add_extrude:
+                    p_array.append([point[0],point[1],extrusion])
+        case 'xz':
+            for point in points:
+                p_array.append([point[0], 0, point[1]])
+                if add_extrude:
+                    p_array.append([point[0],extrusion,point[1]])
+        case 'yz':
+            for point in points:
+                p_array.append([0, point[0], point[1]])
+                if add_extrude:
+                    p_array.append([extrusion,point[0],point[1]])
+                
+    return p_array 
+        
+
+def demoChildXYZselector(points):
+    d = pgui.GUIobj([0,0],[600,600],'test')
+    d.points = points
+    d.add_content(
+        pgui.DisplayRows([
+            pgui.Image([0,0],'boxo.png').set_callback(lambda: print(transform(d.points,'xy'))), #these will be custom 600x200 images i'll make later. for now... boxo.png!
+            pgui.Image([0,0],'boxo.png').set_callback(lambda: print(transform(d.points,'xz'))),
+            pgui.Image([0,0],'boxo.png').set_callback(lambda: print(transform(d.points,'yz')))
+        ])
+    )
+    return d
+
+
 draw = pgui.Drawing([0,0],[800,800],"add object")
+draw.draw_button.callback = demoChildXYZselector
 
 h3 = pgui.Handler()
 
@@ -31,7 +71,7 @@ while 1:
             
             #within this loop, it is beneficial to provide the event, and then feed it through pgui's handler. it's far better than running two event loops at once
     
-    draw.on_hover(x,y)
+    
     h3.display(dis)
     pygame.display.flip()
     x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
