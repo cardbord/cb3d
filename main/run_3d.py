@@ -416,7 +416,7 @@ while 1:
                                 cbmod.add([-1,1,1])
 
                                 cbmod.add([-1,-1,-1])
-                                cbmod.add([1,-1,-1])#omg hewwo haiii heyyyyy~~~ :333333333 >_< :4 <3333
+                                cbmod.add([1,-1,-1])
                                 cbmod.add([1,1,-1])
                                 cbmod.add([-1,1,-1])
 
@@ -663,7 +663,7 @@ while 1:
                     plane.render_points = list(rendered_points)
                 #cbmod.planes = quicksort(runtime_dis,cbmod.planes)
                 #condition for sorting: sum([runtime_dis.observer.calc_dist_topoint(runtime_dis.rendered_pointmap[i]) for i in plane[1]])/len(plane[1])
-                #eww, it's horrible!
+                
                 
                 plane_dlists = []
                 for a in cbmod.planes:
