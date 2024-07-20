@@ -62,7 +62,6 @@ class GUIbaseClass: #provide attrs for other junk, because these things are incl
             self.window_size = pygame.display.get_desktop_sizes()[0]
         self._fontSIZE = 50
         self._SIZE_SF = round(sqrt((self.window_size[0]*self.window_size[1]))/1440,3) #factor for monitor size, 1920x1080p default
-        self._ASIZE_SF = round((self.window_size[0]*self.window_size[1])/2073600,2) #whelp, our area-based size scaling returns
         self.font = Font(get_default_font(),int(round(self._fontSIZE*self._SIZE_SF)))
 
         self._anchor = Anchor.CENTER #set through method
@@ -614,7 +613,7 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
             
 
         
-    #this might be right?
+    
     def display(self,dis:pygame.Surface):
         self.display_window(dis)
         
@@ -625,8 +624,8 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
 
 
     
-    #determine text input boxes properly through a class, initialized through a property
-    #yeah yeah i know
+    
+    
 
 class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a class that collates multiple buttons together
     def __init__(self,pos,placeholder:Button,buttons:typing.List[Button]):
@@ -677,7 +676,7 @@ class Drawing(GUIobj):
         self.text_highlight_font = pygame.font.SysFont('Segoe UI', int(round(15*self._SIZE_SF)))
         self.grid_text = self.text_highlight_font.render(f'{self.pos_on_grid[0]}, {self.pos_on_grid[1]}', True, (100,100,100))
 
-        self.draw_button = Button([0,0],"Draw to...") #spawn child window from this, with x/y, y/z, and x/z planes, attach callback in main
+        self.draw_button = Button([0,0],"Draw") #spawn child window from this, with x/y, y/z, and x/z planes, attach callback in main
 
         
         self.grid_size = [ (self.window_size[0]/self._SIZE_SF)//self.zoom_scale, (self.window_size[1]/self._SIZE_SF)//self.zoom_scale] 
@@ -1101,21 +1100,3 @@ class Handler:
         else:
             self.menu.clickable_cross.highlighted=False
             
-            
-        
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-#mushroom! :333333333333333332
