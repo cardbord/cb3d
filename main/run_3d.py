@@ -526,6 +526,7 @@ while 1:
                             handler.add(createoptMenu())
                             
                             
+                            
                                 
                     
 
@@ -579,9 +580,7 @@ while 1:
         if inv_rotatex is True:
             runtime_dis.angle_x -=0.01
             runtime_grid.angle_x -=0.01
-        
-        
-        
+                
         
         if rotate_xyz is True:
             since_last_moved = 0
@@ -620,6 +619,9 @@ while 1:
             
             runtime_dis.update_angles(runtime_dis.angle_x + ((npmy-my)/100),runtime_dis.angle_y + ((npmx-mx)/100))
         
+        
+
+
         if not show_static_image:
             runtime_dis.point_map = cbmod.pointmap
             dis.fill((104, 157, 242))
@@ -741,9 +743,7 @@ while 1:
                 pygame.draw.line(dis,(255,0,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[1])
                 pygame.draw.line(dis,(0,255,0),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[2])
                 pygame.draw.line(dis,(0,0,255),runtime_grid.rendered_pointmap[0],runtime_grid.rendered_pointmap[3])
-                        
-            
-            
+      
         else:
             dis.blit(curr_static_image, (0,0))
         
@@ -758,6 +758,13 @@ while 1:
             curr_static_image=dis
             show_static_image=True
         
+        for event in handler.eventLog:
+            
+            if event == 'cb3d menu' and (handler.eventLog[event] == handler.Event.move or handler.eventLog[event]==handler.Event.remove or handler.eventLog[event]==handler.Event.click):
+                since_last_moved=0
+                show_static_image=False
+
+
     else:
         
         
