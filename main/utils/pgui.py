@@ -2,7 +2,7 @@ import pygame, requests, typing, os, pathlib, io
 from pygame.font import get_default_font, Font
 from pygame.gfxdraw import aacircle
 from math import sqrt, ceil
-from enum import IntEnum
+from enum import IntEnum, Enum
 
 pygame.font.init()
 
@@ -909,11 +909,30 @@ class Handler:
         self.wecheck = False
         self.previously_moved = 0
         self.moved_in_cycle = False
+        self.eventLog: dict = {} #update each cycle
         
         self.menu:menu = None
     
-    def add(self, obj):
+    class Event(Enum): #enums are lovely... using this to mimic pygame's event system, except for specifically listening to my own junk!
+        
+        
+        move=1 #an obj's window is clicked and dragged by its clickable border
+        click=2 #an obj's on_click method is called, or a click is handled somehow within it
+        scroll=3 #the mouse scroll wheel has been used within an object's window
+
+        type=4 #a keyboard character is registered whilst the highlighted object's to_input==True
+        backspace=5 #a backspace is registered whilst the highlighted object's to_input==True
+
+        remove=6 #an obj is removed from the Handler
+        add=7 #an obj is added to the Handler via an external source
+        create=8 #an obj is added to the Handler via an internal source, one of the current Handler objects
+
+
+
+
+    def add(self, obj:GUIobj):
         self.GUIobjs_array.append(obj)
+        self.eventLog[obj.title] = self.Event.add
     
     def __recursive_displayobj_texthandling(self, obj,unicode, _backspace=False):
         for item in obj.content:
@@ -974,7 +993,7 @@ class Handler:
                 self.GUIobjs_array[0].on_hover(x,y)
         
     def handle_event(self,event,x,y):
-        
+        self.eventLog = {}
         
         if event.type == pygame.KEYDOWN:
             
@@ -983,17 +1002,25 @@ class Handler:
                     for t_input in self.GUIobjs_array[0].text_inputs:
                         if t_input.to_input:
                             t_input.backspace()
-                    self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True)
+                    self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True) #we can supply "absolutely" nothing to this as the funct handles both backspaces and text addition
+                    
+                    self.eventLog[self.GUIobjs_array[0].title] = self.Event.backspace
+
                         
-            else:
+            elif len(self.GUIobjs_array) > 0:
                 self.addTIBtext(event.unicode)
+                self.eventLog[self.GUIobjs_array[0].title] = self.Event.type #fix
 
                 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
             
                 if len(self.GUIobjs_array) > 0 and self.GUIobjs_array[0].check_closebuttoncollide(x,y):
+                    self.eventLog[self.GUIobjs_array[0].title] = self.Event.remove #don't forget to do this early, otherwise we're reporting some other object's event! (or just IndexErroring)
                     self.GUIobjs_array.pop(0)
+                    
+                    
+                    
                 
                 else:
                     for d in range(len(self.GUIobjs_array)):
@@ -1005,13 +1032,18 @@ class Handler:
                                 returntype = self.GUIobjs_array[d].on_click(x,y)
                             elif isinstance(self.GUIobjs_array[0],GUIobj):
                                 returntype = self.__recursive_displayobj_onclick(self.GUIobjs_array[0],x,y)
-                            
+                             
+
                             if returntype != None and isinstance(returntype, GUIobj): #check for object creator buttons
                                 self.GUIobjs_array.insert(0,returntype)
-                                
+                                self.eventLog[self.GUIobjs_array[0].title] = self.Event.create 
+                            else:
+                                self.eventLog[self.GUIobjs_array[0].title] = self.Event.click #let's seperate these two, otherwise different
+
                                 
                         else:
                             if isinstance(self.GUIobjs_array[0],TextInputBox):
+                                self.eventLog[self.GUIobjs_array[0].title] = self.Event.click
                                 for t_input in self.GUIobjs_array[d].text_inputs:
                                     t_input.to_input = False
                             
@@ -1024,6 +1056,7 @@ class Handler:
             for obj in self.GUIobjs_array:
                 if isinstance(obj,Drawing):
                     obj.scrolled_on(event.y,x,y)
+                    self.eventLog[obj.title] = self.Event.scroll
                     
         
         self.moved_in_cycle = False
@@ -1045,6 +1078,8 @@ class Handler:
                         for contentblock in display_object.content:
                             contentblock.parent_pos = display_object.pos
                             contentblock._calc_obj_rel_pos(50*display_object._SIZE_SF)
+
+                    self.eventLog[display_object.title] = self.Event.move
                     
         for contentblock in self.GUIobjs_array:
                 
@@ -1060,18 +1095,18 @@ class Handler:
         
     def addTIBtext(self,unicode):
         
-        if len(self.GUIobjs_array) > 0 and isinstance(self.GUIobjs_array[0],TextInputBox):
+        if isinstance(self.GUIobjs_array[0],TextInputBox):
             for t_input in self.GUIobjs_array[0].text_inputs:
                 if t_input.to_input:    
                     t_input.add_char(unicode)
                     
-        elif len(self.GUIobjs_array) > 0 and hasattr(self.GUIobjs_array[0], "content"):
+        elif hasattr(self.GUIobjs_array[0], "content"):
             for contentblock in self.GUIobjs_array[0].content:
                 self.__recursive_displayobj_texthandling(contentblock,unicode)
                 
                 
                 
-    def handle_menu_event(self,event,x,y):
+    def handle_menu_event(self,event,x,y): #menu doesn't require logging, since it already yields everything it does.
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
