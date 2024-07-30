@@ -5,6 +5,7 @@ import pygame
 copied from pguiHandlerTest.py, just implementing a Drawing object specifically
 '''
 
+#will add to plane_sorter in utils when done
 def transform(points:list, draw_plane:str,extrusion:int=None):
     p_array = []
     add_extrude = False
@@ -31,14 +32,16 @@ def transform(points:list, draw_plane:str,extrusion:int=None):
     return p_array 
         
 
-def demoChildXYZselector(points):
-    d = pgui.GUIobj([0,0],[600,600],'test')
+def demoChildXYZselector(points): #this is implemented inside run_3d.py
+    d = pgui.GUIobj([0,0],[200,600],'test')
     d.points = points
     d.add_content(
         pgui.DisplayRows([
-            pgui.Image([0,0],'boxo.png').set_callback(lambda: print(transform(d.points,'xy'))), #these will be custom 600x200 images i'll make later. for now... boxo.png!
+            pgui.Image([0,0],'boxo.png').set_callback(lambda: print(transform(d.points,'xy'))), #these will be custom 200x200 images i'll make later. for now... boxo.png!
             pgui.Image([0,0],'boxo.png').set_callback(lambda: print(transform(d.points,'xz'))),
             pgui.Image([0,0],'boxo.png').set_callback(lambda: print(transform(d.points,'yz')))
+            
+            #we use the anonymous function lambda: cbmod.add_plane(transform(d.points,planetype), [], texture) in the real thing
         ])
     )
     return d
