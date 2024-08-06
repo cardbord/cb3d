@@ -3,16 +3,23 @@ import pygame
 
 eventHandler = Handler()
 
-debug = True #SET FALSE WHEN NOT TESTING
+debug = False #SET FALSE WHEN NOT TESTING
 
 pygame.init()
 
-obj = GUIobj([200,200], [1400,1000],"content block test")
+obj = GUIobj([200,200], [800,400],"content block test")
 obj.add_content(
      DisplayRows([
-      TextInput([0,0],"textinp").anchor(Anchor.TOP),
-      Button([0,0],"hi guys").anchor(Anchor.TOPRIGHT)
-          ]
+          DisplayColumns(
+               [
+                    Button([0,0],'hey'),
+                    Button([0,0],'hi')
+               ]
+          ),
+          
+          TextInput([0,0],"test TextInput"),
+          Button([0,0],"test button"),
+          ],
      )
 )
 
