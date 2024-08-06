@@ -15,7 +15,7 @@ from cb3d_disgrid import display_3Dgrid
 from model import Point, CBModel, Plane
 from pygame import gfxdraw
 from utils.plane_sorter import quicksort
-from utils import pgui
+from utils.pgui import Text, TextType, Anchor, Button, TextInput, Dropdown, menu, DisplayColumns, DisplayRows, Image, Handler, GUIobj, scale_to_window
 from utils.textures.textureCatalogue import TextureCatalogue
 from webbrowser import open_new_tab
 
@@ -67,19 +67,19 @@ def load_file():
         return True
     
 def createKeyMenu():
-    ttype = pgui.TextType.h3
+    ttype = TextType.h3
     ftype = 'Segoe UI'
-    content = pgui.DisplayRows([
-        pgui.Text([0,0],'c: clear current model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
-        pgui.Text([0,0],'k: load model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
-        pgui.Text([0,0],'j: save current model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
-        pgui.Text([0,0],'m: place demo box',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
-        pgui.Text([0,0],'h: centre model',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
-        pgui.Text([0,0],'g: toggle grid lines',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT),
-        pgui.Text([0,0],'s: show points',type=ttype,font=ftype).anchor(pgui.Anchor.LEFT)
+    content = DisplayRows([
+        Text([0,0],'c: clear current model',type=ttype,font=ftype).anchor(Anchor.LEFT),
+        Text([0,0],'k: load model',type=ttype,font=ftype).anchor(Anchor.LEFT),
+        Text([0,0],'j: save current model',type=ttype,font=ftype).anchor(Anchor.LEFT),
+        Text([0,0],'m: place demo box',type=ttype,font=ftype).anchor(Anchor.LEFT),
+        Text([0,0],'h: centre model',type=ttype,font=ftype).anchor(Anchor.LEFT),
+        Text([0,0],'g: toggle grid lines',type=ttype,font=ftype).anchor(Anchor.LEFT),
+        Text([0,0],'s: show points',type=ttype,font=ftype).anchor(Anchor.LEFT)
     ])
 
-    key_menu = pgui.GUIobj([0,0],[700,600],"keybinds")
+    key_menu = GUIobj([0,0],[700,600],"keybinds")
     key_menu.add_content(content)
 
     return key_menu
@@ -115,47 +115,47 @@ def show_instructions(): #i need something for the __name__checker to look at
 ###GUI MENUS
 def createMenu():
     file_list = [
-        pgui.Button([0,0],"Return",[200,60],None,open_saved),
-        pgui.Button([0,0],"New",[200,60],None,new_file),
-        pgui.Button([0,0],"Load",[200,60],None,load_file),
+        Button([0,0],"Return",[200,60],None,open_saved),
+        Button([0,0],"New",[200,60],None,new_file),
+        Button([0,0],"Load",[200,60],None,load_file),
     ]    
     help_list = [
-        pgui.Button([0,0],"Docs",[200,60],None,open_help),
-        pgui.Button([0,0],"Keys",[200,60],None,show_instructions),
-        pgui.Button([0,0],"Github",[200,60],None,my_github),
+        Button([0,0],"Docs",[200,60],None,open_help),
+        Button([0,0],"Keys",[200,60],None,show_instructions),
+        Button([0,0],"Github",[200,60],None,my_github),
     ]
     
-    _File = pgui.Dropdown([0,0], pgui.Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
-    _Help = pgui.Dropdown([pgui.scale_to_window(200),0], pgui.Button([pgui.scale_to_window(200),0],"Help",[200,50],(10,10,10)), help_list) 
+    _File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
+    _Help = Dropdown([scale_to_window(200),0], Button([scale_to_window(200),0],"Help",[200,50],(10,10,10)), help_list) 
 
     
 
-    start_menu = pgui.menu(
+    start_menu = menu(
         [
             _File,
             _Help
         ]
     )
    
-    _menu_content = pgui.DisplayColumns(
+    _menu_content = DisplayColumns(
         [
 
-            pgui.DisplayRows(
+            DisplayRows(
                 [
-                    pgui.Text([0,0],f'cb3d v{__VERSION}',pgui.TextType.h1,font="Segoe UI",bold=True,colour=(214,164,107)),
-                    pgui.DisplayRows(
+                    Text([0,0],f'cb3d v{__VERSION}',TextType.h1,font="Segoe UI",bold=True,colour=(214,164,107)),
+                    DisplayRows(
                         [
-                            pgui.Text([0,0],'hit "file" to get started',pgui.TextType.h2, font="comic sans ms"),
-                            pgui.Text([0,0],'or hit "help" for some useful info',pgui.TextType.h2, font="comic sans ms"),
+                            Text([0,0],'hit "file" to get started',TextType.h2, font="comic sans ms"),
+                            Text([0,0],'or hit "help" for some useful info',TextType.h2, font="comic sans ms"),
                             None
                         ]
                     ),
                     None
                 ]
             ),
-            pgui.DisplayRows(
+            DisplayRows(
                 [
-                    pgui.Image([0,0],"backg.jpg"),
+                    Image([0,0],"backg.jpg"),
                 ]
             )
         ]
@@ -304,20 +304,20 @@ def place_example_plane_model():
     cbmod.add_plane([Point((-0.2,0.2,1)),Point((0.2,0.2,1)),Point((0.2,1,1)),Point((-0.2,1,1))], [0,1,1,2,0,3,2,3], (214,164,107))
 
 
-handler = pgui.Handler()
+handler = Handler()
 handler.menu = menu_screen
 
 def createoptMenu():
     
-    content = pgui.DisplayRows([
-        pgui.Button(None,"clear model",None,None,clear).anchor(pgui.Anchor.LEFT),
-        pgui.Button(None,"toggle grid lines",None,None,show_grid_lines).anchor(pgui.Anchor.LEFT),
-        pgui.Button(None,"toggle points",None,None,show_point).anchor(pgui.Anchor.LEFT),
-        pgui.Button(None,"place example cube",None,None,place_example_cube).anchor(pgui.Anchor.LEFT),
-        pgui.Button(None,"place example model",None,None, place_example_plane_model).anchor(pgui.Anchor.LEFT)
+    content = DisplayRows([
+        Button(None,"clear model",None,None,clear).anchor(Anchor.LEFT),
+        Button(None,"toggle grid lines",None,None,show_grid_lines).anchor(Anchor.LEFT),
+        Button(None,"toggle points",None,None,show_point).anchor(Anchor.LEFT),
+        Button(None,"place example cube",None,None,place_example_cube).anchor(Anchor.LEFT),
+        Button(None,"place example model",None,None, place_example_plane_model).anchor(Anchor.LEFT)
     ])
 
-    options_menu = pgui.GUIobj([0,0],[700,500],"cb3d menu")
+    options_menu = GUIobj([0,0],[700,500],"cb3d menu")
     options_menu.add_content(content)
 
     return options_menu
@@ -760,9 +760,9 @@ while 1:
         
         for event in handler.eventLog:
             
-            if event == 'cb3d menu' and (handler.eventLog[event] == handler.Event.move or handler.eventLog[event]==handler.Event.remove or handler.eventLog[event]==handler.Event.click):
+            if event[0] == 'cb3d menu' and (event[1] == Handler.Event.move or event[1] == Handler.Event.remove or event[1] == Handler.Event.click):
                 since_last_moved=0
-                show_static_image=False
+                show_static_image=False 
 
 
     else:
