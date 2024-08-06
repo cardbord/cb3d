@@ -72,7 +72,7 @@ class GUIbaseClass: #provide attrs for other junk, because these things are incl
 
         return self
 
-class  DisplayRows(GUIbaseClass):
+class DisplayRows(GUIbaseClass):
     def __init__(self,
         objs,
         _parent_pos=None, #leave as None so that parents can auto-fill this later..
@@ -85,12 +85,12 @@ class  DisplayRows(GUIbaseClass):
         
 
     def _calc_obj_rel_pos(self,displace_height):
-        avg_content_height = (self.parent_window_size[1] - displace_height)/len(self.content) #just make sure parent_window_size is provided by the time this is called, then things work!
+        avg_content_height = (self.parent_window_size[1] - displace_height)/len(self.content) #working out average height for each row
         for itemid in range(len(self.content)):
             if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
                     self.content[itemid].parent_pos = [self.parent_pos[0], self.parent_pos[1]+ displace_height+(avg_content_height)*itemid]
-                    self.content[itemid].parent_window_size = [self.parent_window_size[0],avg_content_height]
-                    self.content[itemid]._calc_obj_rel_pos(displace_height) #recursively call _calc_obj_rel_pos on children, not before constraining scaling area to the current content block size.
+                    self.content[itemid].parent_window_size = [self.parent_window_size[0],avg_content_height] #constrain window size to DisplayRow region allocated for each item
+                    self.content[itemid]._calc_obj_rel_pos(0) #recursively call _calc_obj_rel_pos on children, with displace height of 0, since that's accounted for already
                     #this raises the oppurtunity for all sorts of content layout!
             else:
                 if self.content[itemid]!=None:
@@ -345,7 +345,7 @@ class DisplayColumns(GUIbaseClass):
             if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
                     self.content[itemid].parent_pos = [self.parent_pos[0]+(itemid*avg_content_width), self.parent_pos[1]]
                     self.content[itemid].parent_window_size = [avg_content_width,self.parent_window_size[1]-displace_height]
-                    self.content[itemid]._calc_obj_rel_pos(displace_height)
+                    self.content[itemid]._calc_obj_rel_pos(0)
             else:
                 if self.content[itemid]!=None:
                     match self.content[itemid]._anchor:
@@ -447,7 +447,7 @@ class GUIobj(GUIbaseClass):
                 self.__recursive_Displayobj_display(item,dis)
             else:
                 if item!=None:
-                    item.display(dis) if not isinstance(item,Button) else item._NSdis(dis)
+                    item.display(dis) if not isinstance(item,Button) else item.display(dis)
 
     def display_window(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
@@ -460,7 +460,7 @@ class GUIobj(GUIbaseClass):
         self.__recursive_Displayobj_display(self,dis)        
                 
         
-        self.clickable_cross.display(dis)
+        self.clickable_cross._scaledis(dis)
 
     def check_windowcollide(self,xval,yval): #hover over window's top edge
         return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.clickableborder_pos[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.clickableborder_pos[1])))) else False
@@ -471,11 +471,11 @@ class GUIobj(GUIbaseClass):
     def check_closebuttoncollide(self,xval,yval): #hover over window's close button in the top right corner
         return True if (xval in range(int(round(self.clickable_cross.button_rect.left)), int(round(self.clickable_cross.button_rect.right))) and yval in range(int(round(self.clickable_cross.pos[1])), int(round(self.clickable_cross.button_rect.bottom)))) else False
 
-    def add_content(self, display_obj: typing.Union[DisplayColumns, DisplayRows]):
-        display_obj.parent_pos = self.pos
-        display_obj.parent_window_size = self.window_size
-        self.content = [display_obj]
-        self.content[0]._calc_obj_rel_pos(self.clickableborder_pos[1])
+    def add_content(self, display_obj: typing.Union[DisplayColumns, DisplayRows]): #content addition function
+        display_obj.parent_pos = self.pos 
+        display_obj.parent_window_size = self.window_size #set parent_pos and parent_window_size post-init
+        self.content = [display_obj] #set the current content to the object 
+        self.content[0]._calc_obj_rel_pos(self.clickableborder_pos[1]) #arrange everything before displaying
         
 
 
@@ -493,11 +493,11 @@ class Button(GUIbaseClass):
         self.callback = callback #function to execute once button is clicked
         self._buttonblocksize = window_size #this might be required to satisfy the recursive nature of content blocks, so i might remove it later
 
-    def display(self,dis:pygame.Surface):
+    def _scaledis(self,dis:pygame.Surface):
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
         dis.blit(self.text,(self.pos[0]+11*self._SIZE_SF,self.pos[1]-3*self._SIZE_SF))
 
-    def _NSdis(self,dis:pygame.Surface): #method for Button which displays uncentered, use this for confirm buttons
+    def display(self,dis:pygame.Surface): #method for Button which displays uncentered, use this for confirm buttons
         pygame.draw.rect(dis,(255,255,255),self.button_rect)
         pygame.draw.rect(dis,(0,0,0) if not self.highlighted else self.highlighted_colour,self.button_rect,1 if not self.highlighted else 0)
         dis.blit(self.text,(self.pos[0],self.pos[1]))
@@ -617,7 +617,7 @@ class TextInputBox(GUIobj): #this is a type of window, derived from GUIobj. it c
     def display(self,dis:pygame.Surface):
         self.display_window(dis)
         
-        self.confirm_button._NSdis(dis)
+        self.confirm_button.display(dis)
         
         for _ in range(len(self.text_inputs)):
             self.text_inputs[_].display(dis)
@@ -651,10 +651,10 @@ class Dropdown(GUIbaseClass): # as with TextInputBox and text inputs, we have a 
             self.buttons[b_index].button_rect.x = self.buttons[b_index].pos[0]
 
     def display(self,dis:pygame.Surface):
-        self.placeholder._NSdis(dis)
+        self.placeholder.display(dis)
         if self.is_dropped:
             for button in self.buttons:
-                button._NSdis(dis)
+                button.display(dis)
 
     def on_click(self,xval,yval):
         return self.placeholder.on_click(xval,yval) #just use our on_click method now
@@ -725,13 +725,13 @@ class Drawing(GUIobj):
             trect = self.font.render(self.title,True,(0,0,0))
             dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)])
         
-        self.clickable_cross.display(dis)
+        self.clickable_cross._scaledis(dis)
         
         self.draw_button.pos = [self.pos[0]+self.window_size[0]-self.draw_button.button_rect.w , self.pos[1]+self.window_size[1]-self.draw_button.button_rect.h]
         self.draw_button.button_rect.x = self.pos[0]+self.window_size[0]-self.draw_button.button_rect.w
         self.draw_button.button_rect.y = self.pos[1]+self.window_size[1]-self.draw_button.button_rect.h
         
-        self.draw_button._NSdis(dis)
+        self.draw_button.display(dis)
     
     def scrolled_on(self,value,mx,my):
         if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my) and not self.draw_button.button_rect.collidepoint(mx,my) and self.zoom_scale+value/2 > 0:
@@ -909,7 +909,7 @@ class Handler:
         self.wecheck = False
         self.previously_moved = 0
         self.moved_in_cycle = False
-        self.eventLog: dict = {} #update each cycle
+        self.eventLog: list = [] #update each cycle
         
         self.menu:menu = None
     
@@ -932,7 +932,7 @@ class Handler:
 
     def add(self, obj:GUIobj):
         self.GUIobjs_array.append(obj)
-        self.eventLog[obj.title] = self.Event.add
+        self.eventLog.append((obj.title,self.Event.add))
     
     def __recursive_displayobj_texthandling(self, obj,unicode, _backspace=False):
         for item in obj.content:
@@ -993,7 +993,7 @@ class Handler:
                 self.GUIobjs_array[0].on_hover(x,y)
         
     def handle_event(self,event,x,y):
-        self.eventLog = {}
+        self.eventLog = []
         
         if event.type == pygame.KEYDOWN:
             
@@ -1004,19 +1004,19 @@ class Handler:
                             t_input.backspace()
                     self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True) #we can supply "absolutely" nothing to this as the funct handles both backspaces and text addition
                     
-                    self.eventLog[self.GUIobjs_array[0].title] = self.Event.backspace
+                    self.eventLog.append((self.GUIobjs_array[0].title,self.Event.backspace))
 
                         
             elif len(self.GUIobjs_array) > 0:
                 self.addTIBtext(event.unicode)
-                self.eventLog[self.GUIobjs_array[0].title] = self.Event.type #fix
+                self.eventLog.append((self.GUIobjs_array[0].title,self.Event.type))
 
                 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
             
                 if len(self.GUIobjs_array) > 0 and self.GUIobjs_array[0].check_closebuttoncollide(x,y):
-                    self.eventLog[self.GUIobjs_array[0].title] = self.Event.remove #don't forget to do this early, otherwise we're reporting some other object's event! (or just IndexErroring)
+                    self.eventLog.append((self.GUIobjs_array[0].title,self.Event.remove)) #don't forget to do this early, otherwise we're reporting some other object's event! (or just IndexErroring)
                     self.GUIobjs_array.pop(0)
                     
                     
@@ -1036,14 +1036,14 @@ class Handler:
 
                             if returntype != None and isinstance(returntype, GUIobj): #check for object creator buttons
                                 self.GUIobjs_array.insert(0,returntype)
-                                self.eventLog[self.GUIobjs_array[0].title] = self.Event.create 
+                                self.eventLog.append((self.GUIobjs_array[0].title,self.Event.create))
                             else:
-                                self.eventLog[self.GUIobjs_array[0].title] = self.Event.click #let's seperate these two, otherwise different
+                                self.eventLog.append((self.GUIobjs_array[0].title,self.Event.click)) #let's seperate these two, otherwise different
 
                                 
                         else:
                             if isinstance(self.GUIobjs_array[0],TextInputBox):
-                                self.eventLog[self.GUIobjs_array[0].title] = self.Event.click
+                                self.eventLog.append((self.GUIobjs_array[0].title,self.Event.click))
                                 for t_input in self.GUIobjs_array[d].text_inputs:
                                     t_input.to_input = False
                             
@@ -1056,7 +1056,7 @@ class Handler:
             for obj in self.GUIobjs_array:
                 if isinstance(obj,Drawing):
                     obj.scrolled_on(event.y,x,y)
-                    self.eventLog[obj.title] = self.Event.scroll
+                    self.eventLog.append((obj.title,self.Event.scroll))
                     
         
         self.moved_in_cycle = False
@@ -1079,7 +1079,7 @@ class Handler:
                             contentblock.parent_pos = display_object.pos
                             contentblock._calc_obj_rel_pos(50*display_object._SIZE_SF)
 
-                    self.eventLog[display_object.title] = self.Event.move
+                    self.eventLog.append((display_object.title,self.Event.move))
                     
         for contentblock in self.GUIobjs_array:
                 
