@@ -14,8 +14,8 @@ from pathlib import Path
 from cb3d_disgrid import display_3Dgrid
 from model import Point, CBModel, Plane
 from pygame import gfxdraw
-from utils.plane_sorter import quicksort
-from utils.pgui import Text, TextType, Anchor, Button, TextInput, Dropdown, menu, DisplayColumns, DisplayRows, Image, Handler, GUIobj, scale_to_window
+from utils.plane_sorter import quicksort, transform
+from utils.pgui import Text, TextType, Anchor, Button, TextInput, Dropdown, menu, Drawing, DisplayColumns, DisplayRows, Image, Handler, GUIobj, scale_to_window
 from utils.textures.textureCatalogue import TextureCatalogue
 from webbrowser import open_new_tab
 
@@ -112,6 +112,21 @@ def my_github():
 def show_instructions(): #i need something for the __name__checker to look at
     pass
 
+
+def buildTransform(points,planetype):
+    input_options = handler.collate_textinput_inputs()
+    
+    transformations = transform(points,planetype,input_options['Extrusion'],input_options['From'])
+
+    for transformation in transformations:
+        if len(transformation) == 4:
+            cbmod.add_plane(transformation, [0,1,0,3,1,2,2,3], None, None)
+        else:
+
+            cbmod.add_plane(transformation, [i for i in range(len(transformation))], None, None)
+
+
+
 ###GUI MENUS
 def createMenu():
     file_list = [
@@ -168,6 +183,51 @@ def createMenu():
 
 
 menu_screen = createMenu()
+
+def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
+    selector = GUIobj([0,0],[452,1000],'Draw to')
+    selector.points = []
+    for i in points:
+        if i not in selector.points:
+            selector.points.append(i)
+    
+    print(selector.points)
+
+    selector.add_content(
+        
+        DisplayRows([
+            Image([0,0],'boxo_xy.png').set_callback(lambda:buildTransform(selector.points,'xy')),
+            Image([0,0],'boxo_xz.png').set_callback(lambda:buildTransform(selector.points,'xz')),
+            Image([0,0],'boxo_yz.png').set_callback(lambda:buildTransform(selector.points,'yz')),
+            DisplayRows([
+                None,
+                DisplayColumns([
+                    Text([0,0],'From',TextType.h3),None
+                ]), 
+                
+                TextInput([0,0],'','0',1,'From'),
+                None
+            ]),
+            
+            DisplayRows([
+                None,
+                DisplayColumns([
+                    Text([0,0],'Extrusion',TextType.h3),None
+                ]), 
+                TextInput([0,0],'','0',1,'Extrusion'),
+                None
+            ])
+            
+            
+            #we use the anonymous function lambda: cbmod.add_plane(buildTransform(d.points,planetype), [], texture) to add planes!
+        ]),
+            
+        
+    )
+    return selector
+
+draw = Drawing([0,0],[800,800],"add object")
+draw.draw_button.callback = ChildXYZselector
 
 
 
@@ -369,8 +429,7 @@ while 1:
                     
                     else:
                         match event.key:
-                            case pygame.K_0:
-                                take_input_plane()
+
                             case pygame.K_LCTRL:
                                 delete_on_click = True
                             case pygame.K_UP:
@@ -402,6 +461,11 @@ while 1:
                                 rotate_xyz = False
                                 runtime_dis.update_angles(0,0)
                                 runtime_grid.update_angles(0,0)
+                                runtime_dis.angle_z=0
+                                runtime_dis.angle_z=0
+                                runtime_grid.angle_z=0
+                                runtime_grid.angle_z=0
+                                
                                 runtime_dis.movable_position = [0,0]
                                 runtime_grid.movable_position = [0,0]
 
@@ -524,8 +588,10 @@ while 1:
                         
                         if mx in range(30,80) and my in range(30,90) and "cb3d menu" not in [i.title for i in handler.GUIobjs_array]:
                             handler.add(createoptMenu())
+                        elif plus_rect.collidepoint(mx,my) and "add object" not in [i.title for i in handler.GUIobjs_array]:
                             
-                            
+                            handler.add(draw)
+                            draw.drawdata = []
                             
                                 
                     
@@ -760,7 +826,7 @@ while 1:
         
         for event in handler.eventLog:
             
-            if event[0] == 'cb3d menu' and (event[1] == Handler.Event.move or event[1] == Handler.Event.remove or event[1] == Handler.Event.click):
+            if event[1] == Handler.Event.move or event[1] == Handler.Event.remove or event[1] == Handler.Event.click:
                 since_last_moved=0
                 show_static_image=False 
 
