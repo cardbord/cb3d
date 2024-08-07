@@ -1,6 +1,6 @@
 import pygame, requests, typing, os, pathlib, io
 from pygame.font import get_default_font, Font
-from pygame.gfxdraw import aacircle
+from pygame.gfxdraw import aacircle, filled_polygon
 from math import sqrt, ceil
 from enum import IntEnum, Enum
 
@@ -114,7 +114,7 @@ class DisplayRows(GUIbaseClass):
                                         (self.parent_pos[0] + 2*self._SIZE_SF),
                                         self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
                                     ],
-                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id
                                 ).anchor(self.content[itemid]._anchor)
                             #add support for raw images and raw text later...
 
@@ -345,7 +345,7 @@ class DisplayColumns(GUIbaseClass):
             if isinstance(self.content[itemid], (DisplayColumns,DisplayRows)):
                     self.content[itemid].parent_pos = [self.parent_pos[0]+(itemid*avg_content_width), self.parent_pos[1]]
                     self.content[itemid].parent_window_size = [avg_content_width,self.parent_window_size[1]-displace_height]
-                    self.content[itemid]._calc_obj_rel_pos(0)
+                    self.content[itemid]._calc_obj_rel_pos(displace_height)
             else:
                 if self.content[itemid]!=None:
                     match self.content[itemid]._anchor:
@@ -370,10 +370,16 @@ class DisplayColumns(GUIbaseClass):
                                         (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
                                         self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
                                     ],
-                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id
                                 )
 
-
+                            elif isinstance(self.content[itemid],Text):
+                                size_of_item = self.content[itemid].font.size(self.content[itemid].raw_text)
+                                self.content[itemid].pos = [
+                                    self.parent_pos[0] + (avg_content_width*(itemid+0.5) - size_of_item[0]/2),
+                                    self.parent_pos[1] + displace_height + (self.parent_window_size[1]-size_of_item[1])/2
+                                    
+                                ]
 
 
 
@@ -510,10 +516,11 @@ class Button(GUIbaseClass):
     
 
 class TextInput(GUIbaseClass):
-    def __init__(self,pos,text, _user_text=None, _current_userinp_index=None):
+    def __init__(self,pos,text, _user_text=None, _current_userinp_index=None, textInputID:str=None):
         super().__init__() #init above GUIbaseClass
         self.pos = pos
         self.raw_text = text
+        self._textinput_id = textInputID
         self.text = self.font.render(text,True,(0,0,0))
         self.to_input = False
         __size_text = self.text.get_size()
@@ -675,7 +682,7 @@ class Drawing(GUIobj):
         self.zoom_scale = 40
         self.text_highlight_font = pygame.font.SysFont('Segoe UI', int(round(15*self._SIZE_SF)))
         self.grid_text = self.text_highlight_font.render(f'{self.pos_on_grid[0]}, {self.pos_on_grid[1]}', True, (100,100,100))
-
+        self.hovered = False
         self.draw_button = Button([0,0],"Draw") #spawn child window from this, with x/y, y/z, and x/z planes, attach callback in main
 
         
@@ -711,6 +718,29 @@ class Drawing(GUIobj):
             else:
                 pygame.draw.aaline(dis, (150,150,150,(210)), [self.pos[0], self._convert_y(j)], [self.pos[0]+self.window_size[0], self._convert_y(j)])
 
+        transformed_drawdata = [[self._convert_x(i[0]), self._convert_y(i[1])] for i in self.drawdata]
+        valid = True
+        for pointToCheck in self.drawdata:
+            if pointToCheck[0] > self.grid_size[0] or pointToCheck[1] > self.grid_size[1]:
+                valid = False
+
+        if len(self.drawdata) > 0 and valid:
+            if len(self.drawdata) > 2:
+                filled_polygon(dis, transformed_drawdata, (251,198,207,(220)))
+
+            if self.hovered:
+                
+                pygame.draw.aaline(dis,(100,100,100,(210)),[transformed_drawdata[-1][0], transformed_drawdata[-1][1]],[self._convert_x(self.pos_on_grid[0]), self._convert_y(self.pos_on_grid[1])])
+                
+            for point_index in range(1,len(self.drawdata)):
+                _previous_point = transformed_drawdata[point_index-1]
+                _current_point = transformed_drawdata[point_index]
+
+                pygame.draw.line(dis,(0,0,150),[_previous_point[0],_previous_point[1]], [_current_point[0],_current_point[1]], 2)                
+
+            
+
+
         dis.blit(self.grid_text,[pos_converted[0] + 5*self._SIZE_SF, pos_converted[1] - 20*self._SIZE_SF])
 
         for point in self.drawdata:
@@ -732,6 +762,10 @@ class Drawing(GUIobj):
         self.draw_button.button_rect.y = self.pos[1]+self.window_size[1]-self.draw_button.button_rect.h
         
         self.draw_button.display(dis)
+
+
+    
+
     
     def scrolled_on(self,value,mx,my):
         if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my) and not self.draw_button.button_rect.collidepoint(mx,my) and self.zoom_scale+value/2 > 0:
@@ -740,7 +774,7 @@ class Drawing(GUIobj):
 
     def on_hover(self,mx,my):
         
-
+        self.hovered = True
         if self.check_objcollide(mx,my) and not self.check_windowcollide(mx,my) and not self.draw_button.button_rect.collidepoint(mx,my):
             pygame.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0))
                 
@@ -749,6 +783,7 @@ class Drawing(GUIobj):
             self.grid_text = self.text_highlight_font.render(f'{self.pos_on_grid[0]}, {self.pos_on_grid[1]}', True, (10,10,10))
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+            self.hovered=False
 
     def on_click(self,mx,my):
         
@@ -814,7 +849,7 @@ class Text(GUIbaseClass):
         self.font.set_strikethrough(strikethrough)
             
         self.text = self.font.render(self.raw_text, True, self.colour)
-
+        
         self.text_rect=self.text.get_rect()
 
     def display(self,dis:pygame.Surface):
@@ -979,7 +1014,9 @@ class Handler:
                 _text_returns = self.__recursive_textinput_itext(item,_text_returns)
             else:
                 if isinstance(item, TextInput):
-                    _text_returns[item.raw_text] = item.user_text
+                    print(item._textinput_id)
+
+                    _text_returns[item._textinput_id if item._textinput_id != None else item.raw_text] = item.user_text
         return _text_returns        
         
     
@@ -1002,9 +1039,11 @@ class Handler:
                     for t_input in self.GUIobjs_array[0].text_inputs:
                         if t_input.to_input:
                             t_input.backspace()
+                else:
                     self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True) #we can supply "absolutely" nothing to this as the funct handles both backspaces and text addition
-                    
-                    self.eventLog.append((self.GUIobjs_array[0].title,self.Event.backspace))
+                
+
+                self.eventLog.append((self.GUIobjs_array[0].title,self.Event.backspace))
 
                         
             elif len(self.GUIobjs_array) > 0:
