@@ -793,6 +793,7 @@ class Drawing(GUIobj):
                 return self.draw_button.callback(self.drawdata)
             else:
                 self.drawdata.append(self.pos_on_grid)
+                
         
             
 
@@ -1014,8 +1015,7 @@ class Handler:
                 _text_returns = self.__recursive_textinput_itext(item,_text_returns)
             else:
                 if isinstance(item, TextInput):
-                    print(item._textinput_id)
-
+                    
                     _text_returns[item._textinput_id if item._textinput_id != None else item.raw_text] = item.user_text
         return _text_returns        
         
