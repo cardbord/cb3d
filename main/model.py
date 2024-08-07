@@ -55,11 +55,11 @@ class CBModel:
         if isinstance(points,tuple):
 
             self.pointmap.append(Point(list(points)))
-
-        elif isinstance(points[0],int):
-            self.pointmap.append(Point(points))
         elif isinstance(points,Point):
             self.pointmap.append(points)
+        elif isinstance(points[0],int):
+            self.pointmap.append(Point(points))
+        
         else:
             for i in points:
                 self.pointmap.append(i)
