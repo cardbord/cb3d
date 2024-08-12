@@ -420,7 +420,6 @@ class GUIobj(GUIbaseClass):
     param  `window_size`    size of the GUIobj window, stored as width/height
     param  `title`    title displayed at the top of the window
 
-    Will be initialized automatically through other GUI objects. It is encouraged to use those instead, as they all inherit from this.
     '''
 
     def __init__(self,pos,window_size,title:str=None):
@@ -433,11 +432,10 @@ class GUIobj(GUIbaseClass):
         self.parent_window_rect = pygame.Rect(self.pos[0],self.pos[1],self.window_size[0],self.window_size[1])
         self.clickableborder_area = pygame.Rect(self.pos[0],self.pos[1],self.clickableborder_pos[0],self.clickableborder_pos[1])
         self.clickable_cross = Button([self.pos[0]+self.clickableborder_pos[0]-50*self._SIZE_SF,self.pos[1]],"×",[50,50],(255,0,0)) # window size is corrected to _SIZE_SF automatically in Button.__init__()!
-        self.title = title #init later
+        self.title = title #display a title at the top of the window
         self.content = [] #display content
         #define other attrs in subclasses
         
-
 
     def move_window(self,mousepos): #should be called when a mouse click is detected on the window's clickable border, to change pos
         self.pos = mousepos
@@ -445,28 +443,31 @@ class GUIobj(GUIbaseClass):
         self.clickableborder_area = pygame.Rect(self.pos[0],self.pos[1],self.clickableborder_pos[0],self.clickableborder_pos[1])
         self.parent_window_rect = pygame.Rect(self.pos[0],self.pos[1],self.window_size[0],self.window_size[1])
         self.clickable_cross = Button([self.pos[0]+self.clickableborder_pos[0]-50*self._SIZE_SF,self.pos[1]],"×",[50,50],(255,0,0)) #too many attributes to change in the old one, let's just make a new button with our updated pos and clickable border
-        #render updates should change automatically from this, maybe?
         
-    def __recursive_Displayobj_display(self,obj,dis):
-        for item in obj.content:
+        
+    def __recursive_displayobj_display(self,obj,dis): #only accessed from GUIobj.display_window
+        for item in obj.content: #provide self as the original obj parameter
             if isinstance(item,(DisplayColumns,DisplayRows)):
-                self.__recursive_Displayobj_display(item,dis)
+                self.__recursive_displayobj_display(item,dis) #carry on traversing, similar to a depth-first search
             else:
-                if item!=None:
-                    item.display(dis) if not isinstance(item,Button) else item.display(dis)
+                if item!=None: #ensuring a NoneType.display error doesn't occur
+                    item.display(dis)
 
-    def display_window(self,dis:pygame.Surface):
+    def display_window(self,dis:pygame.Surface): #draws all the window's rects to the screen, along with the close button
         pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
         pygame.draw.rect(dis,(255,255,255),self.clickableborder_area)
         pygame.draw.rect(dis,(0,0,0),self.parent_window_rect,width=1)
         pygame.draw.rect(dis,(0,0,0),self.clickableborder_area,width=1)
-        if self.title != None:
+
+        self.__recursive_displayobj_display(self,dis) #calls recursive display, for contentblocks within the window
+
+        self.clickable_cross.display(dis)
+
+        if self.title != None: 
             trect = self.font.render(self.title,True,(0,0,0))
-            dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)])
-        self.__recursive_Displayobj_display(self,dis)        
-                
-        
-        self.clickable_cross._scaledis(dis)
+            dis.blit(trect,[(self.pos[0]+20*self._SIZE_SF), (self.pos[1]+5*self._SIZE_SF)]) #displays title at 20px from the left, and 5px from the top of the window (px scaled)
+             
+
 
     def check_windowcollide(self,xval,yval): #hover over window's top edge
         return True if (xval in range(self.pos[0], int(round(self.pos[0]+self.clickableborder_pos[0]))) and yval in range(self.pos[1], int(round(self.pos[1]+self.clickableborder_pos[1])))) else False
