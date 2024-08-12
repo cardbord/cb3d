@@ -323,6 +323,8 @@ menu_rect = menusym.get_rect()
 plussym = pygame.image.load(f'{path.parent}/plussym.png')
 plussym = pygame.transform.scale(plussym,(30,30))
 plus_rect = plussym.get_rect()
+plus_rect.x=70
+plus_rect.y=30
 
 ###FULL DELETION/CUBE ADDITION
 #to be removed
