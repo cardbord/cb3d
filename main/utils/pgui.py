@@ -42,15 +42,14 @@ class TextType(IntEnum):
     h3: header 3
     
     p: paragraph text
-    
     '''
     
     h1=64
     h2=48
     h3=32
-    
 
     p=16
+
 
 class GUIbaseClass: #provide attrs for other junk, because these things are included in everything
     def __init__(self):
@@ -373,11 +372,10 @@ class DisplayColumns(GUIbaseClass):
                                     self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id
                                 )
 
-                            elif isinstance(self.content[itemid],Text):
-                                size_of_item = self.content[itemid].font.size(self.content[itemid].raw_text)
+                            elif isinstance(self.content[itemid],Text): 
                                 self.content[itemid].pos = [
-                                    self.parent_pos[0] + (avg_content_width*(itemid+0.5) - size_of_item[0]/2),
-                                    self.parent_pos[1] + displace_height + (self.parent_window_size[1]-size_of_item[1])/2
+                                    self.parent_pos[0] + (avg_content_width*(itemid+0.5) - self.content[itemid].text_rect.w/2),
+                                    self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_rect.h)/2
                                     
                                 ]
 
@@ -461,7 +459,7 @@ class GUIobj(GUIbaseClass):
 
         self.__recursive_displayobj_display(self,dis) #calls recursive display, for contentblocks within the window
 
-        self.clickable_cross.display(dis)
+        self.clickable_cross._scaledis(dis)
 
         if self.title != None: 
             trect = self.font.render(self.title,True,(0,0,0))
@@ -820,44 +818,48 @@ class menu(GUIobj): # i wonder... will setting window size to 1080p remove any n
 class window(GUIobj):
     ... #here!
     
-class Text(GUIbaseClass):
-    def __init__(self,
-                 pos,
-                 text_str:str,
-                 type:TextType=None,
-                 *,
-                 colour:tuple=None,
-                 ul:bool=False,
-                 italic:bool=False,
-                 bold:bool=False,
-                 strikethrough:bool=False,
-                 font:str=None, #assume font not instantiated yet, create a new instance here with type size too
 
-                 ):
-        super().__init__()
-        if not pygame.font.get_init():
-            pygame.font.init()
-        
-        
-        
+
+class Text(GUIbaseClass): #standard text - no interaction
+    def __init__(self,
+                pos,
+                text_str:str,
+                type:TextType=None, #TextType is an enum for different font sizes
+                *, #keyword args from here onwards, as they are only for customisation 
+                colour:tuple=None,
+                ul:bool=False,
+                italic:bool=False,
+                bold:bool=False,
+                strikethrough:bool=False,
+                font:str=None, #override font attr with a new one here
+
+                ):
+        super().__init__() #init GUIbaseClass
+
+        if not pygame.font.get_init(): 
+            pygame.font.init() #to avoid display error just in case font has not been initialised (somehow)
         
         self.pos = pos
         self.raw_text=text_str
-        self.colour = colour or (0,0,0)
-        self.type=type
-        self.font = pygame.font.SysFont(font,round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic) if font else pygame.font.SysFont(get_default_font(),round(type.value*self._SIZE_SF) if type else round(TextType.p.value*self._SIZE_SF), bold, italic)
+        self.colour = colour or (0,0,0) #sets colour to black if it is None
+        self.type=type or TextType.p
+        
+        if font:
+            self.font = pygame.font.SysFont(font, round(type.value*self._SIZE_SF), bold, italic)
+        else: #chooses the OS default font instead
+            self.font = pygame.font.SysFont(get_default_font(),round(type.value*self._SIZE_SF), bold, italic)
+            
 
         self.font.set_underline(ul)
         self.font.set_strikethrough(strikethrough)
             
         self.text = self.font.render(self.raw_text, True, self.colour)
-        
-        self.text_rect=self.text.get_rect()
 
-    def display(self,dis:pygame.Surface):
+        self.text_rect = self.text.get_rect() #for width and height values
+
+
+    def display(self,dis:pygame.Surface): #display method for self.text
         dis.blit(self.text,self.pos)
-        
-        
         
     
     
@@ -874,6 +876,7 @@ class Image(GUIbaseClass):
         image_is_file = True
         self.image = None
         self.callback = callback
+
         if len(image.split('.')) > 2:
             if not os.path.exists(image):
                 image_is_file = False
