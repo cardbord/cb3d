@@ -1,4 +1,4 @@
-from utils.pgui import TextInput, Button, DisplayColumns, DisplayRows, GUIobj, Text, TextType
+from utils.pgui import TextInput, Button, DisplayColumns, DisplayRows, GUIobj, Text, TextType, Image
 import pygame
 
 #basic pygame setup
@@ -12,23 +12,20 @@ obj = GUIobj([200,200], [900,700],"contentblocks")
 obj.add_content( 
      
      #the parent parameter must be a DisplayColumns or DisplayRows object
-     DisplayColumns([
-          DisplayRows([
-               Text([0,0],'test header 1',TextType.h1,colour=(255,0,0),ul=True,bold=True,font='comic sans ms'),
-               Text([0,0],'test header 2',TextType.h2,colour=(0,255,0),italic=True, font='Segoe UI'),
-               Text([0,0],"this shouldn't be here...",TextType.p,strikethrough=True, font='calibri')
-          ]),
+     DisplayRows([
+          Image([0,0],'boxo.png'), #filename, looked for in cb3d\main\utils\content\...
 
-          Text([0,0],"i'm over here!",TextType.h3, font='consolas', colour=(0,0,255))
-     
+          Image([0,0],'W:\\downloads-copied\\other_boxo.jpg'), #full filename
+
+          Image([0,0],'https://www.boxo.ovh/cat_boxo') #not a direct link! this redirects to an image on the same site
+
      ])
 )
-
 
 while 1: #main loop
      dis.fill((255,255,255))
      
-     for event in pygame.event.get():
+     for event in pygame.event.get(): #monitoring events (to close the program)
           
           if event.type == pygame.QUIT:
                pygame.quit()
