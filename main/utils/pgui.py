@@ -861,7 +861,7 @@ class Text(GUIbaseClass): #standard text - no interaction
     def display(self,dis:pygame.Surface): #display method for self.text
         dis.blit(self.text,self.pos)
         
-    
+ #callback=None #we can treat images as buttons by attaching the same callback functionality to them!   
     
     
 class Image(GUIbaseClass):
@@ -869,64 +869,55 @@ class Image(GUIbaseClass):
                  pos,
                  image:str,
                  scaling:list=None,
-                 callback=None #we can treat images as buttons by attaching the same callback functionality to them!
     ):
-        super().__init__()
+        super().__init__() #init above GUIbaseClass
         self.pos = pos
-        image_is_file = True
-        self.image = None
-        self.callback = callback
+        path = str(pathlib.Path(__file__).parent)+'\\content\\' #path is constructed to cb3d/main/utils/content to grab image
 
-        if len(image.split('.')) > 2:
-            if not os.path.exists(image):
-                image_is_file = False
-            else:
-                self.image = pygame.image.load(image)
+        if '\\' in image and os.path.exists(image): #image is most likely a full file path
+            self.image=pygame.image.load(image)
+
+        elif image.count('.') == 1 and os.path.exists(path+image): #image has only one . (for filetype)
+            self.image=pygame.image.load(path+image)
 
         else:
-            path = str(pathlib.Path(__file__).parent)+'\\content\\'
-            if not os.path.exists(path+image):
-                image_is_file=False
-            else:
-                self.image = pygame.image.load(path+image)
+            try: #try/except here as there can be network errors
+                r=requests.get(image)
+                if r.status_code in range(200,299): #http protocol's standard range of codes for success
+                    _temp_stream=io.BytesIO(r.content) #loads the site's content into memory with a buffer
+                    self.image=pygame.image.load(_temp_stream)
 
-        if not image_is_file: #assume url
-            try:
-                r = requests.get(image)
-                if r.status_code in range(200,299):
-
-                    _temp_stream = io.BytesIO(r.content)
-                    self.image = pygame.image.load(_temp_stream)
                 else:
-                    raise ConnectionError(f"{image} could not be resolved. Status code {r.status_code}")
-
-
+                    raise ConnectionError(f"{image} could not be resolved. Status code {r.status_code}") #network error
+                
             except requests.exceptions.RequestException: #invalid url, format, or schema
                 raise ValueError(f"{image} is an invalid url. Please provide a url or valid file path for this image.")
-
+                
         self.image_size = scaling or self.image.get_size()
         if scaling:
-            self.image=pygame.transform.scale(self.image,scaling)
+            self.image=pygame.transform.scale(self.image,scaling) #scale the image to the target resolution if scaling is present
 
-    
-    def scale(self, new_size, *, sticky_x:bool=False,sticky_y:bool=False):
+
+    def display(self,dis:pygame.Surface): #display method
+        dis.blit(self.image,self.pos)
+
+
+    def scale(self, new_size, *, sticky_x:bool=False,sticky_y:bool=False): #scaling method, used in displayrows/columns
         if new_size != self.image_size:
             if sticky_x:
-                _scale_sf = self.image_size[0]/self.image_size[1] #div xlen by ylen for sticky scaling
-                new_size[1] = new_size[0]/_scale_sf
+                _scale_sf = self.image_size[0]/self.image_size[1] #div xlen by ylen for scaling
+                new_size[1] = new_size[0]/_scale_sf #scale the 
             elif sticky_y:
-                _scale_sf = self.image_size[1]/self.image_size[0] #rely on ylen instead for sticky scaling
+                _scale_sf = self.image_size[1]/self.image_size[0] #rely on ylen instead for ratio
                 new_size[0] = new_size[1]/_scale_sf
 
-
-            self.image_size = new_size
+            self.image_size = new_size #update image size and transform image
             self.image=pygame.transform.scale(self.image,new_size)
-        return self
+        
         
         
 
-    def display(self,dis:pygame.Surface):
-        dis.blit(self.image,self.pos)
+    
 
 
     def on_click(self,mx,my):
