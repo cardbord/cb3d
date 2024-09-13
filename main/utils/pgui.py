@@ -845,9 +845,9 @@ class Text(GUIbaseClass): #standard text - no interaction
         self.type=type or TextType.p
         
         if font:
-            self.font = pygame.font.SysFont(font, round(type.value*self._SIZE_SF), bold, italic)
+            self.font = pygame.font.SysFont(font, round(self.type.value*self._SIZE_SF), bold, italic)
         else: #chooses the OS default font instead
-            self.font = pygame.font.SysFont(get_default_font(),round(type.value*self._SIZE_SF), bold, italic)
+            self.font = pygame.font.SysFont(get_default_font(),round(self.type.value*self._SIZE_SF), bold, italic)
             
 
         self.font.set_underline(ul)
