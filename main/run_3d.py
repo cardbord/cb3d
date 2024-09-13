@@ -1,5 +1,5 @@
 #NECESSARY IMPORTS
-import pygame, guizero
+import pygame, guizero, uvicorn, os, subprocess
 
 
 ###DISPLAY SETUP
@@ -112,6 +112,58 @@ def my_github():
 def show_instructions(): #i need something for the __name__checker to look at
     pass
 
+def childClientJoinAPI():
+    input_options = handler.collate_textinput_inputs()
+
+def childNetworkJoin():
+    obj = GUIobj([0,0],[900,700], 'Network')
+    obj.add_content(
+        DisplayRows([
+            
+            Button([0,0],'Join',[170,60],None,childClientJoinAPI)
+        ])
+    )
+
+
+
+def childNetworkBuildAPI():
+    input_options = handler.collate_textinput_inputs()
+    
+    if input_options.get('roomID')!=None:
+        subprocess.Popen(['python', 'start_api.py', 'code'+input_options['roomID']])
+    else:
+        subprocess.Popen(['python', 'start_api.py'])
+    
+    
+    guizero.info('Creating network...','Please find your network details in the terminal.')
+
+def childNetworkCreate():
+    
+    obj = GUIobj([0,0],[900,700],'Network')
+    obj.add_content(
+        DisplayRows([
+            Text([0,0],"Networks require a unique room ID for privacy.",TextType.h2),
+            DisplayColumns([
+                DisplayRows([
+                    Text([0,0],'Please enter a room ID',TextType.h2).anchor(Anchor.LEFT),
+                    TextInput([0,0],'',textInputID='roomID').anchor(Anchor.CENTER),
+                    None
+                ]),
+                None
+            ]),
+            DisplayRows([
+                Text([0,0],'Users will need to login to access your database.',TextType.h3),
+                Text([0,0],'Anybody can create an account.', TextType.h3),
+            ]),
+            
+            Button([0,0],'Confirm',[210,60], None, childNetworkBuildAPI).anchor(Anchor.BOTTOMRIGHT)
+        ])
+    )
+    
+    handler.add(obj)
+
+    
+
 
 def buildTransform(points,planetype):
     input_options = handler.collate_textinput_inputs()
@@ -139,16 +191,21 @@ def createMenu():
         Button([0,0],"Keys",[200,60],None,show_instructions),
         Button([0,0],"Github",[200,60],None,my_github),
     ]
+    network_list = [
+        Button([0,0],"Join",[200,60],None, childNetworkJoin),
+        Button([0,0],"Create",[200,60],None,childNetworkCreate)
+    ]
     
     _File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
     _Help = Dropdown([scale_to_window(200),0], Button([scale_to_window(200),0],"Help",[200,50],(10,10,10)), help_list) 
-
+    _Networks = Dropdown([scale_to_window(400),0], Button([scale_to_window(400),0],"Network", [210,50], (10,10,10)), network_list)
     
 
     start_menu = menu(
         [
             _File,
-            _Help
+            _Help,
+            _Networks
         ]
     )
    
@@ -612,11 +669,14 @@ while 1:
                         rotate_xyz = False
 
                 case pygame.MOUSEWHEEL:
+                    since_last_moved = 0
                     if runtime_dis.scale <= 175: #max zoom constraint (otherwise you can zoom into negatives and crash)
                         
                         runtime_dis.update_scale(runtime_dis.scale-event.y*5) 
                     elif event.y > 0:
                         runtime_dis.update_scale(runtime_dis.scale-event.y*5)
+
+                    
                     
         if left is True:
             runtime_dis.movable_position[0] -= 1
@@ -846,6 +906,8 @@ while 1:
 
                 elif callback[1] == 'show_instructions' and len([i for i in handler.GUIobjs_array if i.title=='keybinds']) == 0:
                     handler.add(createKeyMenu())
+                
+                 
                 
                     
             
