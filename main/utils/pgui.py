@@ -867,32 +867,34 @@ class Text(GUIbaseClass): #standard text - no interaction
 class Image(GUIbaseClass):
     def __init__(self,
                  pos,
-                 image:str,
+                 image:str | pygame.Surface,
                  scaling:list=None,
     ):
         super().__init__() #init above GUIbaseClass
         self.pos = pos
         path = str(pathlib.Path(__file__).parent)+'\\content\\' #path is constructed to cb3d/main/utils/content to grab image
-
-        if '\\' in image and os.path.exists(image): #image is most likely a full file path
-            self.image=pygame.image.load(image)
-
-        elif image.count('.') == 1 and os.path.exists(path+image): #image has only one . (for filetype)
-            self.image=pygame.image.load(path+image)
-
+        if isinstance(image,pygame.Surface):
+            self.image=image
         else:
-            try: #try/except here as there can be network errors
-                r=requests.get(image)
-                if r.status_code in range(200,299): #http protocol's standard range of codes for success
-                    _temp_stream=io.BytesIO(r.content) #loads the site's content into memory with a buffer
-                    self.image=pygame.image.load(_temp_stream)
+            if '\\' in image and os.path.exists(image): #image is most likely a full file path
+                self.image=pygame.image.load(image)
 
-                else:
-                    raise ConnectionError(f"{image} could not be resolved. Status code {r.status_code}") #network error
-                
-            except requests.exceptions.RequestException: #invalid url, format, or schema
-                raise ValueError(f"{image} is an invalid url. Please provide a url or valid file path for this image.")
-                
+            elif image.count('.') == 1 and os.path.exists(path+image): #image has only one . (for filetype)
+                self.image=pygame.image.load(path+image)
+
+            else:
+                try: #try/except here as there can be network errors
+                    r=requests.get(image)
+                    if r.status_code in range(200,299): #http protocol's standard range of codes for success
+                        _temp_stream=io.BytesIO(r.content) #loads the site's content into memory with a buffer
+                        self.image=pygame.image.load(_temp_stream)
+
+                    else:
+                        raise ConnectionError(f"{image} could not be resolved. Status code {r.status_code}") #network error
+                    
+                except requests.exceptions.RequestException: #invalid url, format, or schema
+                    raise ValueError(f"{image} is an invalid url. Please provide a url or valid file path for this image.")
+                    
         self.image_size = scaling or self.image.get_size()
         if scaling:
             self.image=pygame.transform.scale(self.image,scaling) #scale the image to the target resolution if scaling is present
