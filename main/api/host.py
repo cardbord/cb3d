@@ -15,6 +15,7 @@ import sys
 
 class CBmodel(BaseModel):
     modelData:str #use the same stream used in .CBmodels
+    username:str
     
 class registrationItem(BaseModel):
     username:str
@@ -64,7 +65,7 @@ class UploadHandler:
             raise HTTPException(status_code=401,detail=str(e),headers={"WWW-Authenticate":"Bearer"})
 
 
-
+global room_id
 room_id = sample("QqWwEeRrTtYyUuIiOoPpAaSsDdFfGgHhJjKkLlZzXxCcVvBbNnMm1234567890",6)
 
 
@@ -77,7 +78,8 @@ models = sqlalchemy.Table(
     "models",
     metadata,
     sqlalchemy.Column("modelid",sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("modeldata",sqlalchemy.String)
+    sqlalchemy.Column("modeldata",sqlalchemy.String),
+    sqlalchemy.Column("username",sqlalchemy.String)
 )
 
 users = sqlalchemy.Table(
@@ -96,7 +98,7 @@ authentication_session = UploadHandler(database,users)
 
 @host_service.on_event("startup")
 async def startup():
-    
+    global room_id
     if len(sys.argv)>1:
         room_id = sys.argv[1][4:]
     title = '\033[96m'
