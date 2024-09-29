@@ -1,5 +1,5 @@
 #NECESSARY IMPORTS
-import pygame, guizero, uvicorn, os, subprocess
+import pygame, guizero, subprocess, requests, json
 
 
 ###DISPLAY SETUP
@@ -9,7 +9,7 @@ dis = pygame.display.set_mode((winsize[0],winsize[1]))
 pygame.display.set_caption('cb3d','CBmodel engine')
 clock = pygame.time.Clock()
 
-#OTHER IMPORTS
+#PARTIAL IMPORTS
 from pathlib import Path
 from cb3d_disgrid import display_3Dgrid
 from model import Point, CBModel, Plane
@@ -39,9 +39,14 @@ global cbmod
 path = Path(__file__).parent #just in case python refuses to locate model files, this is a slight problem since older versions of pygame are pretty fussy
 cbmod, successful_load = CBModel.from_cblog() #return a new CBModel, or a pre-existing one from a previous cb3d runtime
 
+image_preview = None
 if successful_load: #if saved normally, there should be a preview for it
-    pass
-
+    image_preview = pygame.image.load(str(path)+'/_preview.jpg').convert()
+    aspect_ratio = image_preview.get_size()
+    image_preview = image_preview.subsurface(pygame.Rect(aspect_ratio[0]/4,0,aspect_ratio[1],aspect_ratio[1]))
+    
+global api_token
+api_token = None
 
 with open(str(path.parent)+'\\_globals.cblog','r') as version_doc:
     __VERSION = version_doc.read().replace("'","")
@@ -115,18 +120,72 @@ def show_instructions(): #i need something for the __name__checker to look at
 def childClientJoinAPI():
     input_options = handler.collate_textinput_inputs()
     
-    
+    _room_id = input_options.get('Room ID')
+    _username = input_options.get('Username')
+    _password = input_options.get('Password')
 
-def childNetworkJoin():
+    json = {
+        'username':_username,
+        'password':_password,
+        'roomid':_room_id
+    }
+    try:
+        r = requests.post("http://127.0.0.1:8000/register/",json=json)
+        if r.status_code in range(200,299):
+            guizero.info(f'hi, {_username}!','You are registered')
+        else:
+            guizero.warn("Something isn't right...",'Check your room ID carefully, and try again')
+    except:
+        guizero.warn("Host is not running",'Please ask your host to start the server!')    
+
+def childRegister():
     obj = GUIobj([0,0],[900,700], 'Network')
     obj.add_content(
         DisplayRows([
-            
-            Button([0,0],'Join',[170,60],None,childClientJoinAPI)
+            TextInput([0,0],'Room ID'),
+            TextInput([0,0],'Username'),
+            TextInput([0,0],'Password'),
+            Button([0,0],'Join',[170,60],None,childClientJoinAPI).anchor(Anchor.BOTTOMRIGHT)
         ])
     )
     handler.add(obj)
     
+def childApplyForToken():
+    input_options = handler.collate_textinput_inputs()
+    _username = input_options.get('Username')
+    _password = input_options.get('Password')
+    
+
+    if _username != '' and _password != '':
+        handler.GUIobjs_array.pop(0)
+        json = {
+            'username':_username,
+            'password':_password,
+        }
+        r = requests.post("http://127.0.0.1:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
+        if r.status_code in range(200,299):
+            global api_token
+            api_token = r.json()['access_token']
+
+            guizero.info(f'welcome, {_username}!','You can now access community features.')
+        else:
+            guizero.warn('Invalid details','Please enter a valid username or password, or register')
+            
+    else:
+        guizero.warn('No details entered','Please fill out the username and password sections')
+        
+    
+
+    
+def childLogin():
+    obj = GUIobj([0,0],[400,600], 'Login')
+    obj.add_content(
+        DisplayRows([
+            TextInput([0,0],'Username'),
+            TextInput([0,0],'Password'),
+            Button([0,0],'Login',[210,60],None,childApplyForToken).anchor(Anchor.BOTTOMRIGHT)
+        ])
+    )
 
 
 def childNetworkBuildAPI():
@@ -195,7 +254,8 @@ def createMenu():
         Button([0,0],"Github",[200,60],None,my_github),
     ]
     network_list = [
-        Button([0,0],"Join",[200,60],None, childNetworkJoin),
+        Button([0,0],"Join",[200,60],None, childRegister),
+        Button([0,0],"Login",[200,60],None, childLogin),
         Button([0,0],"Create",[200,60],None,childNetworkCreate)
     ]
     
@@ -230,7 +290,7 @@ def createMenu():
             ),
             DisplayRows(
                 [
-                    Image([0,0],"backg.jpg"),
+                    Image([0,0],"backg.jpg" if image_preview == None else image_preview),
                 ]
             )
         ]
