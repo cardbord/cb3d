@@ -114,6 +114,8 @@ def show_instructions(): #i need something for the __name__checker to look at
 
 def childClientJoinAPI():
     input_options = handler.collate_textinput_inputs()
+    
+    
 
 def childNetworkJoin():
     obj = GUIobj([0,0],[900,700], 'Network')
@@ -123,7 +125,8 @@ def childNetworkJoin():
             Button([0,0],'Join',[170,60],None,childClientJoinAPI)
         ])
     )
-
+    handler.add(obj)
+    
 
 
 def childNetworkBuildAPI():
@@ -468,126 +471,110 @@ while 1:
 
 
                 case pygame.KEYDOWN:
+
                     
-                    if event.key == pygame.K_RETURN:
-                        if inputable is True:
-                            inputable = False
+                    
+                    match event.key:
+
+                        case pygame.K_LCTRL:
+                            delete_on_click = True
+                        case pygame.K_UP:
+                            up = True
+                        case pygame.K_DOWN:
+                            down = True
+                        case pygame.K_LEFT:
+                            left = True
+                        case pygame.K_RIGHT:
+                            right = True
+                        case pygame.K_z:
+                            rotatez = True
+                        case pygame.K_y:
+                            rotatey=True
+                        case pygame.K_x:
+                            rotatex=True
+                        case pygame.K_g:
+                            show_grid = not show_grid
+                        case pygame.K_p:
+                            take_input()
+                        case pygame.K_c:
+                            cbmod.delete_all()
+                        case pygame.K_h:
+                            rotate_x = False
+                            rotate_y = False
+                            rotate_z = False
+                            inv_rotatex = False
+                            inv_rotatey = False
+                            rotate_xyz = False
+                            runtime_dis.update_angles(0,0)
+                            runtime_grid.update_angles(0,0)
+                            runtime_dis.angle_z=0
+                            runtime_dis.angle_z=0
+                            runtime_grid.angle_z=0
+                            runtime_grid.angle_z=0
                             
-                            answer = user_text
-                            try:
-                                answer = answer.split(',')
-                                a = [float(x) for x in answer]
-                                
-                                a = Point(a)
-                                cbmod.add([a])
-                            except Exception as e:
-                                print(e)
-                            user_text = ''    
+                            runtime_dis.movable_position = [0,0]
+                            runtime_grid.movable_position = [0,0]
+
+                        case pygame.K_F9:
+                            debug = not debug
+
+                        case pygame.K_e:
+                            
+                            cbmod.add([-1,-1,1])
+                            cbmod.add([1,-1,1])
+                            cbmod.add([1,1,1])
+                            cbmod.add([-1,1,1])
+
+                            cbmod.add([-1,-1,-1])
+                            cbmod.add([1,-1,-1])
+                            cbmod.add([1,1,-1])
+                            cbmod.add([-1,1,-1])
+
+                        case pygame.K_m:
+                            cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+
+                            cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            cbmod.add_plane([Point((1,1,1)), Point((1,1,-1)), Point((1,-1,-1)), Point((1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            
+
+                            #[[1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]]
+                            cbmod.add_plane([Point((1,-1,1)), Point((-1,-1,1)), Point((-1,-1,-1)), Point((1,-1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            cbmod.add_plane([Point((1,1,1)), Point((-1,1,1)), Point((-1,1,-1)), Point((1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+
+                            cbmod.add_plane([Point((0.2,1,1)), Point((-0.2,1,1)), Point((-0.2,1,-1)), Point((0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                            cbmod.add_plane([Point((-0.2,0.2,-1)), Point((0.2,0.2,-1)), Point((0.2,1,-1)), Point((-0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                            cbmod.add_plane([Point((-0.2,0.2,1)),Point((0.2,0.2,1)),Point((0.2,1,1)),Point((-0.2,1,1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                            
 
 
+                        case pygame.K_s:
+                            show_points = not show_points
+                            
+                        case pygame.K_j:
+                            savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodel","*.CBmodel"]])
+                            print(savename)
+                            if savename == "":
+                                pass
+                            else:
+                                cbmod.save(savename)
+                                cbmod.filename_modified = savename
                     
-                    else:
-                        match event.key:
+                        case pygame.K_k:
+                            savename = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
+                            
+                            if savename == "":
+                                pass #user has closed the file opener, so pass
 
-                            case pygame.K_LCTRL:
-                                delete_on_click = True
-                            case pygame.K_UP:
-                                up = True
-                            case pygame.K_DOWN:
-                                down = True
-                            case pygame.K_LEFT:
-                                left = True
-                            case pygame.K_RIGHT:
-                                right = True
-                            case pygame.K_z:
-                                rotatez = True
-                            case pygame.K_y:
-                                rotatey=True
-                            case pygame.K_x:
-                                rotatex=True
-                            case pygame.K_g:
-                                show_grid = not show_grid
-                            case pygame.K_p:
-                                take_input()
-                            case pygame.K_c:
-                                cbmod.delete_all()
-                            case pygame.K_h:
-                                rotate_x = False
-                                rotate_y = False
-                                rotate_z = False
-                                inv_rotatex = False
-                                inv_rotatey = False
-                                rotate_xyz = False
-                                runtime_dis.update_angles(0,0)
-                                runtime_grid.update_angles(0,0)
-                                runtime_dis.angle_z=0
-                                runtime_dis.angle_z=0
-                                runtime_grid.angle_z=0
-                                runtime_grid.angle_z=0
-                                
-                                runtime_dis.movable_position = [0,0]
-                                runtime_grid.movable_position = [0,0]
+                            else:
 
-                            case pygame.K_F9:
-                                debug = not debug
-
-                            case pygame.K_e:
-                                
-                                cbmod.add([-1,-1,1])
-                                cbmod.add([1,-1,1])
-                                cbmod.add([1,1,1])
-                                cbmod.add([-1,1,1])
-
-                                cbmod.add([-1,-1,-1])
-                                cbmod.add([1,-1,-1])
-                                cbmod.add([1,1,-1])
-                                cbmod.add([-1,1,-1])
-
-                            case pygame.K_m:
-                                cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                                cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-
-                                cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                                cbmod.add_plane([Point((1,1,1)), Point((1,1,-1)), Point((1,-1,-1)), Point((1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                                
-
-                                #[[1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]]
-                                cbmod.add_plane([Point((1,-1,1)), Point((-1,-1,1)), Point((-1,-1,-1)), Point((1,-1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                                cbmod.add_plane([Point((1,1,1)), Point((-1,1,1)), Point((-1,1,-1)), Point((1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-
-                                cbmod.add_plane([Point((0.2,1,1)), Point((-0.2,1,1)), Point((-0.2,1,-1)), Point((0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
-                                cbmod.add_plane([Point((-0.2,0.2,-1)), Point((0.2,0.2,-1)), Point((0.2,1,-1)), Point((-0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
-                                cbmod.add_plane([Point((-0.2,0.2,1)),Point((0.2,0.2,1)),Point((0.2,1,1)),Point((-0.2,1,1))], [0,1,1,2,0,3,2,3], (214,164,107))
-                                
-
-
-                            case pygame.K_s:
-                                show_points = not show_points
-                                
-                            case pygame.K_j:
-                                savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodel","*.CBmodel"]])
-                                print(savename)
-                                if savename == "":
-                                    pass
-                                else:
-                                    cbmod.save(savename)
-                                    cbmod.filename_modified = savename
-                        
-                            case pygame.K_k:
-                                savename = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
-                                
-                                if savename == "":
-                                    pass #user has closed the file opener, so pass
-
-                                else:
-
-                                    cbmod = CBModel.load(savename)
-                                    cbmod.filename_modified = savename
-                                        
-                            case pygame.K_ESCAPE:
-                                start_menu_shown = True
-                                pygame.image.save(dis,str(path)+'\\_preview.jpg')
-                                handler.GUIobjs_array = []
+                                cbmod = CBModel.load(savename)
+                                cbmod.filename_modified = savename
+                                    
+                        case pygame.K_ESCAPE:
+                            start_menu_shown = True
+                            pygame.image.save(dis,str(path)+'\\_preview.jpg')
+                            handler.GUIobjs_array = []
 
 
                 case pygame.KEYUP:

@@ -100,8 +100,10 @@ class display_3Dgrid:
         
         
         for point in self.point_map:
-            mat_point = point.xyz #the point here is of the Point datatype, specified in model.py
-            
+            if isinstance(point, Point):
+                mat_point = point.xyz #the point here is of the Point datatype, specified in model.py
+            else:
+                mat_point = point
             mat_point = np.matrix(mat_point)
             
             rotationalz, rotationaly, rotationalx = self.rotation() #generates rotation matrices based on x,y,z angles
