@@ -52,7 +52,12 @@ global api_username
 api_username = None
 
 global localnetworkIP
-localnetworkIP = socket.gethostbyname(socket.gethostname())
+localnetworkIP = None
+
+if os.path.exists('_hostname.cblog'):
+    with open('_hostname.cblog','r') as hostname:
+        localnetworkIP=hostname.read()
+        localnetworkIP = socket.gethostbyname(localnetworkIP)
 
 with open(str(path.parent)+'\\_globals.cblog','r') as version_doc:
     __VERSION = version_doc.read().replace("'","")
@@ -168,7 +173,7 @@ def childApplyForToken():
             'username':_username,
             'password':_password,
         }
-        r = requests.post(f"http://{localnetworkIP}:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
+        r = requests.post(f"http://127.0.0.1:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
         if r.status_code in range(200,299):
             global api_token
             api_token = r.json()['access_token']
@@ -288,6 +293,15 @@ def childBuildFileUploader():
             guizero.info('Model uploaded!',"See all models on the 'Models' tab")
 
 
+def setHostName():
+    name = guizero.askstring('Set host name','Ask your host for their device name!')
+    if name!='':
+        with open('_hostname.cblog', 'w') as addhostname:
+            addhostname.write(name)
+        global localnetworkIP
+        localnetworkIP=socket.gethostbyname(name)
+    else:
+        pass
 
 
 def buildTransform(points,planetype):
@@ -317,6 +331,7 @@ def createMenu():
         Button([0,0],"Github",[200,60],None,my_github),
     ]
     network_list = [
+        Button([0,0],"Set host", [210,60],None, setHostName),
         Button([0,0],"Upload",[210,60],None, lambda: (checkAuthBuild(childBuildFileUploader))),
         Button([0,0],"Models",[210,60],None, lambda: (checkAuthBuild(childBuildFileViewer))),
         Button([0,0],"Register",[210,60],None, childRegister),
