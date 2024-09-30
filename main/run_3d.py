@@ -133,7 +133,7 @@ def childClientJoinAPI():
         'roomid':_room_id
     }
     try:
-        r = requests.post("http://127.0.0.1:8000/register/",json=json)
+        r = requests.post("http://0.0.0.0:8000/register/",json=json)
         if r.status_code in range(200,299):
             guizero.info(f'hi, {_username}!','You are registered')
         else:
@@ -165,7 +165,7 @@ def childApplyForToken():
             'username':_username,
             'password':_password,
         }
-        r = requests.post("http://127.0.0.1:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
+        r = requests.post("http://0.0.0.0:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
         if r.status_code in range(200,299):
             global api_token
             api_token = r.json()['access_token']
@@ -236,7 +236,7 @@ def checkAuthBuild(funct):
         match funct.__name__:
             case 'childBuildFileViewer':
                 pageNum = 0
-                r = requests.get("http://127.0.0.1:8000/models/",headers={
+                r = requests.get("http://0.0.0.0:8000/models/",headers={
           "Authorization":f'Bearer {api_token}'
           })
                 if r.status_code in range(200,299):
@@ -279,7 +279,7 @@ def childBuildFileUploader():
             'modelData':lines,
             'username':api_username
         }
-        r=requests.post("http://127.0.0.1:8000/upload/", json=json, headers={"Authorization":f'Bearer {api_token}'})
+        r=requests.post("http://0.0.0.0:8000/upload/", json=json, headers={"Authorization":f'Bearer {api_token}'})
         if r.status_code in range(200,299):
             print(r.json())
             guizero.info('Model uploaded!',"See all models on the 'Models' tab")
