@@ -244,7 +244,7 @@ def checkAuthBuild(funct):
     if api_token != None: #SET != NONE WHEN NOT TESTING
         match funct.__name__:
             case 'childBuildFileViewer':
-                pageNum = 0
+
                 r = requests.get(f"http://{localnetworkIP}:8000/models/",headers={
           "Authorization":f'Bearer {api_token}'
           })
@@ -265,14 +265,47 @@ def checkAuthBuild(funct):
         guizero.warn('No login!','Please log in before accessing community features')    
     
 
+def childDownloadModel(modeldata):
+    pass #do!
+
+
 def childBuildFileViewer(directory, pageNum:int=0):
+    if len(directory) > 5:
+        start = pageNum*5
+        end = start+4
+        if len(directory) <= end:
+            end = len(directory)-1
+
+        viewable = directory[start:end+1]
+    else:
+        pageNum=0
+        viewable=directory
+
     obj = GUIobj([0,0],[500,600],'Community models')
     obj.add_content(
-        DisplayRows([
-            
-        ])
+        DisplayRows(
+            [    
+                DisplayColumns([
+                    DisplayRows([
+                        Text([0,0],model['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
+                        Text([0,0],'- by '+model['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+                    ]),
+                    Text([0,0],model['modelData'][:20]+'...',TextType.p,colour=(77, 76, 76)),
+                    Button([0,0],'Download',[212,60],None,lambda: (childDownloadModel(model['modelData'])))
+                ])
+            for model in viewable
+            ].extend(
+                [
+                    DisplayColumns([ #fill out tomor
+                        Button([0,0],'<',[60,60],None,lambda: ())
+                    ])
+                ]
+            )
+        )
     )
+    handler.add(obj)
     
+
 def childBuildFileUploader():
     savename = guizero.select_file("Open CBmodel",filetypes=[["CBmodels","*.CBmodel"]])
                             
