@@ -1,5 +1,5 @@
 #NECESSARY IMPORTS
-import pygame, guizero, subprocess, requests, os
+import pygame, guizero, subprocess, requests, os, socket
 
 
 ###DISPLAY SETUP
@@ -50,6 +50,9 @@ api_token = None
 
 global api_username
 api_username = None
+
+global localnetworkIP
+localnetworkIP = socket.gethostbyname(socket.gethostname())
 
 with open(str(path.parent)+'\\_globals.cblog','r') as version_doc:
     __VERSION = version_doc.read().replace("'","")
@@ -133,7 +136,7 @@ def childClientJoinAPI():
         'roomid':_room_id
     }
     try:
-        r = requests.post("http://0.0.0.0:8000/register/",json=json)
+        r = requests.post(f"http://{localnetworkIP}:8000/register/",json=json)
         if r.status_code in range(200,299):
             guizero.info(f'hi, {_username}!','You are registered')
         else:
@@ -165,7 +168,7 @@ def childApplyForToken():
             'username':_username,
             'password':_password,
         }
-        r = requests.post("http://0.0.0.0:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
+        r = requests.post(f"http://{localnetworkIP}:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
         if r.status_code in range(200,299):
             global api_token
             api_token = r.json()['access_token']
@@ -236,7 +239,7 @@ def checkAuthBuild(funct):
         match funct.__name__:
             case 'childBuildFileViewer':
                 pageNum = 0
-                r = requests.get("http://0.0.0.0:8000/models/",headers={
+                r = requests.get(f"http://{localnetworkIP}:8000/models/",headers={
           "Authorization":f'Bearer {api_token}'
           })
                 if r.status_code in range(200,299):
@@ -279,7 +282,7 @@ def childBuildFileUploader():
             'modelData':lines,
             'username':api_username
         }
-        r=requests.post("http://0.0.0.0:8000/upload/", json=json, headers={"Authorization":f'Bearer {api_token}'})
+        r=requests.post(f"http://{localnetworkIP}:8000/upload/", json=json, headers={"Authorization":f'Bearer {api_token}'})
         if r.status_code in range(200,299):
             print(r.json())
             guizero.info('Model uploaded!',"See all models on the 'Models' tab")
