@@ -157,7 +157,7 @@ def childApplyForToken():
     
 
     if _username != '' and _password != '':
-        handler.GUIobjs_array.pop(0)
+        
         json = {
             'username':_username,
             'password':_password,
@@ -178,7 +178,7 @@ def childApplyForToken():
 
     
 def childLogin():
-    obj = GUIobj([0,0],[400,600], 'Login')
+    obj = GUIobj([0,0],[650,300], 'Login')
     obj.add_content(
         DisplayRows([
             TextInput([0,0],'Username'),
@@ -186,13 +186,14 @@ def childLogin():
             Button([0,0],'Login',[210,60],None,childApplyForToken).anchor(Anchor.BOTTOMRIGHT)
         ])
     )
+    handler.add(obj)
 
 
 def childNetworkBuildAPI():
     input_options = handler.collate_textinput_inputs()
     
     if input_options.get('roomID')!=None:
-        subprocess.Popen(['python', 'start_api.py', 'code'+input_options['roomID']])
+        subprocess.Popen(['python', str(path.parent)+'/start_api.py', 'code'+input_options['roomID']])
     else:
         subprocess.Popen(['python', 'start_api.py'])
     
@@ -224,6 +225,23 @@ def childNetworkCreate():
     
     handler.add(obj)
 
+
+def checkAuthBuild(funct):
+    if api_token != None:
+        match funct.__name__:
+            case 'childBuildFileViewer':
+                pageNum = 0
+                r = requests.get("http://127.0.0.1:8000/models/",headers={
+          "Authorization":f'Bearer {api_token}'
+          })
+                if r.status_code in range(200,299):
+                    print(r.json())
+    else:
+        guizero.warn('No login!','Please log in before accessing community features')    
+    
+
+def childBuildFileViewer(pageNum=0):
+    obj = GUIobj([0,0],[500,600],'Community files')
     
 
 
@@ -254,9 +272,10 @@ def createMenu():
         Button([0,0],"Github",[200,60],None,my_github),
     ]
     network_list = [
-        Button([0,0],"Join",[200,60],None, childRegister),
-        Button([0,0],"Login",[200,60],None, childLogin),
-        Button([0,0],"Create",[200,60],None,childNetworkCreate)
+        Button([0,0],"Files",[210,60],None, lambda: (checkAuthBuild(childBuildFileViewer))),
+        Button([0,0],"Register",[210,60],None, childRegister),
+        Button([0,0],"Login",[210,60],None, childLogin),
+        Button([0,0],"Create",[210,60],None,childNetworkCreate)
     ]
     
     _File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
