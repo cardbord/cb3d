@@ -14,6 +14,7 @@ from pydantic import BaseModel
 import sys
 
 class CBmodel(BaseModel):
+    modelname:str
     modelData:str #use the same stream used in .CBmodels
     username:str
     
@@ -77,7 +78,7 @@ metadata = sqlalchemy.MetaData()
 models = sqlalchemy.Table(
     "models",
     metadata,
-    sqlalchemy.Column("modelid",sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("modelname",sqlalchemy.String),
     sqlalchemy.Column("modeldata",sqlalchemy.String),
     sqlalchemy.Column("username",sqlalchemy.String)
 )
@@ -123,9 +124,9 @@ async def fetch_models():
     return await database.fetch_all(query)
     
 
-@host_service.patch("/upload/",dependencies=[Depends(authentication_session.authenticate_token)])
+@host_service.post("/upload/",dependencies=[Depends(authentication_session.authenticate_token)])
 async def upload_model(json:CBmodel):
-    query = models.insert().values(modeldata=str(json.modelData))
+    query = models.insert().values(modelname=str(json.modelname), modeldata=str(json.modelData), username=str(json.username))
     result = await database.execute(query)
     return {**json.model_dump(), "id":result}
 
