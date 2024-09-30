@@ -173,7 +173,8 @@ def childApplyForToken():
             'username':_username,
             'password':_password,
         }
-        r = requests.post(f"http://127.0.0.1:8000/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
+        
+        r = requests.post(f"http://{localnetworkIP}/login/",data=json,headers={'content-type':'application/x-www-form-urlencoded'})
         if r.status_code in range(200,299):
             global api_token
             api_token = r.json()['access_token']
@@ -300,6 +301,7 @@ def setHostName():
             addhostname.write(name)
         global localnetworkIP
         localnetworkIP=socket.gethostbyname(name)
+        print(localnetworkIP)
     else:
         pass
 
