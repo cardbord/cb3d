@@ -1,5 +1,5 @@
 #NECESSARY IMPORTS
-import pygame, guizero, subprocess, requests, json
+import pygame, guizero, subprocess, requests, os
 
 
 ###DISPLAY SETUP
@@ -47,6 +47,9 @@ if successful_load: #if saved normally, there should be a preview for it
     
 global api_token
 api_token = None
+
+global api_username
+api_username = None
 
 with open(str(path.parent)+'\\_globals.cblog','r') as version_doc:
     __VERSION = version_doc.read().replace("'","")
@@ -166,8 +169,10 @@ def childApplyForToken():
         if r.status_code in range(200,299):
             global api_token
             api_token = r.json()['access_token']
+            global api_username
+            api_username = _username
 
-            guizero.info(f'welcome, {_username}!','You can now access community features.')
+            guizero.info(f'welcome, {_username}!','You can now access community features')
         else:
             guizero.warn('Invalid details','Please enter a valid username or password, or register')
             
@@ -227,7 +232,7 @@ def childNetworkCreate():
 
 
 def checkAuthBuild(funct):
-    if api_token != None:
+    if api_token != None: #SET != NONE WHEN NOT TESTING
         match funct.__name__:
             case 'childBuildFileViewer':
                 pageNum = 0
@@ -236,13 +241,50 @@ def checkAuthBuild(funct):
           })
                 if r.status_code in range(200,299):
                     print(r.json())
+                    
+
+                    childBuildFileViewer(r.json(), 0)
+
+
+            case 'childBuildFileUploader':
+                
+                childBuildFileUploader()
+                
+                            
+                
     else:
         guizero.warn('No login!','Please log in before accessing community features')    
     
 
-def childBuildFileViewer(pageNum=0):
-    obj = GUIobj([0,0],[500,600],'Community files')
+def childBuildFileViewer(directory, pageNum:int=0):
+    obj = GUIobj([0,0],[500,600],'Community models')
+    obj.add_content(
+        DisplayRows([
+            
+        ])
+    )
     
+def childBuildFileUploader():
+    savename = guizero.select_file("Open CBmodel",filetypes=[["CBmodels","*.CBmodel"]])
+                            
+    if savename == "":
+        pass #user has closed the file opener, so pass
+
+    else:
+        print(savename)
+        with open(savename,'r') as opened_file:
+            lines = opened_file.read()
+        json = {
+            'modelname':os.path.basename(savename), 
+            'modelData':lines,
+            'username':api_username
+        }
+        r=requests.post("http://127.0.0.1:8000/upload/", json=json, headers={"Authorization":f'Bearer {api_token}'})
+        if r.status_code in range(200,299):
+            print(r.json())
+            guizero.info('Model uploaded!',"See all models on the 'Models' tab")
+
+
 
 
 def buildTransform(points,planetype):
@@ -272,7 +314,8 @@ def createMenu():
         Button([0,0],"Github",[200,60],None,my_github),
     ]
     network_list = [
-        Button([0,0],"Files",[210,60],None, lambda: (checkAuthBuild(childBuildFileViewer))),
+        Button([0,0],"Upload",[210,60],None, lambda: (checkAuthBuild(childBuildFileUploader))),
+        Button([0,0],"Models",[210,60],None, lambda: (checkAuthBuild(childBuildFileViewer))),
         Button([0,0],"Register",[210,60],None, childRegister),
         Button([0,0],"Login",[210,60],None, childLogin),
         Button([0,0],"Create",[210,60],None,childNetworkCreate)
@@ -631,7 +674,7 @@ while 1:
                             show_points = not show_points
                             
                         case pygame.K_j:
-                            savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodel","*.CBmodel"]])
+                            savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodels","*.CBmodel"]])
                             print(savename)
                             if savename == "":
                                 pass
@@ -640,7 +683,7 @@ while 1:
                                 cbmod.filename_modified = savename
                     
                         case pygame.K_k:
-                            savename = guizero.select_file("Open cbmodel",filetypes=[["CBmodels","*.CBmodel"]])
+                            savename = guizero.select_file("Open CBmodel",filetypes=[["CBmodels","*.CBmodel"]])
                             
                             if savename == "":
                                 pass #user has closed the file opener, so pass
