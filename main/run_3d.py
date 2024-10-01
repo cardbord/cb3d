@@ -269,7 +269,13 @@ def checkAuthBuild(funct):
     
 
 def childDownloadModel(modeldata):
-    pass #do!
+    savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodels","*.CBmodel"]])
+    print(savename)
+    if savename == "":
+        pass
+    with open(savename+'.CBmodel','w') as writable:
+        writable.write(modeldata)
+    
 
 def changeUploaderPage(directory,pageNum):
     pos = handler.GUIobjs_array[0].pos
@@ -284,10 +290,13 @@ def changeUploaderPage(directory,pageNum):
     handler.GUIobjs_array[0].content[0].parent_pos=pos
     handler.GUIobjs_array[0].content[0]._calc_obj_rel_pos(handler.GUIobjs_array[0].clickableborder_pos[1])
 
+
+
+
 def childBuildFileViewer(directory, pageNum:int=0):
-    if len(directory) > 5:
-        start = pageNum*5
-        end = start+4
+    if len(directory) > 3:
+        start = pageNum*3
+        end = start+2
         if len(directory) <= end:
             end = len(directory)-1
 
@@ -299,21 +308,57 @@ def childBuildFileViewer(directory, pageNum:int=0):
     obj = GUIobj([0,0],[1200,800],'Community models')
     
     modelarray = []
-    for model in viewable:
-        item = DisplayColumns([
-            DisplayRows([
-                Text([0,0],model['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
-                Text([0,0],'- by '+model['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
-            ]),
-            DisplayRows([
-                
-                Text([0,0],model['modeldata'][:50]+'...'  if len(model['modeldata']) > 50 else model['modeldata'],TextType.h3,colour=(77, 76, 76)),
-            ]),
-            
-            Button([0,0],'Download',[245,60],None,lambda: (childDownloadModel(model['modeldata'])))
-        ])
-        modelarray.append(item)
     
+
+    if len(viewable) > 0:
+        model = viewable[0]
+        modelarray.append(
+            DisplayColumns([
+                DisplayRows([
+                    Text([0,0],model['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
+                    Text([0,0],'- by '+model['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+                ]),
+                DisplayRows([
+                    
+                    Text([0,0],model['modeldata'][:50]+'...'  if len(model['modeldata']) > 50 else model['modeldata'],TextType.h3,colour=(77, 76, 76)),
+                ]),
+                
+                Button([0,0],'Download',[245,60],None,lambda:(childDownloadModel(model['modeldata'])))
+            ])
+        )
+    if len(viewable) > 1:
+        model2 = viewable[1]
+        modelarray.append(
+            DisplayColumns([
+                DisplayRows([
+                    Text([0,0],model2['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
+                    Text([0,0],'- by '+model2['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+                ]),
+                DisplayRows([
+                    
+                    Text([0,0],model2['modeldata'][:50]+'...'  if len(model2['modeldata']) > 50 else model2['modeldata'],TextType.h3,colour=(77, 76, 76)),
+                ]),
+                
+                Button([0,0],'Download',[245,60],None,lambda:(childDownloadModel(model2['modeldata'])))
+            ])
+        )
+    if len(viewable) > 2:
+        model3 = viewable[2]
+        modelarray.append(
+            DisplayColumns([
+                DisplayRows([
+                    Text([0,0],model3['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
+                    Text([0,0],'- by '+model3['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+                ]),
+                DisplayRows([
+                    
+                    Text([0,0],model3['modeldata'][:50]+'...'  if len(model3['modeldata']) > 50 else model3['modeldata'],TextType.h3,colour=(77, 76, 76)),
+                ]),
+                
+                Button([0,0],'Download',[245,60],None,lambda:(childDownloadModel(model3['modeldata'])))
+            ])
+        )
+
     modelarray.append(
         DisplayColumns([
             Button([0,0],'<-',None,None,lambda: (changeUploaderPage(directory,pageNum-1 if pageNum!=0 else 0))),
