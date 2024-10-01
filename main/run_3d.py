@@ -291,6 +291,14 @@ def changeUploaderPage(directory,pageNum):
     handler.GUIobjs_array[0].content[0]._calc_obj_rel_pos(handler.GUIobjs_array[0].clickableborder_pos[1])
 
 
+def calcFileSizeFromString(string): #assuming a byte is used per character
+    size_in_kb = round(len(string)/1000,3)
+    if size_in_kb > 10:
+        return 'large', size_in_kb
+    elif size_in_kb > 1:
+        return 'average', size_in_kb
+    else:
+        return 'small', size_in_kb
 
 
 def childBuildFileViewer(directory, pageNum:int=0):
@@ -312,15 +320,19 @@ def childBuildFileViewer(directory, pageNum:int=0):
 
     if len(viewable) > 0:
         model = viewable[0]
+        modelsize = calcFileSizeFromString(model['modeldata'])
         modelarray.append(
             DisplayColumns([
                 DisplayRows([
                     Text([0,0],model['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
-                    Text([0,0],'- by '+model['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+                    Text([0,0],'- by '+model['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI'),
+                    None
                 ]),
                 DisplayRows([
-                    
-                    Text([0,0],model['modeldata'][:50]+'...'  if len(model['modeldata']) > 50 else model['modeldata'],TextType.h3,colour=(77, 76, 76)),
+                    None,
+                    Text([0,0],f'Relatively {modelsize[0]} ~ {modelsize[1]} kilobytes',TextType.h3,font='Segoe UI',colour=(153, 38, 143)),
+                    Text([0,0],'Shape',TextType.h3) if model['modeldata'].startswith('[]\n[]\n') else Text([0,0],'Wireframe model',TextType.h3),
+                    #Text([0,0],model['modeldata'][:50]+'...'  if len(model['modeldata']) > 50 else model['modeldata'],TextType.h3,colour=(77, 76, 76)),
                 ]),
                 
                 Button([0,0],'Download',[245,60],None,lambda:(childDownloadModel(model['modeldata'])))
@@ -328,15 +340,19 @@ def childBuildFileViewer(directory, pageNum:int=0):
         )
     if len(viewable) > 1:
         model2 = viewable[1]
+        modelsize = calcFileSizeFromString(model2['modeldata'])
         modelarray.append(
             DisplayColumns([
                 DisplayRows([
                     Text([0,0],model2['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
-                    Text([0,0],'- by '+model2['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+                    Text([0,0],'- by '+model2['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI'),
+                    None
                 ]),
                 DisplayRows([
-                    
-                    Text([0,0],model2['modeldata'][:50]+'...'  if len(model2['modeldata']) > 50 else model2['modeldata'],TextType.h3,colour=(77, 76, 76)),
+                    None,
+                    Text([0,0],f'Relatively {modelsize[0]} ~ {modelsize[1]} kilobytes',TextType.h3,font='Segoe UI',colour=(153, 38, 143)),
+                    Text([0,0],'Shape',TextType.h3) if model2['modeldata'].startswith('[]\n[]\n') else Text([0,0],'Wireframe model',TextType.h3),
+                    #Text([0,0],model2['modeldata'][:50]+'...'  if len(model2['modeldata']) > 50 else model2['modeldata'],TextType.h3,colour=(77, 76, 76)),
                 ]),
                 
                 Button([0,0],'Download',[245,60],None,lambda:(childDownloadModel(model2['modeldata'])))
@@ -344,15 +360,19 @@ def childBuildFileViewer(directory, pageNum:int=0):
         )
     if len(viewable) > 2:
         model3 = viewable[2]
+        modelsize = calcFileSizeFromString(model3['modeldata'])
         modelarray.append(
             DisplayColumns([
                 DisplayRows([
                     Text([0,0],model3['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
-                    Text([0,0],'- by '+model3['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+                    Text([0,0],'- by '+model3['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI'),
+                    None
                 ]),
                 DisplayRows([
-                    
-                    Text([0,0],model3['modeldata'][:50]+'...'  if len(model3['modeldata']) > 50 else model3['modeldata'],TextType.h3,colour=(77, 76, 76)),
+                    None,
+                    Text([0,0],f'Relatively {modelsize[0]} ~ {modelsize[1]} kilobytes',TextType.h3,font='Segoe UI',colour=(153, 38, 143)),
+                    Text([0,0],'Shape',TextType.h3) if model3['modeldata'].startswith('[]\n[]\n') else Text([0,0],'Wireframe model',TextType.h3),
+                    #Text([0,0],model3['modeldata'][:50]+'...'  if len(model3['modeldata']) > 50 else model3['modeldata'],TextType.h3,colour=(77, 76, 76)),
                 ]),
                 
                 Button([0,0],'Download',[245,60],None,lambda:(childDownloadModel(model3['modeldata'])))
@@ -363,7 +383,7 @@ def childBuildFileViewer(directory, pageNum:int=0):
         DisplayColumns([
             Button([0,0],'<-',None,None,lambda: (changeUploaderPage(directory,pageNum-1 if pageNum!=0 else 0))),
             Text([0,0],f'page {pageNum+1}',TextType.h3),
-            Button([0,0],'->',None,None,lambda: (changeUploaderPage(directory,pageNum+1)))
+            Button([0,0],'->',None,None,lambda: (changeUploaderPage(directory,(pageNum+1) if len(directory)-(3*(pageNum+1)) > 0 else pageNum)))
         ])
     )
     
