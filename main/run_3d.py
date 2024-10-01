@@ -58,6 +58,9 @@ if os.path.exists('_hostname.cblog'):
     with open('_hostname.cblog','r') as hostname:
         localnetworkIP=hostname.read()
         localnetworkIP = socket.gethostbyname(localnetworkIP)
+        if localnetworkIP == socket.gethostbyname(socket.gethostname()):
+            localnetworkIP='127.0.0.1'
+        print(localnetworkIP)
 
 with open(str(path.parent)+'\\_globals.cblog','r') as version_doc:
     __VERSION = version_doc.read().replace("'","")
@@ -268,6 +271,18 @@ def checkAuthBuild(funct):
 def childDownloadModel(modeldata):
     pass #do!
 
+def changeUploaderPage(directory,pageNum):
+    pos = handler.GUIobjs_array[0].pos
+    handler.GUIobjs_array.pop(0)
+    childBuildFileViewer(directory,pageNum)
+    l = len(handler.GUIobjs_array)
+    if l>1:
+        temp = handler.GUIobjs_array[0]
+        handler.GUIobjs_array[0] = handler.GUIobjs_array[l-1]
+        handler.GUIobjs_array[l-1] = temp
+    handler.GUIobjs_array[0].move_window(pos)
+    handler.GUIobjs_array[0].content[0].parent_pos=pos
+    handler.GUIobjs_array[0].content[0]._calc_obj_rel_pos(handler.GUIobjs_array[0].clickableborder_pos[1])
 
 def childBuildFileViewer(directory, pageNum:int=0):
     if len(directory) > 5:
@@ -280,29 +295,37 @@ def childBuildFileViewer(directory, pageNum:int=0):
     else:
         pageNum=0
         viewable=directory
-
-    obj = GUIobj([0,0],[500,600],'Community models')
-    obj.add_content(
-        DisplayRows(
-            [    
-                DisplayColumns([
-                    DisplayRows([
-                        Text([0,0],model['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
-                        Text([0,0],'- by '+model['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
-                    ]),
-                    Text([0,0],model['modelData'][:20]+'...',TextType.p,colour=(77, 76, 76)),
-                    Button([0,0],'Download',[212,60],None,lambda: (childDownloadModel(model['modelData'])))
-                ])
-            for model in viewable
-            ].extend(
-                [
-                    DisplayColumns([ #fill out tomor
-                        Button([0,0],'<',[60,60],None,lambda: ())
-                    ])
-                ]
-            )
-        )
+    print(directory)
+    obj = GUIobj([0,0],[1200,800],'Community models')
+    
+    modelarray = []
+    for model in viewable:
+        item = DisplayColumns([
+            DisplayRows([
+                Text([0,0],model['modelname'].replace('.CBmodel',''),TextType.h2,colour=(50, 35, 117),font='Segoe UI'),
+                Text([0,0],'- by '+model['username'],TextType.h3,colour=(52, 42, 97),font='Segoe UI')
+            ]),
+            DisplayRows([
+                
+                Text([0,0],model['modeldata'][:50]+'...'  if len(model['modeldata']) > 50 else model['modeldata'],TextType.h3,colour=(77, 76, 76)),
+            ]),
+            
+            Button([0,0],'Download',[245,60],None,lambda: (childDownloadModel(model['modeldata'])))
+        ])
+        modelarray.append(item)
+    
+    modelarray.append(
+        DisplayColumns([
+            Button([0,0],'<-',None,None,lambda: (changeUploaderPage(directory,pageNum-1 if pageNum!=0 else 0))),
+            Text([0,0],f'page {pageNum+1}',TextType.h3),
+            Button([0,0],'->',None,None,lambda: (changeUploaderPage(directory,pageNum+1)))
+        ])
     )
+    
+    obj.add_content(
+        DisplayRows(modelarray)
+    )
+    
     handler.add(obj)
     
 
@@ -334,6 +357,8 @@ def setHostName():
             addhostname.write(name)
         global localnetworkIP
         localnetworkIP=socket.gethostbyname(name)
+        if localnetworkIP == socket.gethostbyname(socket.gethostname()):
+            localnetworkIP='127.0.0.1'
         print(localnetworkIP)
     else:
         pass
