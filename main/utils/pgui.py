@@ -37,6 +37,9 @@ class TextType(IntEnum):
     r'''
     Markup text types-
     
+    banner: banner text (largest)
+    title: title
+    
     h1: header 1
     h2: header 2
     h3: header 3
@@ -44,11 +47,14 @@ class TextType(IntEnum):
     p: paragraph text
     '''
     
+    banner=256
+    title=100
+    
     h1=64
     h2=48
     h3=32
 
-    p=16
+    p=26
 
 
 class GUIbaseClass: #provide attrs for other junk, because these things are included in everything
@@ -451,14 +457,15 @@ class GUIobj(GUIbaseClass):
                 if item!=None: #ensuring a NoneType.display error doesn't occur
                     item.display(dis)
 
-    def display_window(self,dis:pygame.Surface): #draws all the window's rects to the screen, along with the close button
-        pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
+    def display_window(self,dis:pygame.Surface, _backgcolour:tuple=(255,255,255)): #draws all the window's rects to the screen, along with the close button
+        pygame.draw.rect(dis,_backgcolour,self.parent_window_rect)
+        
+        
+
+        self.__recursive_displayobj_display(self,dis) #calls recursive display, for contentblocks within the window
         pygame.draw.rect(dis,(255,255,255),self.clickableborder_area)
         pygame.draw.rect(dis,(0,0,0),self.parent_window_rect,width=1)
         pygame.draw.rect(dis,(0,0,0),self.clickableborder_area,width=1)
-
-        self.__recursive_displayobj_display(self,dis) #calls recursive display, for contentblocks within the window
-
         self.clickable_cross._scaledis(dis)
 
         if self.title != None: 
@@ -809,7 +816,7 @@ class menu(GUIobj): # i wonder... will setting window size to 1080p remove any n
         pass
     
     def display_window(self,dis): #override GUIobj display window for extra functionality
-        super().display_window(dis)
+        super().display_window(dis,(255,255,255))
         for dropdown in self.dropdowns:
             dropdown.display(dis)
         
@@ -832,7 +839,8 @@ class Text(GUIbaseClass): #standard text - no interaction
                 bold:bool=False,
                 strikethrough:bool=False,
                 font:str=None, #override font attr with a new one here
-
+                background:tuple=None,
+                banner_effect:bool=False
                 ):
         super().__init__() #init GUIbaseClass
 
@@ -843,7 +851,10 @@ class Text(GUIbaseClass): #standard text - no interaction
         self.raw_text=text_str
         self.colour = colour or (0,0,0) #sets colour to black if it is None
         self.type=type or TextType.p
+        if self.type==TextType.banner and banner_effect:
+            self.raw_text=f'   {self.raw_text}   ' #must use with centering!
         
+        self.background = background
         if font:
             self.font = pygame.font.SysFont(font, round(self.type.value*self._SIZE_SF), bold, italic)
         else: #chooses the OS default font instead
@@ -852,8 +863,8 @@ class Text(GUIbaseClass): #standard text - no interaction
 
         self.font.set_underline(ul)
         self.font.set_strikethrough(strikethrough)
-            
-        self.text = self.font.render(self.raw_text, True, self.colour)
+        
+        self.text = self.font.render(self.raw_text, True, self.colour, self.background)
 
         self.text_rect = self.text.get_rect() #for width and height values
 
