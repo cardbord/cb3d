@@ -1,5 +1,5 @@
 #NECESSARY IMPORTS
-import pygame, guizero, subprocess, requests, os, socket
+import pygame, guizero, subprocess, requests, os, socket, json
 
 
 ###DISPLAY SETUP
@@ -18,7 +18,7 @@ from utils.plane_sorter import quicksort, transform
 from utils.pgui import Text, TextType, Anchor, Button, TextInput, Dropdown, menu, Drawing, DisplayColumns, DisplayRows, Image, Handler, GUIobj, scale_to_window
 from utils.textures.textureCatalogue import TextureCatalogue
 from webbrowser import open_new_tab
-
+from random import choice
 
 
 #REMOVELATER
@@ -54,17 +54,28 @@ api_username = None
 global localnetworkIP
 localnetworkIP = None
 
-if os.path.exists('_hostname.cblog'):
-    with open('_hostname.cblog','r') as hostname:
-        localnetworkIP=hostname.read()
-        localnetworkIP = socket.gethostbyname(localnetworkIP)
-        if localnetworkIP == socket.gethostbyname(socket.gethostname()):
-            localnetworkIP='127.0.0.1'
-        print(localnetworkIP)
+try:
+    if os.path.exists('_hostname.cblog'):
+        with open('_hostname.cblog','r') as hostname:
+            localnetworkIP=hostname.read()
+            localnetworkIP = socket.gethostbyname(localnetworkIP)
+            if localnetworkIP == socket.gethostbyname(socket.gethostname()):
+                localnetworkIP='127.0.0.1'
+            print(localnetworkIP)
+except: #user is not on the network
+    localnetworkIP=None
+
 
 with open(str(path.parent)+'\\_globals.cblog','r') as version_doc:
     __VERSION = version_doc.read().replace("'","")
     version_doc.close()
+    
+
+with open(str(path)+'\\title_messages.json','r') as title_messages:
+    text = title_messages.read()
+    messages = json.loads(text)
+    splashtext = choice(messages['messages'])
+    
 
 ###BUTTON CALLBACKS
 
@@ -482,15 +493,61 @@ def createMenu():
 
             DisplayRows(
                 [
-                    Text([0,0],f'cb3d v{__VERSION}',TextType.h1,font="Segoe UI",bold=True,colour=(214,164,107)),
-                    DisplayRows(
+                    DisplayRows([ #TITLE + version
+                        None,
+                        DisplayColumns([
+                            None,None,
+                            Text([0,0],'CB3D',TextType.banner,font="Segoe UI",bold=True,colour=(129, 50, 168), background=None,banner_effect=False),
+                            None,
+                            DisplayRows([
+                                None,
+                                None,
+                                None,
+                                Text([0,0],f' v{__VERSION}', TextType.h3, font="Consolas",colour=(233, 66, 245)),    
+                            ])
+                            
+                            
+                                
+                        ]),
+                        None,
+                        Text([0,0],splashtext, TextType.h3, font="Segoe UI",italic=True, colour=(240,90,250)),
+                        None
+                    ]),
+                    
+                    DisplayRows( #body
                         [
-                            Text([0,0],'hit "file" to get started',TextType.h2, font="comic sans ms"),
-                            Text([0,0],'or hit "help" for some useful info',TextType.h2, font="comic sans ms"),
-                            None
+                            
+                            DisplayColumns([
+                                None,
+                                DisplayRows([
+                                    Text([0,0],"cb3d is a 3D modelling software packed with useful features",TextType.p,font="Segoe UI").anchor(Anchor.LEFT),
+                                    Text([0,0],"- click 'File' to start working on a model...",TextType.p, font="Segoe UI").anchor(Anchor.LEFT),
+                                    Text([0,0],"- or click 'Help' for some tips on buttons you can use!",TextType.p, font="Segoe UI").anchor(Anchor.LEFT),
+                                    Text([0,0],"- also, use the 'networks' tab to share models locally",TextType.p, font="Segoe UI").anchor(Anchor.LEFT),
+                                ]),
+                                None,None,None,None
+                            ]),
+                
+                            Text([0,0],"a short quickstarter on modelling", TextType.h2, font="Segoe UI"),
+                            
+                            DisplayRows([
+                                Text([0,0],'- open a new file from the menu',TextType.p,font="Segoe UI"),
+                                Text([0,0],"- click the plus shape button", TextType.p,font="Segoe UI"),
+                                Text([0,0],"- draw your shape in the grid...", TextType.p,font="Segoe UI"),
+                                Text([0,0],"- click draw and extrude the shape",TextType.p,font="Segoe UI")    
+                            ]),
+                            
+                            
+                            
+                            
                         ]
                     ),
-                    None
+                    DisplayColumns([
+                        Text([0,0],'Like this! ~>',TextType.h3,italic=True,font='Segoe UI',colour=(90,90,90)),
+                        DisplayRows([Image([0,0],'demo.png')]),
+                        None
+                    ])
+                    
                 ]
             ),
             DisplayRows(
@@ -736,7 +793,8 @@ while 1:
 
 
                 case pygame.KEYDOWN:
-
+                    since_last_moved = 0
+                    show_static_image=False
                     
                     
                     match event.key:
@@ -864,7 +922,8 @@ while 1:
 
 
                 case pygame.MOUSEBUTTONDOWN:
-                    
+                    since_last_moved = 0
+                    show_static_image = False
                     if event.button == 3:
                         if delete_on_click:
                             
@@ -922,6 +981,7 @@ while 1:
 
                 case pygame.MOUSEWHEEL:
                     since_last_moved = 0
+                    show_static_image = False
                     if runtime_dis.scale <= 175: #max zoom constraint (otherwise you can zoom into negatives and crash)
                         
                         runtime_dis.update_scale(runtime_dis.scale-event.y*5) 
@@ -964,6 +1024,7 @@ while 1:
         
         if rotate_xyz is True:
             since_last_moved = 0
+            show_static_image=False
             newpos = pygame.mouse.get_pos()
             npmx = newpos[0]
             npmy = newpos[1]
