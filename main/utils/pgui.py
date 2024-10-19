@@ -707,20 +707,20 @@ class Drawing(GUIobj):
         pygame.draw.rect(dis,(255,255,255),self.parent_window_rect)
         
 
-        pos_converted = (int(round(self._convert_x(self.pos_on_grid[0]))), int(round(self._convert_y(self.pos_on_grid[1]))))
+        pos_converted = (int(round(self._convert_x(self.pos_on_grid[0]))), int(round(self._convert_y(self.pos_on_grid[1])))) #convert position to a rounded integer as aacircle only takes integers
 
         
-        aacircle(dis,pos_converted[0] , pos_converted[1], 7, (104,115,174))  
+        aacircle(dis,pos_converted[0] , pos_converted[1], 7, (104,115,174))
         
         for i in range(int(self.grid_size[0])):
             if i == 0:
-                pygame.draw.line(dis,(0,0,0),[self._convert_x(i) , self.pos[1]+self.window_size[1]], [self._convert_x(i) , self.pos[1]], 3)    
+                pygame.draw.line(dis,(0,0,0),[self._convert_x(i) , self.pos[1]+self.window_size[1]], [self._convert_x(i) , self.pos[1]], 3) #drawing vertical lines to the grid
             else:
-                pygame.draw.aaline(dis,(150,150,150,(210)),[self._convert_x(i) , self.pos[1]+self.window_size[1]], [self._convert_x(i) , self.pos[1]])
+                pygame.draw.aaline(dis,(150,150,150,(210)),[self._convert_x(i) , self.pos[1]+self.window_size[1]], [self._convert_x(i) , self.pos[1]]) 
         
         for j in range(int(self.grid_size[1])):
             if j == 0:
-                pygame.draw.line(dis, (0,0,0), [self.pos[0], self._convert_y(j)], [self.pos[0]+self.window_size[0], self._convert_y(j)], 3)
+                pygame.draw.line(dis, (0,0,0), [self.pos[0], self._convert_y(j)], [self.pos[0]+self.window_size[0], self._convert_y(j)], 3) #drawing horizontal lines to the grid
             else:
                 pygame.draw.aaline(dis, (150,150,150,(210)), [self.pos[0], self._convert_y(j)], [self.pos[0]+self.window_size[0], self._convert_y(j)])
 
@@ -974,7 +974,7 @@ class Handler:
 
 
 
-    def add(self, obj:GUIobj):
+    def add(self, obj:GUIobj): #to add objects to the handler, saving a bit of time and giving an event in the log to work with
         self.GUIobjs_array.append(obj)
         self.eventLog.append((obj.title,self.Event.add))
     
@@ -1043,18 +1043,18 @@ class Handler:
         if event.type == pygame.KEYDOWN:
             
             if event.key == pygame.K_BACKSPACE:
-                if len(self.GUIobjs_array)>0 and isinstance(self.GUIobjs_array[0],TextInputBox):
+                if len(self.GUIobjs_array)>0 and isinstance(self.GUIobjs_array[0],TextInputBox): #using iteration for textinputboxes
                     for t_input in self.GUIobjs_array[0].text_inputs:
                         if t_input.to_input:
                             t_input.backspace()
-                else:
+                else: #using a recursive method to traverse the GUIobj
                     self.__recursive_displayobj_texthandling(self.GUIobjs_array[0],"absolutely nothing",True) #we can supply "absolutely" nothing to this as the funct handles both backspaces and text addition
                 
 
                 self.eventLog.append((self.GUIobjs_array[0].title,self.Event.backspace))
 
                         
-            elif len(self.GUIobjs_array) > 0:
+            elif len(self.GUIobjs_array) > 0: #using both iteration and recursion with addTIBtext()
                 self.addTIBtext(event.unicode)
                 self.eventLog.append((self.GUIobjs_array[0].title,self.Event.type))
 
@@ -1063,11 +1063,8 @@ class Handler:
             if event.button == 1:
             
                 if len(self.GUIobjs_array) > 0 and self.GUIobjs_array[0].check_closebuttoncollide(x,y):
-                    self.eventLog.append((self.GUIobjs_array[0].title,self.Event.remove)) #don't forget to do this early, otherwise we're reporting some other object's event! (or just IndexErroring)
+                    self.eventLog.append((self.GUIobjs_array[0].title,self.Event.remove)) #reporting early so another object's event is not being logged (or just IndexErroring)
                     self.GUIobjs_array.pop(0)
-                    
-                    
-                    
                 
                 else:
                     for d in range(len(self.GUIobjs_array)):
@@ -1137,7 +1134,7 @@ class Handler:
                 contentblock.clickable_cross.highlighted = False
             
     def collate_textinput_inputs(self):
-        return self.__recursive_textinput_itext(self.GUIobjs_array[0])
+        return self.__recursive_textinput_itext(self.GUIobjs_array[0]) #returns a dictionary of all the TextInputs' data of the most significant window
        
         
     def addTIBtext(self,unicode):

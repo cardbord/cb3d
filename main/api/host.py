@@ -13,24 +13,24 @@ import datetime
 from pydantic import BaseModel
 import sys
 
-class CBmodel(BaseModel):
+class CBmodel(BaseModel): #to be used in model submission to the database
     modelname:str
     modelData:str #use the same stream used in .CBmodels
     username:str
     
-class registrationItem(BaseModel):
+class registrationItem(BaseModel): #to be used in registration - to add user accounts to the database
     username:str
     password:str
     roomid:str
 
-class Token(BaseModel):
+class Token(BaseModel): #to be used when returning tokens back after logging in
     access_token:str
     token_type:str
 
 
-SECRET = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+SECRET = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7" #secret key - generated with openssl
 oauth2scheme = OAuth2PasswordBearer(tokenUrl="token")
-class UploadHandler:
+class UploadHandler: #security system to authenticate users by their credentials
     def __init__(self,db:Database,users_schema:sqlalchemy.Table):
         self.pwd_ctx = CryptContext(schemes=["bcrypt"],deprecated="auto")
         self.db = db
