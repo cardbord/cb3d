@@ -439,18 +439,25 @@ def setHostName():
     else:
         pass
 
+def buildTextureMenu():
+    obj = GUIobj([int(round(winsize[0]-scale_to_window(904))), 0], [452,900], "Textures")
+    obj.add_content(
+        DisplayRows([
+            
+        ])
+    )
 
 def buildTransform(points,planetype):
     input_options = handler.collate_textinput_inputs()
-    
+    colour_submitted = (int(input_options['redV']), int(input_options['greenV']), int(input_options['blueV']))
     transformations = transform(points,planetype,input_options['Extrusion'],input_options['From'])
 
     for transformation in transformations:
         if len(transformation) == 4:
-            cbmod.add_plane(transformation, [0,1,0,3,1,2,2,3], None, None)
+            cbmod.add_plane(transformation, [0,1,0,3,1,2,2,3], colour_submitted, None)
         else:
 
-            cbmod.add_plane(transformation, [i for i in range(len(transformation))], None, None)
+            cbmod.add_plane(transformation, [i for i in range(len(transformation))], colour_submitted, None)
 
 
 
@@ -567,13 +574,11 @@ def createMenu():
 menu_screen = createMenu()
 
 def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
-    selector = GUIobj([0,0],[452,1000],'Draw to')
+    selector = GUIobj([int(round(winsize[0]-scale_to_window(452))),0],[452,1080],'Draw to')
     selector.points = []
     for i in points:
         if i not in selector.points:
             selector.points.append(i)
-    
-    print(selector.points)
 
     selector.add_content(
         
@@ -598,7 +603,19 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                 ]), 
                 TextInput([0,0],'','0',1,'Extrusion'),
                 None
-            ])
+            ]),
+            
+            DisplayRows([
+                None,
+                DisplayColumns([
+                    Text([0,0],'Colour (rgb)',TextType.h3),None
+                ]), 
+                DisplayColumns([
+                    TextInput([0,0],'','255',3,'redV',True), TextInput([0,0],'','255',3,'greenV',True), TextInput([0,0],'','255',3,'blueV',True)
+                ]),
+                None
+            ]),
+            Button([0,0],'Set texture',None,None,buildTextureMenu)
             
             
             #we use the anonymous function lambda: cbmod.add_plane(buildTransform(d.points,planetype), [], texture) to add planes!
