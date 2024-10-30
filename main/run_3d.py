@@ -21,10 +21,20 @@ from webbrowser import open_new_tab
 from random import choice
 
 
-#REMOVELATER
-a = TextureCatalogue()
-__glass = a.textures['glass']
+#TEXTURE INIT
+catalogue = TextureCatalogue()
+__glass = catalogue.textures['glass']
 
+tRows = []
+for texture in catalogue.textures:
+    
+    _row = DisplayColumns([
+        DisplayRows([
+            Image([0,0],catalogue.textures[texture].texture_map),
+        ]),
+        Text([0,0],texture),
+    ])
+    tRows.append(_row)
 
 ###GLOBALS
 
@@ -439,25 +449,32 @@ def setHostName():
     else:
         pass
 
+
 def buildTextureMenu():
-    obj = GUIobj([int(round(winsize[0]-scale_to_window(904))), 0], [452,900], "Textures")
-    obj.add_content(
-        DisplayRows([
-            
-        ])
+    textureMenu = GUIobj([int(round(winsize[0]-scale_to_window(752))), 0], [300,900], "Textures")
+
+    textureMenu.add_content(
+        DisplayRows(
+            tRows
+        )
     )
+    handler.add(textureMenu)
 
 def buildTransform(points,planetype):
     input_options = handler.collate_textinput_inputs()
     colour_submitted = (int(input_options['redV']), int(input_options['greenV']), int(input_options['blueV']))
     transformations = transform(points,planetype,input_options['Extrusion'],input_options['From'])
-
+    texture = input_options['Texture']
+    if texture != 'default':
+        texture = catalogue.textures[texture]
+    else:
+        texture = None
     for transformation in transformations:
         if len(transformation) == 4:
-            cbmod.add_plane(transformation, [0,1,0,3,1,2,2,3], colour_submitted, None)
+            cbmod.add_plane(transformation, [0,1,0,3,1,2,2,3], colour_submitted, texture)
         else:
 
-            cbmod.add_plane(transformation, [i for i in range(len(transformation))], colour_submitted, None)
+            cbmod.add_plane(transformation, [i for i in range(len(transformation))], colour_submitted, texture)
 
 
 
@@ -576,6 +593,7 @@ menu_screen = createMenu()
 def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
     selector = GUIobj([int(round(winsize[0]-scale_to_window(452))),0],[452,1080],'Draw to')
     selector.points = []
+    
     for i in points:
         if i not in selector.points:
             selector.points.append(i)
@@ -593,7 +611,7 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                 ]), 
                 
                 TextInput([0,0],'','0',1,'From'),
-                None
+                
             ]),
             
             DisplayRows([
@@ -602,7 +620,7 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                     Text([0,0],'Extrusion',TextType.h3),None
                 ]), 
                 TextInput([0,0],'','0',1,'Extrusion'),
-                None
+                
             ]),
             
             DisplayRows([
@@ -613,9 +631,20 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                 DisplayColumns([
                     TextInput([0,0],'','255',3,'redV',True), TextInput([0,0],'','255',3,'greenV',True), TextInput([0,0],'','255',3,'blueV',True)
                 ]),
-                None
+                
             ]),
-            Button([0,0],'Set texture',None,None,buildTextureMenu)
+
+            DisplayRows([
+                None,
+                DisplayColumns([
+                    Text([0,0],'Texture',TextType.h3),None
+                ]), 
+                TextInput([0,0],'','default',7,'Texture'),
+                
+            ]),
+            
+            Button([0,0],'Preview textures',None,None,buildTextureMenu)
+            
             
             
             #we use the anonymous function lambda: cbmod.add_plane(buildTransform(d.points,planetype), [], texture) to add planes!
