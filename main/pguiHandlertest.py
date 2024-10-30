@@ -15,17 +15,21 @@ handler = pgui.Handler()
 pygame.init()
 dis = pygame.display.set_mode(pygame.display.get_desktop_sizes()[0])
 
-#initializing a GUIobj to test
-obj = pgui.GUIobj([200,200], [900,700],"contentblocks")
-obj.add_content( 
-     
-    #the parent parameter must be a DisplayColumns or DisplayRows object
-    pgui.DisplayRows([
-        pgui.TextInput([0,0],'Test input'),
-        pgui.Button([0,0],'Test button',None,None,lambda:print('button callback'))
-     ])
-)
-handler.add(obj)
+#object generation function
+def generate_object(): 
+    obj = pgui.GUIobj([200,200], [900,700],"contentblocks")
+    obj.add_content( 
+        
+        #the parent parameter must be a DisplayColumns or DisplayRows object
+        pgui.DisplayRows([
+            pgui.TextInput([0,0],'Test input'),
+            pgui.TextInput([0,0],'Test input 2'),
+            pgui.Button([0,0],'Test button',None,None,lambda:print('button callback'))
+        ])
+    )
+    return obj
+
+handler.add(generate_object())
 
 x,y = pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]
 
@@ -42,6 +46,8 @@ while 1:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 quit()
+            elif event.key == pygame.K_DELETE:
+                handler.add(generate_object())
         
             
     handler.display(dis)
