@@ -119,7 +119,7 @@ class DisplayRows(GUIbaseClass):
                                         (self.parent_pos[0] + 2*self._SIZE_SF),
                                         self.parent_pos[1] + displace_height + avg_content_height*(itemid+0.5) - self.content[itemid].text_box_height/2
                                     ],
-                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id, self.content[itemid]._small
                                 ).anchor(self.content[itemid]._anchor)
                             #add support for raw images and raw text later...
 
@@ -375,7 +375,7 @@ class DisplayColumns(GUIbaseClass):
                                         (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
                                         self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
                                     ],
-                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id, self.content[itemid]._small
                                 )
 
                             elif isinstance(self.content[itemid],Text): 
@@ -409,7 +409,7 @@ class DisplayColumns(GUIbaseClass):
                                         (self.parent_pos[0] + (avg_content_width*itemid) + 2*self._SIZE_SF),
                                         self.parent_pos[1] + displace_height + (self.parent_window_size[1]-self.content[itemid].text_box_height)/2
                                     ],
-                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index
+                                    self.content[itemid].raw_text, self.content[itemid].user_text, self.content[itemid].current_userinp_index, self.content[itemid]._textinput_id
                                 )
                             
                 
@@ -522,7 +522,7 @@ class Button(GUIbaseClass):
     
 
 class TextInput(GUIbaseClass):
-    def __init__(self,pos,text, _user_text=None, _current_userinp_index=None, textInputID:str=None):
+    def __init__(self,pos,text, _user_text=None, _current_userinp_index=None, textInputID:str=None, small:bool=False):
         super().__init__() #init above GUIbaseClass
         self.pos = pos
         self.raw_text = text
@@ -537,7 +537,11 @@ class TextInput(GUIbaseClass):
         self.current_userinp_index = _current_userinp_index or 0
         self.user_text = _user_text or ""
         #render within display method
-        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size) #chooses between 200px (at 1080p) or the user text + the size of the pipeline
+        self._small = small
+        if not self._small:
+            self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size) #chooses between 200px (at 1080p) or the user text + the size of the pipeline
+        else:
+            self.user_text_width = self.font.size(self.user_text)[0]+self._pipeline_size #only use small if text is already there
         self.user_text_rect = pygame.Rect(self.pos[0]+self.text_box_width+10*self._SIZE_SF,self.pos[1],self.user_text_width,__size_text[1])
         
         
@@ -559,13 +563,19 @@ class TextInput(GUIbaseClass):
     def add_char(self,newletter:str): #adds a single character a time (multiple characters not required as the limit is adding once per loop through event.unicode)
         self.user_text = (self.user_text[:self.current_userinp_index]+newletter+self.user_text[self.current_userinp_index:] if self.current_userinp_index!=len(self.user_text)-1 else "") if len(self.user_text)>0 else newletter
         #inserts the character into the middle of the current position (you can move through the text with arrow keys)
-        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size)
+        if not self._small:
+            self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size) #chooses between 200px (at 1080p) or the user text + the size of the pipeline
+        else:
+            self.user_text_width = self.font.size(self.user_text)[0]+self._pipeline_size #only use small if text is already there
         self.user_text_rect.w = self.user_text_width
         self.current_userinp_index+=1
 
     def backspace(self): #removes a character at the current pipeline position
         self.user_text = self.user_text[:self.current_userinp_index-1] + self.user_text[self.current_userinp_index+1:] 
-        self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0])
+        if not self._small:
+            self.user_text_width = max(200*self._SIZE_SF,self.font.size(self.user_text)[0]+self._pipeline_size) #chooses between 200px (at 1080p) or the user text + the size of the pipeline
+        else:
+            self.user_text_width = self.font.size(self.user_text)[0]+self._pipeline_size #only use small if text is already there
         self.user_text_rect.w = self.user_text_width #shortens the user text width of the user text rect
         self.current_userinp_index = self.current_userinp_index-1 if self.current_userinp_index != 0 else 0 #can't have a negative index, so i've just added a small check
 
@@ -1001,8 +1011,7 @@ class Handler:
         
         for item in obj.content:
             if isinstance(item,(DisplayRows,DisplayColumns)):
-                self.__recursive_displayobj_onclick(item,xval,yval,obj)
-                
+                self.__recursive_displayobj_onclick(item,xval,yval,_original_object)
             else:
                 if isinstance(item,TextInput) and xval in range(item.user_text_rect.left,item.user_text_rect.right) and yval in range(item.user_text_rect.top,item.user_text_rect.bottom):
                     item.to_input = True
@@ -1075,7 +1084,7 @@ class Handler:
                             elif isinstance(self.GUIobjs_array[0],Drawing): #drawing must be above GUIobj here, as it is a GUIobj itself
                                 returntype = self.GUIobjs_array[d].on_click(x,y)
                             elif isinstance(self.GUIobjs_array[0],GUIobj):
-                                returntype = self.__recursive_displayobj_onclick(self.GUIobjs_array[0],x,y)
+                                returntype = self.__recursive_displayobj_onclick(self.GUIobjs_array[0],x,y, self.GUIobjs_array[0])
                              
 
                             if returntype != None and isinstance(returntype, GUIobj): #check for object creator buttons
