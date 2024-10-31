@@ -3,63 +3,29 @@ import math as m
 import pygame
 from model import Point
 
-
-
 pygame.init()
 default_font = pygame.font.get_default_font()
 
 
-
-
-class Button:
-    def __init__(self,x,y,width,height,text,command):
-        self._command = command
-        self.rect = pygame.Rect(x,y,width,height)
-        self.text = text
-    def display(self,dis):
-        pygame.draw.rect(dis,(60,60,60),self.rect)
-        text = pygame.font.SysFont(default_font,46)
-        text = text.render(self.text,True,(255,255,255))
-        text_rect = text.get_rect(center=self.rect.center)
-        dis.blit(text,text_rect)
-
-    def when_clicked(self,event):
-        if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
-            self._command()
-
-class menu_screen:
-    def __init__(self,active, commands):
-        self.active = active
-        self._commands = commands
-        self.menurect =  pygame.Rect(100,100,600,600)
-
-    def display(self,dis):
-        for command in self._commands:
-            command.display(dis)
-
-class Observer:
+class Observer: #used as part of the depth algo to find a relative position between everything and a camera
     def __init__(self):
         self.position = [0,0,0] #init through calcpos
         
-    def calcpos(self,angle_x,angle_y, scale):
-        #nasty code, but it works!
-        
+    def calcpos(self,angle_x,angle_y, scale): #setter for Observer.position
         
         xlen = abs(scale)*m.cos(m.pi*2 - angle_x)
         zlen = abs(scale)*m.sin(m.pi*2 - angle_x)
         
-        ylen = (abs(scale)*m.cos(m.pi*2 - angle_y))
+        ylen = abs(scale)*m.cos(m.pi*2 - angle_y)
         hidden_z = scale*m.sin(m.pi*2 - angle_y)
         
         sf = (scale**2)/hidden_z
         self.position = [xlen/sf, zlen/sf, ylen]
 
-    def calc_dist_topoint(self,point):
-        try:
-            return m.sqrt(abs((self.position[0] - point[0][0])**2 + (self.position[1] - point[1][0])**2 + (self.position[2] - point[2][0])**2))
-        except Exception as e:
-            print(f"erred on here, here's why: {e}")
-            return 10000
+    def calc_dist_topoint(self,point) -> float: #distance calc between another point
+        return m.sqrt(abs((self.position[0] - point[0][0])**2 + (self.position[1] - point[1][0])**2 + (self.position[2] - point[2][0])**2))
+    
+    #good idea to keep position private through getter/setters like these as other position vars exist in main program
 
         
 
@@ -143,14 +109,11 @@ class display_3Dgrid:
             
             raw_rotates.append(rotate)
             
-            #furthest = self.point_map.index(point)
-            
-            
-            
             projection = np.dot(self.manipulation_matrix,rotate)
             x = int(projection[0][0]*(200-self.scale)) + position[0] + self.movable_position[0]
             y = self.window_size[1] - (int(projection[1][0]*(200-self.scale)) + position[1]) + self.movable_position[1]
             pointmap.append((x,y))
+            
         return raw_rotates, pointmap
 
     def rotation(self):
