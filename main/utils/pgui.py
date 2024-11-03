@@ -893,6 +893,7 @@ class Image(GUIbaseClass):
     ):
         super().__init__() #init above GUIbaseClass
         self.pos = pos
+        self.callback = None
         path = str(pathlib.Path(__file__).parent)+'\\content\\' #path is constructed to cb3d/main/utils/content to grab image
         if isinstance(image,pygame.Surface):
             self.image=image

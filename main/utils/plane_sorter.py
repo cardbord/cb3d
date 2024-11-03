@@ -13,6 +13,28 @@ def quicksort(array):
         return quicksort(left) + [pivot] + quicksort(right)
     
 
+def binary_search(array, value): #standard binary search algo
+    lowbound = 0 #setting upper and lower bounds
+    upbound = len(array)-1 
+
+    midp = 1
+
+    while lowbound<=upbound: 
+
+        midp = (lowbound+upbound)//2
+        midval = array[midp]
+        if not isinstance(midval,float):
+            midval = midval.avg_distance #plane distance, as it has already been replaced
+        if midval < value:
+            upbound=midp-1
+        elif midval > value:
+            lowbound=midp+1
+        else:
+            return midp
+        
+    return None
+
+
 def transform(points:list, draw_plane:str,extrusion:str='0',zerodisplacement:str='0'):
     plane_array = []
     extrusion=float(extrusion)

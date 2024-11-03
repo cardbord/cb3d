@@ -12,17 +12,15 @@ clock = pygame.time.Clock()
 #PARTIAL IMPORTS
 from pathlib import Path
 from cb3d_disgrid import display_3Dgrid
-from model import Point, CBModel, Plane
+from model import Point, CBModel, Plane, catalogue
 from pygame import gfxdraw
-from utils.plane_sorter import quicksort, transform
+from utils.plane_sorter import quicksort, binary_search, transform
 from utils.pgui import Text, TextType, Anchor, Button, TextInput, Dropdown, menu, Drawing, DisplayColumns, DisplayRows, Image, Handler, GUIobj, scale_to_window
-from utils.textures.textureCatalogue import TextureCatalogue
 from webbrowser import open_new_tab
 from random import choice
 
 
 #TEXTURE INIT
-catalogue = TextureCatalogue()
 __glass = catalogue.textures['glass']
 
 tRows = []
@@ -862,7 +860,8 @@ while 1:
                         case pygame.K_x:
                             rotatex=True
                         case pygame.K_g:
-                            show_grid = not show_grid
+                            if len(handler.GUIobjs_array) < 1:
+                                show_grid = not show_grid
                         case pygame.K_p:
                             take_input()
                         case pygame.K_c:
@@ -888,37 +887,52 @@ while 1:
                             debug = not debug
 
                         case pygame.K_e:
-                            
-                            cbmod.add([-1,-1,1])
-                            cbmod.add([1,-1,1])
-                            cbmod.add([1,1,1])
-                            cbmod.add([-1,1,1])
+                            if len(handler.GUIobjs_array) < 1:
+                                
+                                cbmod.add([-1,-1,1])
+                                cbmod.add([1,-1,1])
+                                cbmod.add([1,1,1])
+                                cbmod.add([-1,1,1])
 
-                            cbmod.add([-1,-1,-1])
-                            cbmod.add([1,-1,-1])
-                            cbmod.add([1,1,-1])
-                            cbmod.add([-1,1,-1])
+                                cbmod.add([-1,-1,-1])
+                                cbmod.add([1,-1,-1])
+                                cbmod.add([1,1,-1])
+                                cbmod.add([-1,1,-1])
 
                         case pygame.K_m:
-                            cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                            cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                            if len(handler.GUIobjs_array) < 1:
+                                cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                                cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
 
-                            cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                            cbmod.add_plane([Point((1,1,1)), Point((1,1,-1)), Point((1,-1,-1)), Point((1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                            
+                                cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                                cbmod.add_plane([Point((1,1,1)), Point((1,1,-1)), Point((1,-1,-1)), Point((1,-1,1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                                
 
-                            #[[1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]]
-                            cbmod.add_plane([Point((1,-1,1)), Point((-1,-1,1)), Point((-1,-1,-1)), Point((1,-1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
-                            cbmod.add_plane([Point((1,1,1)), Point((-1,1,1)), Point((-1,1,-1)), Point((1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                                #[[1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]]
+                                cbmod.add_plane([Point((1,-1,1)), Point((-1,-1,1)), Point((-1,-1,-1)), Point((1,-1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
+                                cbmod.add_plane([Point((1,1,1)), Point((-1,1,1)), Point((-1,1,-1)), Point((1,1,-1))], [0,1,1,2,0,3,2,3], (133, 98, 58))
 
-                            cbmod.add_plane([Point((0.2,1,1)), Point((-0.2,1,1)), Point((-0.2,1,-1)), Point((0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
-                            cbmod.add_plane([Point((-0.2,0.2,-1)), Point((0.2,0.2,-1)), Point((0.2,1,-1)), Point((-0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
-                            cbmod.add_plane([Point((-0.2,0.2,1)),Point((0.2,0.2,1)),Point((0.2,1,1)),Point((-0.2,1,1))], [0,1,1,2,0,3,2,3], (214,164,107))
-                            
+                                cbmod.add_plane([Point((0.2,1,1)), Point((-0.2,1,1)), Point((-0.2,1,-1)), Point((0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                                cbmod.add_plane([Point((-0.2,0.2,-1)), Point((0.2,0.2,-1)), Point((0.2,1,-1)), Point((-0.2,1,-1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                                cbmod.add_plane([Point((-0.2,0.2,1)),Point((0.2,0.2,1)),Point((0.2,1,1)),Point((-0.2,1,1))], [0,1,1,2,0,3,2,3], (214,164,107))
+                                
+                        case pygame.K_u:
+                            if len(handler.GUIobjs_array) < 1:
+                                cbmod.add_plane([Point((-1,-1,-1)), Point((1,-1,-1)), Point((1,1,-1)), Point((-1,1,-1))], [0,1,1,2,0,3,2,3], (25,175,200), catalogue.textures['wood'])
+                                cbmod.add_plane([Point((-1,-1,1)),Point((1,-1,1)),Point((1,1,1)),Point((-1,1,1))], [0,1,1,2,0,3,2,3],        (25,175,200), catalogue.textures['wood'])
+
+                                cbmod.add_plane([Point((-1,1,1)), Point((-1,1,-1)), Point((-1,-1,-1)), Point((-1,-1,1))], [0,1,1,2,0,3,2,3], (25,175,200), catalogue.textures['wood'])
+                                cbmod.add_plane([Point((1,1,1)), Point((1,1,-1)), Point((1,-1,-1)), Point((1,-1,1))], [0,1,1,2,0,3,2,3],     (25,175,200), catalogue.textures['wood'])
+                                
+
+                                #[[1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]]
+                                cbmod.add_plane([Point((1,-1,1)), Point((-1,-1,1)), Point((-1,-1,-1)), Point((1,-1,-1))], [0,1,1,2,0,3,2,3], (25,175,200), catalogue.textures['wood'])
+                                cbmod.add_plane([Point((1,1,1)), Point((-1,1,1)), Point((-1,1,-1)), Point((1,1,-1))], [0,1,1,2,0,3,2,3],     (25,175,200), catalogue.textures['wood'])
 
 
                         case pygame.K_s:
-                            show_points = not show_points
+                            if len(handler.GUIobjs_array) < 1:
+                                show_points = not show_points
                             
                         case pygame.K_j:
                             savename = guizero.select_file("Save CBmodel",save=True,filetypes=[["CBmodels","*.CBmodel"]])
@@ -930,15 +944,16 @@ while 1:
                                 cbmod.filename_modified = savename
                     
                         case pygame.K_k:
-                            savename = guizero.select_file("Open CBmodel",filetypes=[["CBmodels","*.CBmodel"]])
-                            
-                            if savename == "":
-                                pass #user has closed the file opener, so pass
+                            if len(handler.GUIobjs_array) < 1:
+                                savename = guizero.select_file("Open CBmodel",filetypes=[["CBmodels","*.CBmodel"]])
+                                
+                                if savename == "":
+                                    pass #user has closed the file opener, so pass
 
-                            else:
+                                else:
 
-                                cbmod = CBModel.load(savename)
-                                cbmod.filename_modified = savename
+                                    cbmod = CBModel.load(savename)
+                                    cbmod.filename_modified = savename
                                     
                         case pygame.K_ESCAPE:
                             start_menu_shown = True
@@ -979,7 +994,6 @@ while 1:
                                         cbmod.delete(runtime_dis.rendered_pointmap.index(point))
                             if len(cbmod.planes) > 0:
                                 for plane in cbmod.planes:
-                                    
                                     for point in plane.render_points:
                                         if mx in range(round(point[0])-20,round(point[0])+20) and my in range(round(point[1])-20,round(point[1])+20):
                                             del cbmod.planes[cbmod.planes.index(plane)]
@@ -1142,35 +1156,36 @@ while 1:
                                 pass
             
             if len(cbmod.planes)>0:
-                #sorter
+                
                 
                 for plane in cbmod.planes:
                     
-                    raw_renders,rendered_points = runtime_dis.plane_project(plane.points,(winsize[0]/2,winsize[1]/2))
+                    raw_renders,rendered_points = runtime_dis.plane_project(plane.points,(winsize[0]/2,winsize[1]/2)) #project planes
                     
-                    plane.rpoints = list(raw_renders)
+                    plane.rpoints = list(raw_renders) 
                     plane.render_points = list(rendered_points)
-                #cbmod.planes = quicksort(runtime_dis,cbmod.planes)
-                #condition for sorting: sum([runtime_dis.observer.calc_dist_topoint(runtime_dis.rendered_pointmap[i]) for i in plane[1]])/len(plane[1])
+
+
                 
                 
                 plane_dlists = []
                 for a in cbmod.planes:
-                    d_list = [runtime_dis.observer.calc_dist_topoint(distance) for distance in list(a.rpoints)]
+                    d_list = [runtime_dis.observer.calc_dist_topoint(distance) for distance in list(a.rpoints)] #distance calculaions
                     avg_distance = round( sum(d_list)/len(d_list), 4) #remove floating point imprecision
                     plane_dlists.append(avg_distance)
                     a.avg_distance = avg_distance
                 
                 
-                plane_dlists = quicksort(plane_dlists)
-                
+                plane_dlists = quicksort(plane_dlists) #sort the distances
+
+
                 if debug:
                     plane_dlists_2REMOVELATER = [i for i in plane_dlists]
                 
                 
                 for distance in plane_dlists:
                     if isinstance(distance,Plane):
-                            pass
+                        pass
                     else:
                         for plane in cbmod.planes:
                             
@@ -1178,18 +1193,19 @@ while 1:
                                 pass
                             elif plane.avg_distance == distance:
                                 plane_dlists[plane_dlists.index(distance)] = plane
-                
 
                 
+    
                 
                 for pl in range(len(plane_dlists)):
                     plane = plane_dlists[pl]
                     
-                    try:
-                        if debug:
+                    try: 
+                        if debug: #debug stuff, ignore
                             text = debug_font.render(f" PLANE {plane_dlists[pl]}: " +str(plane_dlists_2REMOVELATER[pl]),False,(0,0,0))
                             dis.blit(text,plane.render_points[0])
-                        else:
+
+                        else: #drawing the sides of the shape
                             if plane.texture:
                                 if plane.texture.transparency != 1:
                                     plane.texture.texture_map.set_alpha(int(round(255*(plane.texture.transparency + (len(plane_dlists)- pl)*0.01))))
@@ -1203,17 +1219,18 @@ while 1:
                     except Exception as e:
                         print(e)
                     
-                    for point in plane.render_points:
+                    for point in plane.render_points: #drawing the circle over the point
                         if show_points is True:
                             gfxdraw.filled_circle(dis,int(round(point[0])),int(round(point[1])),int(round(20-runtime_dis.scale*0.1)),(0,0,0))
                     
                     
-                    for i in range(0,len(plane.connections)-1,2):
+                    for i in range(0,len(plane.connections)-1,2): #drawing connections
                         indextocheck = plane.connections[i]
                         second_index = plane.connections[i+1]
                         for point in plane.render_points:
                             
-                            if plane.render_points.index(point) == indextocheck:
+                            if plane.render_points.index(point) == indextocheck: 
+                                #some indexes may not exist due to mistakes in constructing the plane, so this is a final check!
                                 try: 
                                     pygame.draw.line(dis,(0,0,0),plane.render_points[indextocheck],plane.render_points[second_index],width=3)
                                 except:

@@ -33,7 +33,7 @@ class Observer: #used as part of the depth algo to find a relative position betw
 class display_3Dgrid:
     def __init__(self,points,angle_x,angle_y,angle_z,scale):
         
-        self.observer = Observer()
+        self.observer = Observer() 
 
         self.point_map = points
 
