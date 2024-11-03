@@ -150,28 +150,28 @@ def my_github():
 def show_instructions(): #i need something for the __name__checker to look at
     pass
 
-def childClientJoinAPI():
-    input_options = handler.collate_textinput_inputs()
+def childClientJoinAPI(): #registration request
+    input_options = handler.collate_textinput_inputs() #grab text inputs from childRegister
     
     _room_id = input_options.get('Room ID')
     _username = input_options.get('Username')
     _password = input_options.get('Password')
 
-    json = {
-        'username':_username,
+    json = { #construct a json file from the data
+        'username':_username, 
         'password':_password,
         'roomid':_room_id
     }
     try:
-        r = requests.post(f"http://{localnetworkIP}:8000/register/",json=json)
-        if r.status_code in range(200,299):
+        r = requests.post(f"http://{localnetworkIP}:8000/register/",json=json) #post the json file
+        if r.status_code in range(200,299): #success HTTP messages
             guizero.info(f'hi, {_username}!','You are registered')
         else:
             guizero.warn("Something isn't right...",'Check your room ID carefully, and try again')
     except:
         guizero.warn("Host is not running",'Please ask your host to start the server!')    
 
-def childRegister():
+def childRegister(): #registration function - passes process to childClientJoinAPI
     obj = GUIobj([0,0],[900,700], 'Network')
     obj.add_content(
         DisplayRows([
@@ -183,15 +183,15 @@ def childRegister():
     )
     handler.add(obj)
     
-def childApplyForToken():
-    input_options = handler.collate_textinput_inputs()
+def childApplyForToken(): #authentication of login
+    input_options = handler.collate_textinput_inputs() #grabs inputs from childLogin
     _username = input_options.get('Username')
     _password = input_options.get('Password')
     
 
-    if _username != '' and _password != '':
+    if _username != '' and _password != '': #presence check
         
-        json = {
+        json = { #construct json file
             'username':_username,
             'password':_password,
         }
@@ -213,7 +213,7 @@ def childApplyForToken():
     
 
     
-def childLogin():
+def childLogin(): #login - passes process to childApplyForToken
     obj = GUIobj([0,0],[650,300], 'Login')
     obj.add_content(
         DisplayRows([
@@ -231,31 +231,31 @@ def childNetworkBuildAPI():
     if input_options.get('roomID')!=None:
         subprocess.Popen(['python', str(path.parent)+'/start_api.py', 'code'+input_options['roomID']])
     else:
-        subprocess.Popen(['python', 'start_api.py'])
+        subprocess.Popen(['python', str(path.parent)+'/start_api.py'])
     
     
     guizero.info('Creating network...','Please find your network details in the terminal.')
 
-def childNetworkCreate():
+def childNetworkCreate(): #network creator, once created passes the process on to the API builder funct
     
     obj = GUIobj([0,0],[900,700],'Network')
     obj.add_content(
         DisplayRows([
-            Text([0,0],"Networks require a unique room ID for privacy.",TextType.h2),
+            Text([0,0],"Networks require a unique room ID for privacy.",TextType.h2), #general information texts
             DisplayColumns([
                 DisplayRows([
                     Text([0,0],'Please enter a room ID',TextType.h2).anchor(Anchor.LEFT),
-                    TextInput([0,0],'',textInputID='roomID').anchor(Anchor.CENTER),
+                    TextInput([0,0],'',textInputID='roomID').anchor(Anchor.CENTER), #custom room ID textinput
                     None
                 ]),
                 None
             ]),
-            DisplayRows([
-                Text([0,0],'Users will need to login to access your database.',TextType.h3),
+            DisplayRows([ 
+                Text([0,0],'Users will need to login to access your database.',TextType.h3), #more general information text
                 Text([0,0],'Anybody can create an account.', TextType.h3),
             ]),
             
-            Button([0,0],'Confirm',[210,60], None, childNetworkBuildAPI).anchor(Anchor.BOTTOMRIGHT)
+            Button([0,0],'Confirm',[210,60], None, childNetworkBuildAPI).anchor(Anchor.BOTTOMRIGHT) #confirm builds a network!
         ])
     )
     
@@ -263,7 +263,7 @@ def childNetworkCreate():
 
 
 def checkAuthBuild(funct):
-    if api_token != None: #SET != NONE WHEN NOT TESTING
+    if api_token != None:
         match funct.__name__:
             case 'childBuildFileViewer':
 
@@ -278,10 +278,7 @@ def checkAuthBuild(funct):
 
 
             case 'childBuildFileUploader':
-                
-                childBuildFileUploader()
-                
-                            
+                childBuildFileUploader()       
                 
     else:
         guizero.warn('No login!','Please log in before accessing community features')    
@@ -434,18 +431,18 @@ def childBuildFileUploader():
             guizero.info('Model uploaded!',"See all models on the 'Models' tab")
 
 
-def setHostName():
+def setHostName(): #set the host name so they can find the host device to use the API
     name = guizero.askstring('Set host name','Ask your host for their device name!')
     if name!='':
-        with open('_hostname.cblog', 'w') as addhostname:
+        with open('_hostname.cblog', 'w') as addhostname: #save the hostname for future use
             addhostname.write(name)
-        global localnetworkIP
+        global localnetworkIP #set localnetworkIP variable so API can be used
         localnetworkIP=socket.gethostbyname(name)
-        if localnetworkIP == socket.gethostbyname(socket.gethostname()):
-            localnetworkIP='127.0.0.1'
+        if localnetworkIP == socket.gethostbyname(socket.gethostname()): #if the host is also trying to access the API
+            localnetworkIP='127.0.0.1' #this is the localhost address
         print(localnetworkIP)
     else:
-        pass
+        pass #user has closed the input window, so pass
 
 
 def buildTextureMenu():
@@ -489,18 +486,16 @@ def createMenu():
         Button([0,0],"Github",[200,60],None,my_github),
     ]
     network_list = [
-        Button([0,0],"Set host", [210,60],None, setHostName),
+	    Button([0,0],"Set host", [210,60],None, setHostName),
         Button([0,0],"Upload",[210,60],None, lambda: (checkAuthBuild(childBuildFileUploader))),
         Button([0,0],"Models",[210,60],None, lambda: (checkAuthBuild(childBuildFileViewer))),
         Button([0,0],"Register",[210,60],None, childRegister),
         Button([0,0],"Login",[210,60],None, childLogin),
         Button([0,0],"Create",[210,60],None,childNetworkCreate)
     ]
-    
     _File = Dropdown([0,0], Button([0,0],"File",[200,50],(10,10,10)), file_list)#place button list in sq brackets
     _Help = Dropdown([scale_to_window(200),0], Button([scale_to_window(200),0],"Help",[200,50],(10,10,10)), help_list) 
     _Networks = Dropdown([scale_to_window(400),0], Button([scale_to_window(400),0],"Network", [210,50], (10,10,10)), network_list)
-    
 
     start_menu = menu(
         [
@@ -509,10 +504,8 @@ def createMenu():
             _Networks
         ]
     )
-   
     _menu_content = DisplayColumns(
         [
-
             DisplayRows(
                 [
                     DisplayRows([ #TITLE + version
@@ -526,19 +519,14 @@ def createMenu():
                                 None,
                                 None,
                                 Text([0,0],f' v{__VERSION}', TextType.h3, font="Consolas",colour=(233, 66, 245)),    
-                            ])
-                            
-                            
-                                
+                            ])  
                         ]),
                         None,
                         Text([0,0],splashtext, TextType.h3, font="Segoe UI",italic=True, colour=(240,90,250)),
                         None
                     ]),
-                    
                     DisplayRows( #body
                         [
-                            
                             DisplayColumns([
                                 None,
                                 DisplayRows([
@@ -549,19 +537,13 @@ def createMenu():
                                 ]),
                                 None,None,None,None
                             ]),
-                
                             Text([0,0],"a short quickstarter on modelling", TextType.h2, font="Segoe UI"),
-                            
                             DisplayRows([
                                 Text([0,0],'- open a new file from the menu',TextType.p,font="Segoe UI"),
                                 Text([0,0],"- click the plus shape button", TextType.p,font="Segoe UI"),
                                 Text([0,0],"- draw your shape in the grid...", TextType.p,font="Segoe UI"),
                                 Text([0,0],"- click draw and extrude the shape",TextType.p,font="Segoe UI")    
                             ]),
-                            
-                            
-                            
-                            
                         ]
                     ),
                     DisplayColumns([
@@ -569,7 +551,6 @@ def createMenu():
                         DisplayRows([Image([0,0],'demo.png')]),
                         None
                     ])
-                    
                 ]
             ),
             DisplayRows(
@@ -579,10 +560,8 @@ def createMenu():
             )
         ]
     )
-                                         
-    
     start_menu.add_content(_menu_content)
-    
+
     return start_menu
 
 

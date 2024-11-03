@@ -4,7 +4,7 @@ from databases import Database
 from random import sample
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from typing import Annotated, List
+from typing import Annotated
 from passlib.hash import bcrypt
 from fastapi import HTTPException
 from jose import jwt, JWTError
@@ -39,7 +39,6 @@ class UploadHandler: #security system to authenticate users by their credentials
     
     async def _get_user(self,identifier):
         query = self.users_schema.select().where(self.users_schema.c.userID==identifier)
-        
         return await self.db.fetch_one(query)
 
     async def authenticate_password(self,userID,password):
@@ -52,12 +51,13 @@ class UploadHandler: #security system to authenticate users by their credentials
         data.update({"exp":datetime.datetime.now(datetime.UTC)+datetime.timedelta(hours=10)}) #should be long enough to use, but not too long to leave open for bad actors
         return jwt.encode(data,SECRET)
     
-    async def authenticate_token(self,token:Annotated[str,Depends(oauth2scheme)]):
+    async def authenticate_token(self,token:Annotated[str,Depends(oauth2scheme)]): #token verificaiton after user is logged in
         try:
-            decoded_token_payload = jwt.decode(token,SECRET)
+            decoded_token_payload = jwt.decode(token,SECRET) #verification process in reverse, returning  original user
             userID = decoded_token_payload.get("userID")
+
             if userID:
-                user = await self._get_user(userID)
+                user = await self._get_user(userID) 
                 if user:
                     return user
                 else:
@@ -67,26 +67,27 @@ class UploadHandler: #security system to authenticate users by their credentials
 
 
 global room_id
-room_id = sample("QqWwEeRrTtYyUuIiOoPpAaSsDdFfGgHhJjKkLlZzXxCcVvBbNnMm1234567890",6)
+room_id = sample("QqWwEeRrTtYyUuIiOoPpAaSsDdFfGgHhJjKkLlZzXxCcVvBbNnMm1234567890",6) #sample random letters and numbers
 
 
 host_service = FastAPI()
 
-DATABASE_URL = "postgresql://postgres:qwerty@localhost:5432"
+DATABASE_URL = "postgresql://postgres:qwerty@localhost:5432" #test database
+
 metadata = sqlalchemy.MetaData()
 
-models = sqlalchemy.Table(
+models = sqlalchemy.Table( #models table
     "models",
     metadata,
     sqlalchemy.Column("modelname",sqlalchemy.String),
     sqlalchemy.Column("modeldata",sqlalchemy.String),
     sqlalchemy.Column("username",sqlalchemy.String)
-)
+) #no primary key as all of these will be loaded at once. they cannot be searched for
 
-users = sqlalchemy.Table(
+users = sqlalchemy.Table( #users table
     "users",
     metadata,
-    sqlalchemy.Column("userID",sqlalchemy.String, primary_key=True),
+    sqlalchemy.Column("userID",sqlalchemy.String, primary_key=True), #a primary key is needed here as userID is searched for during verification
     sqlalchemy.Column("password",sqlalchemy.String)
 )
 
@@ -118,37 +119,37 @@ async def startup():
 async def shutdown():
     await database.disconnect()
 
-@host_service.get("/models/",dependencies=[Depends(authentication_session.authenticate_token)])
+@host_service.get("/models/",dependencies=[Depends(authentication_session.authenticate_token)]) #authenticates the token via the UploadHandler
 async def fetch_models():
     query = models.select()
-    return await database.fetch_all(query)
+    return await database.fetch_all(query) #select all and return
     
 
-@host_service.post("/upload/",dependencies=[Depends(authentication_session.authenticate_token)])
+@host_service.post("/upload/",dependencies=[Depends(authentication_session.authenticate_token)]) #authenticates the token via the UploadHandler
 async def upload_model(json:CBmodel):
-    query = models.insert().values(modelname=str(json.modelname), modeldata=str(json.modelData), username=str(json.username))
+    query = models.insert().values(modelname=str(json.modelname), modeldata=str(json.modelData), username=str(json.username)) #equivalent of INSERT INTO models, VALUES (values)
     result = await database.execute(query)
     return {**json.model_dump(), "id":result}
 
-@host_service.post("/register/")
+@host_service.post("/register/") #register a user account
 async def register(json:registrationItem):
-    if json.roomid == room_id:
+    if json.roomid == room_id: #if roomID is correct
         username_exists = models.select().where(users.c.userID==json.username)
 
         if username_exists != None:
-            query = users.insert().values(userID=json.username,password=bcrypt.hash(json.password))
+            query = users.insert().values(userID=json.username,password=bcrypt.hash(json.password)) #insert a username and hashed password
             result= await database.execute(query)
-            return {**json.model_dump(), "id":result}
+            return {**json.model_dump(), "id":result} #return the same data that was submitted, with a status code
         else:
             raise HTTPException(status_code=401,detail="Username is already registered.")
     else:
         raise HTTPException(status_code=401, detail="Invalid room ID")
         
-@host_service.post("/login/",response_model = Token)
-async def login(data:Annotated[OAuth2PasswordRequestForm,Depends()]):
-    user =  await authentication_session.authenticate_password(data.username,data.password)
+@host_service.post("/login/",response_model = Token) #authentication for a pre-existing user account
+async def login(data:Annotated[OAuth2PasswordRequestForm,Depends()]): #requires an encoded password form
+    user =  await authentication_session.authenticate_password(data.username,data.password) #verifies user and password
     if user:
-        access_token = authentication_session.create_access_token(data={"userID":data.username})
+        access_token = authentication_session.create_access_token(data={"userID":data.username}) #creates and returns token
         return Token(access_token=access_token,token_type="bearer")
     
     raise HTTPException(status_code=401,detail="Invalid credentials",headers={"WWW-Authenticate":"Bearer"})
