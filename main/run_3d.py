@@ -14,7 +14,7 @@ from pathlib import Path
 from cb3d_disgrid import display_3Dgrid
 from model import Point, CBModel, Plane, catalogue
 from pygame import gfxdraw
-from utils.plane_sorter import quicksort, binary_search, transform
+from utils.plane_sorter import quicksort, transform
 from utils.pgui import Text, TextType, Anchor, Button, TextInput, Dropdown, menu, Drawing, DisplayColumns, DisplayRows, Image, Handler, GUIobj, scale_to_window
 from webbrowser import open_new_tab
 from random import choice
@@ -458,10 +458,10 @@ def buildTextureMenu():
     )
     handler.add(textureMenu)
 
-def buildTransform(points,planetype):
-    input_options = handler.collate_textinput_inputs()
+def buildTransform(points,planetype): #used to convert an x,y drawing to a specific plane
+    input_options = handler.collate_textinput_inputs() #collects the inputs given in the selector
     colour_submitted = (int(input_options['redV']), int(input_options['greenV']), int(input_options['blueV']))
-    transformations = transform(points,planetype,input_options['Extrusion'],input_options['From'])
+    transformations = transform(points,planetype,input_options['Extrusion'],input_options['From']) #calls on the transform method in plane_sorter.py
     texture = input_options['Texture']
     if texture != 'default':
         texture = catalogue.textures[texture]
@@ -469,7 +469,7 @@ def buildTransform(points,planetype):
         texture = None
     for transformation in transformations:
         if len(transformation) == 4:
-            cbmod.add_plane(transformation, [0,1,0,3,1,2,2,3], colour_submitted, texture)
+            cbmod.add_plane(transformation, [0,1,0,3,1,2,2,3], colour_submitted, texture) #Drawing objects require a specific order of input, so this can be copied here
         else:
 
             cbmod.add_plane(transformation, [i for i in range(len(transformation))], colour_submitted, texture)
@@ -590,7 +590,7 @@ menu_screen = createMenu()
 
 def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
     selector = GUIobj([int(round(winsize[0]-scale_to_window(452))),0],[452,1080],'Draw to')
-    selector.points = []
+    selector.points = [] #the GUIobj needs its own points arr as it will pass these to the other callbacks
     
     for i in points:
         if i not in selector.points:
@@ -599,7 +599,7 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
     selector.add_content(
         
         DisplayRows([
-            Image([0,0],'boxo_xy.png').set_callback(lambda:buildTransform(selector.points,'xy')),
+            Image([0,0],'boxo_xy.png').set_callback(lambda:buildTransform(selector.points,'xy')), #transform for each xy, xz, yz plane
             Image([0,0],'boxo_xz.png').set_callback(lambda:buildTransform(selector.points,'xz')),
             Image([0,0],'boxo_yz.png').set_callback(lambda:buildTransform(selector.points,'yz')),
             DisplayRows([
@@ -608,7 +608,7 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                     Text([0,0],'From',TextType.h3),None
                 ]), 
                 
-                TextInput([0,0],'','0',1,'From'),
+                TextInput([0,0],'','0',1,'From'), #adds the ability to add a third coordinate as this will be restricted by choosing a plane
                 
             ]),
             
@@ -617,7 +617,7 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                 DisplayColumns([
                     Text([0,0],'Extrusion',TextType.h3),None
                 ]), 
-                TextInput([0,0],'','0',1,'Extrusion'),
+                TextInput([0,0],'','0',1,'Extrusion'), #extrudes the model
                 
             ]),
             
@@ -627,7 +627,7 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                     Text([0,0],'Colour (rgb)',TextType.h3),None
                 ]), 
                 DisplayColumns([
-                    TextInput([0,0],'','255',3,'redV',True), TextInput([0,0],'','255',3,'greenV',True), TextInput([0,0],'','255',3,'blueV',True)
+                    TextInput([0,0],'','255',3,'redV',True), TextInput([0,0],'','255',3,'greenV',True), TextInput([0,0],'','255',3,'blueV',True) #RGB colour values
                 ]),
                 
             ]),
@@ -641,11 +641,7 @@ def ChildXYZselector(points) -> GUIobj: #this is implemented inside run_3d.py
                 
             ]),
             
-            Button([0,0],'Preview textures',None,None,buildTextureMenu)
-            
-            
-            
-            #we use the anonymous function lambda: cbmod.add_plane(buildTransform(d.points,planetype), [], texture) to add planes!
+            Button([0,0],'Preview textures',None,None,buildTextureMenu) 
         ]),
             
         
@@ -752,8 +748,8 @@ plus_rect = plussym.get_rect()
 plus_rect.x=70
 plus_rect.y=30
 
-###FULL DELETION/CUBE ADDITION
-#to be removed
+
+#CLONES OF THE KEYBINDS, IN PROCEDURE FORM
 def clear():
     cbmod.delete_all()
 
